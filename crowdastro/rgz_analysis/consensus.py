@@ -95,7 +95,7 @@ client = pymongo.MongoClient(HOST, PORT)
 db = client[DB_NAME]
 subjects = db.radio_subjects  # RGZ examples.
 classifications = db.radio_classifications  # classifications of each subject.
-subindex = classifications.create_index([('subject_ids',pymongo.ASCENDING)],
+subindex = classifications.create_index([('subject_ids', pymongo.ASCENDING)],
                                         name='subject_ids_1')
 
 # Bounding pixel indices.
@@ -108,25 +108,35 @@ BAD_KEYS = ('finished_at', 'started_at', 'user_agent', 'lang', 'pending')
 
 rgz_dir = None  # Set after argument parsing.
 
-def checksum(zid,experts_only=False,excluded=[],no_anonymous=False,write_peak_data=True):
+
+def checksum(
+        zid,
+        experts_only=False,
+        excluded=[],
+        no_anonymous=False,
+        write_peak_data=True):
     """Find the consensus for all users who have classified a particular galaxy.
 
     This function is taken (almost) verbatim from willettk/rgz-analysis. Minor
     changes: Updated to Python 3, and swapped print for logging.
     """
 
-    sub = subjects.find_one({'zooniverse_id':zid})
+    sub = subjects.find_one({'zooniverse_id': zid})
     imgid = sub['_id']
 
     # Classifications for this subject after launch date
-    class_params = {"subject_ids": imgid, "updated_at": {"$gt": MAIN_RELEASE_DATE}}
+    class_params = {
+        "subject_ids": imgid,
+        "updated_at": {
+            "$gt": MAIN_RELEASE_DATE}}
     # Only get the consensus classification for the science team members
     if experts_only:
         class_params['expert'] = True
 
-    # If comparing a particular volunteer (such as an expert), don't include self-comparison
+    # If comparing a particular volunteer (such as an expert), don't include
+    # self-comparison
     if len(excluded) > 0:
-        class_params['user_name'] = {"$nin":excluded}
+        class_params['user_name'] = {"$nin": excluded}
 
     '''
     # To exclude the experts:
@@ -138,26 +148,27 @@ def checksum(zid,experts_only=False,excluded=[],no_anonymous=False,write_peak_da
         if 'user_name' in class_params:
             class_params['user_name']["$exists"] = True
         else:
-            class_params['user_name'] = {"$exists":True}
+            class_params['user_name'] = {"$exists": True}
 
     _c = classifications.find(class_params)
 
-    # Empty dicts and lists 
+    # Empty dicts and lists
     cdict = {}
 
     unique_users = set()
-    
+
     clen_start = 0
     clist_all = []
     listcount = []
 
-    # Compute the most popular combination for each NUMBER of galaxies identified in image
-    
+    # Compute the most popular combination for each NUMBER of galaxies
+    # identified in image
+
     for c in _c:
 
         clist_all.append(c)
         clen_start += 1
-        
+
         # Skip classification if they already did one?
 
         try:
@@ -169,16 +180,17 @@ def checksum(zid,experts_only=False,excluded=[],no_anonymous=False,write_peak_da
 
             unique_users.add(user_name)
             listcount.append(True)
-        
-            sumlist = []    # List of the checksums over all possible combinations
+
+            sumlist = []  # List of the checksums over all possible combinations
 
             # Only find data that was an actual marking, not metadata
-            goodann = [x for x in c['annotations'] if (list(x.keys())[0] not in BAD_KEYS)]
+            goodann = [x for x in c['annotations'] if (
+                list(x.keys())[0] not in BAD_KEYS)]
             n_galaxies = len(goodann)
-    
+
             if n_galaxies > 0:  # There must be at least one galaxy!
-                for idx,ann in enumerate(goodann):
-    
+                for idx, ann in enumerate(goodann):
+
                     xmaxlist = []
                     try:
                         radio_comps = ann['radio']
@@ -192,19 +204,21 @@ def checksum(zid,experts_only=False,excluded=[],no_anonymous=False,write_peak_da
                             xmaxlist.append(-99)
                     except KeyError:
                         xmaxlist.append(-99)
-    
-                    # To create a unique ID for the combination of radio components,
-                    # take the product of all the xmax coordinates and sum them together.
+
+                    # To create a unique ID for the combination of radio
+                    # components, take the product of all the xmax coordinates
+                    # and sum them together.
                     product = functools.reduce(operator.mul, xmaxlist, 1)
-                    sumlist.append(round(product,3))
+                    sumlist.append(round(product, 3))
 
                 checksum = sum(sumlist)
             else:
                 checksum = -99
 
             c['checksum'] = checksum
-    
-            # Insert checksum into dictionary with number of galaxies as the index
+
+            # Insert checksum into dictionary with number of galaxies as the
+            # index
             if n_galaxies in cdict:
                 cdict[n_galaxies].append(checksum)
             else:
@@ -212,74 +226,81 @@ def checksum(zid,experts_only=False,excluded=[],no_anonymous=False,write_peak_da
 
         else:
             listcount.append(False)
-            #print 'Removing classification for %s' % user_name
-    
+            # print 'Removing classification for %s' % user_name
+
     # Remove duplicates and classifications for no object
-    clist = [c for lc,c in zip(listcount,clist_all) if lc and c['checksum'] != -99]
+    clist = [
+        c for lc,
+        c in zip(
+            listcount,
+            clist_all) if lc and c['checksum'] != -
+        99]
 
     clen_diff = clen_start - len(clist)
 
-    '''
-    if clen_diff > 0:
-        print '\nSkipping %i duplicated classifications for %s. %i good classifications total.' % (clen_diff,zid,len(clist))
-    '''
-
-    maxval=0
+    maxval = 0
     mc_checksum = 0.
 
-    # Find the number of galaxies that has the highest number of consensus classifications
+    # Find the number of galaxies that has the highest number of consensus
+    # classifications
 
-    for k,v in cdict.items():
+    for k, v in cdict.items():
         mc = collections.Counter(v).most_common()
-        # Check if the most common selection coordinate was for no radio contours
+        # Check if the most common selection coordinate was for no radio
+        # contours
         if mc[0][0] == -99.0:
             if len(mc) > 1:
-                # If so, take the selection with the next-highest number of counts
+                # If so, take the selection with the next-highest number of
+                # counts
                 mc_best = mc[1]
             else:
                 continue
         # Selection with the highest number of counts
         else:
             mc_best = mc[0]
-        # If the new selection has more counts than the previous one, choose it as the best match;
-        # if tied or less than this, remain with the current consensus number of galaxies
+        # If the new selection has more counts than the previous one, choose it
+        # as the best match; if tied or less than this, remain with the current
+        # consensus number of galaxies
         if mc_best[1] > maxval:
             maxval = mc_best[1]
             mc_checksum = mc_best[0]
-    
+
     # Find a galaxy that matches the checksum (easier to keep track as a list)
 
     try:
         cmatch = next(i for i in clist if i['checksum'] == mc_checksum)
     except StopIteration:
-        # Necessary for objects like ARG0003par; one classifier recorded 22 "No IR","No Contours" in a short space. Still shouldn't happen.
+        # Necessary for objects like ARG0003par; one classifier recorded 22 "No
+        # IR","No Contours" in a short space. Still shouldn't happen.
         logging.warning('No non-zero classifications recorded for %s' % zid)
         return
-   
-    # Find IR peak for the checksummed galaxies
-    
-    goodann = [x for x in cmatch['annotations'] if list(x.keys())[0] not in BAD_KEYS]
 
-    # Find the sum of the xmax coordinates for each galaxy. This gives the index to search on.
-    
+    # Find IR peak for the checksummed galaxies
+
+    goodann = [x for x in cmatch['annotations']
+               if list(x.keys())[0] not in BAD_KEYS]
+
+    # Find the sum of the xmax coordinates for each galaxy. This gives the
+    # index to search on.
+
     cons = {}
     cons['zid'] = zid
     cons['source'] = sub['metadata']['source']
-    ir_x,ir_y = {},{}
+    ir_x, ir_y = {}, {}
     cons['answer'] = {}
     cons['n_users'] = maxval
     cons['n_total'] = len(clist)
 
     answer = cons['answer']
 
-    for k,gal in enumerate(goodann):
+    for k, gal in enumerate(goodann):
         xmax_temp = []
         bbox_temp = []
         try:
             for v in gal['radio'].values():
                 xmax_temp.append(float(v['xmax']))
-                bbox_temp.append((v['xmax'],v['ymax'],v['xmin'],v['ymin']))
-            checksum2 = round(sum(xmax_temp),3)
+                bbox_temp.append((v['xmax'], v['ymax'], v['xmin'], v['ymin']))
+            checksum2 = round(sum(xmax_temp), 3)
             answer[checksum2] = {}
             answer[checksum2]['ind'] = k
             answer[checksum2]['xmax'] = xmax_temp
@@ -288,21 +309,24 @@ def checksum(zid,experts_only=False,excluded=[],no_anonymous=False,write_peak_da
             logging.warning('KeyError for %s, %s.', gal, zid)
         except AttributeError:
             logging.warning('No Sources, No IR recorded for %s.', zid)
-    
+
         # Make empty copy of next dict in same loop
         ir_x[k] = []
         ir_y[k] = []
-    
+
     # Now loop over all sets of classifications to get the IR counterparts
     for c in clist:
         if c['checksum'] == mc_checksum:
-    
-            annlist = [ann for ann in c['annotations'] if list(ann.keys())[0] not in BAD_KEYS]
+
+            annlist = [
+                ann for ann in c['annotations'] if list(
+                    ann.keys())[0] not in BAD_KEYS]
             for ann in annlist:
                 if 'ir' in list(ann.keys()):
                     # Find the index k that this corresponds to
                     try:
-                        xmax_checksum = round(sum([float(ann['radio'][a]['xmax']) for a in ann['radio']]),3)
+                        xmax_checksum = round(sum(float(ann['radio'][a]['xmax'])
+                                                  for a in ann['radio']), 3)
                     except TypeError:
                         xmax_checksum = -99
 
@@ -313,47 +337,54 @@ def checksum(zid,experts_only=False,excluded=[],no_anonymous=False,write_peak_da
                             ir_x[k].append(-99)
                             ir_y[k].append(-99)
                         else:
-                            # Only takes the first IR source right now; NEEDS TO BE MODIFIED.
+                            # Only takes the first IR source right now; NEEDS
+                            # TO BE MODIFIED.
 
                             ir_x[k].append(float(ann['ir']['0']['x']))
                             ir_y[k].append(float(ann['ir']['0']['y']))
                     except KeyError:
-                        logging.warning('"No radio" still appearing as valid consensus option.')
+                        logging.warning(
+                            '"No radio" still appearing as valid consensus '
+                            'option.')
 
     # Perform a kernel density estimate on the data for each galaxy
-    
-    scale_ir = IMG_HEIGHT_NEW/IMG_HEIGHT_OLD
+
+    scale_ir = IMG_HEIGHT_NEW / IMG_HEIGHT_OLD
 
     peak_data = []
 
     # Remove empty IR peaks if they exist
 
-    for (xk,xv),(yk,yv) in zip(list(ir_x.items()), list(ir_y.items())):
-        
+    for (xk, xv), (yk, yv) in zip(list(ir_x.items()), list(ir_y.items())):
+
         if len(xv) == 0:
             ir_x.pop(xk)
         if len(yv) == 0:
             ir_y.pop(yk)
 
-    assert len(ir_x) == len(ir_y),'Lengths of ir_x (%i) and ir_y (%i) are not the same' % (len(ir_x),len(ir_y))
+    assert len(ir_x) == len(ir_y), \
+        'Lengths of ir_x (%i) and ir_y (%i) are not the same' % (
+        len(ir_x), len(ir_y))
 
-    for (xk,xv),(yk,yv) in zip(list(ir_x.items()), list(ir_y.items())):
-        
+    for (xk, xv), (yk, yv) in zip(list(ir_x.items()), list(ir_y.items())):
+
         if len(xv) == 0:
             irx
 
         pd = {}
-    
+
         x_exists = [xt * scale_ir for xt in xv if xt != -99.0]
         y_exists = [yt * scale_ir for yt in yv if yt != -99.0]
 
         x_all = [xt * scale_ir for xt in xv]
         y_all = [yt * scale_ir for yt in yv]
-        coords_all = [(xx,yy) for xx,yy in zip(x_all,y_all)]
+        coords_all = [(xx, yy) for xx, yy in zip(x_all, y_all)]
         ir_counter = collections.Counter(coords_all)
         most_common_ir = ir_counter.most_common(1)[0][0]
 
-        if len(collections.Counter(x_exists)) > 2 and len(collections.Counter(y_exists)) > 2 and most_common_ir != (-99,-99):
+        if (len(collections.Counter(x_exists)) > 2 and
+                len(collections.Counter(y_exists)) > 2 and
+                most_common_ir != (-99, -99)):
 
             # X,Y = grid of uniform coordinates over the IR pixel plane
             X, Y = numpy.mgrid[XMIN:XMAX, YMIN:YMAX]
@@ -362,80 +393,104 @@ def checksum(zid,experts_only=False,excluded=[],no_anonymous=False,write_peak_da
                 values = numpy.vstack([x_exists, y_exists])
             except ValueError:
                 # Breaks on the tutorial subject. Find out why len(x) != len(y)
-                logging.warning('Length of IR x array: %i; Length of IR y array: %i (zid %s)', len(x_exists), len(y_exists), zid)
+                logging.warning(
+                    'Length of IR x array: %i; Length of IR y array: %i '
+                    '(zid %s)',
+                    len(x_exists),
+                    len(y_exists),
+                    zid)
             try:
                 kernel = scipy.stats.gaussian_kde(values)
             except scipy.linalg.basic.LinAlgError:
                 logging.debug('LinAlgError in KD estimation for %s', zid)
                 continue
 
-            # Even if there are more than 2 sets of points, if they are mutually co-linear, 
-            # matrix can't invert and kernel returns NaNs. 
+            # Even if there are more than 2 sets of points, if they are mutually
+            # co-linear, matrix can't invert and kernel returns NaNs.
 
             kp = kernel(positions)
 
             if numpy.isnan(kp).sum() > 0:
-                acp = collinearity.collinear(x_exists,y_exists)
+                acp = collinearity.collinear(x_exists, y_exists)
                 if len(acp) > 0:
-                    logging.warning('There are %i unique points for %s (source no. %i in the field), but all are co-linear; KDE estimate does not work.' % (len(collections.Counter(x_exists)),zid,xk))
+                    logging.warning(
+                        'There are %i unique points for %s (source no. %i in '
+                        'the field), but all are co-linear; KDE estimate does '
+                        'not work.' %
+                        (len(
+                            collections.Counter(x_exists)),
+                            zid,
+                            xk))
                 else:
-                    logging.warning('There are NaNs in the KDE for %s (source no. %i in the field), but points are not co-linear.' % (zid,xk))
+                    logging.warning(
+                        'There are NaNs in the KDE for %s (source no. %i in the'
+                        ' field), but points are not co-linear.' %
+                        (zid, xk))
 
-                for k,v in answer.items():
+                for k, v in answer.items():
                     if v['ind'] == xk:
-                        answer[k]['ir'] = (numpy.mean(x_exists),numpy.mean(y_exists))
-        
+                        answer[k]['ir'] = (
+                            numpy.mean(x_exists), numpy.mean(y_exists))
+
             else:
 
                 Z = numpy.reshape(kp.T, X.shape)
-                
+
                 # Find the number of peaks
-                # http://stackoverflow.com/questions/3684484/peak-detection-in-a-2d-array
-                
-                neighborhood = numpy.ones((10,10))
-                local_max = scipy.ndimage.filters.maximum_filter(Z, footprint=neighborhood)==Z
-                background = (Z==0)
-                eroded_background = scipy.ndimage.morphology.binary_erosion(background, structure=neighborhood, border_value=1)
+                # http://stackoverflow.com/questions/3684484/peak-detection-in-a
+                # -2d-array
+
+                neighborhood = numpy.ones((10, 10))
+                local_max = scipy.ndimage.filters.maximum_filter(
+                    Z, footprint=neighborhood) == Z
+                background = (Z == 0)
+                eroded_background = scipy.ndimage.morphology.binary_erosion(
+                    background, structure=neighborhood, border_value=1)
                 detected_peaks = local_max ^ eroded_background
-                
+
                 npeaks = detected_peaks.sum()
-    
-                #return X,Y,Z,npeaks
-    
+
+                # return X,Y,Z,npeaks
+
                 pd['X'] = X
                 pd['Y'] = Y
                 pd['Z'] = Z
                 pd['npeaks'] = npeaks
 
                 try:
-                    xpeak = float(pd['X'][pd['Z']==pd['Z'].max()][0])
-                    ypeak = float(pd['Y'][pd['Z']==pd['Z'].max()][0])
+                    xpeak = float(pd['X'][pd['Z'] == pd['Z'].max()][0])
+                    ypeak = float(pd['Y'][pd['Z'] == pd['Z'].max()][0])
                 except IndexError:
-                    logging.warning('IndexError for %s, %s, %s.', pd, zid, clist)
+                    logging.warning(
+                        'IndexError for %s, %s, %s.', pd, zid, clist)
 
-                for k,v in answer.items():
+                for k, v in answer.items():
                     if v['ind'] == xk:
-                        answer[k]['ir_peak'] = (xpeak,ypeak)
-                        # Don't write to consensus for serializable JSON object 
+                        answer[k]['ir_peak'] = (xpeak, ypeak)
+                        # Don't write to consensus for serializable JSON object
                         if write_peak_data:
                             answer[k]['peak_data'] = pd
                             answer[k]['ir_x'] = x_exists
                             answer[k]['ir_y'] = y_exists
         else:
 
-            # Note: need to actually put a limit in if less than half of users selected IR counterpart.
-            # Right now it still IDs a sources even if only 1/10 users said it was there.
+            # Note: need to actually put a limit in if less than half of users
+            # selected IR counterpart. Right now it still IDs a sources even if
+            # only 1/10 users said it was there.
 
-            for k,v in answer.items():
+            for k, v in answer.items():
                 if v['ind'] == xk:
-                    # Case 1: multiple users selected IR source, but not enough unique points to pinpoint peak
-                    if most_common_ir != (-99,-99) and len(x_exists) > 0 and len(y_exists) > 0:
-                        answer[k]['ir'] = (x_exists[0],y_exists[0])
+                    # Case 1: multiple users selected IR source, but not enough
+                    # unique points to pinpoint peak
+                    if most_common_ir != (-99, -99) and len(
+                            x_exists) > 0 and len(y_exists) > 0:
+                        answer[k]['ir'] = (x_exists[0], y_exists[0])
                     # Case 2: most users have selected No Sources
                     else:
-                        answer[k]['ir'] = (-99,-99)
+                        answer[k]['ir'] = (-99, -99)
 
     return cons
+
 
 def run_sample(data_path, catalogue_path, limit=0):
     """Runs the consensus algorithm described in Banfield et al., 2015."""
@@ -505,6 +560,7 @@ def run_sample(data_path, catalogue_path, limit=0):
 
     logging.info('Completed consensus.')
 
+
 def bbox_unravel(bbox):
     """Turns a list of (str, str) tuples into (float, float) tuples.
 
@@ -518,6 +574,7 @@ def bbox_unravel(bbox):
         bboxes.append(t)
 
     return bboxes
+
 
 def alpha(i):
     return chr(i % 26 + ord('a')) * (i // 26 + 1)
