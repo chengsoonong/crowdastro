@@ -51,8 +51,8 @@ import scipy.stats
 import scipy.ndimage.morphology
 import scipy.linalg.basic
 
-import collinearity
-import load_contours
+import crowdastro.rgz_analysis.collinearity
+import crowdastro.rgz_analysis.load_contours
 
 # Mongo DB server.
 HOST = 'localhost'
@@ -109,7 +109,7 @@ BAD_KEYS = ('finished_at', 'started_at', 'user_agent', 'lang', 'pending')
 rgz_dir = None  # Set after argument parsing.
 
 
-def checksum(
+def consensus(
         zid,
         experts_only=False,
         excluded=[],
@@ -531,7 +531,7 @@ def run_sample(data_path, catalogue_path, limit=0):
                 progress = idx / len(zooniverse_ids)
                 logging.info('{:.02%} {}'.format(progress, now))
 
-            cons = checksum(zid)
+            cons = consensus(zid)
             cons['consensus_level'] = cons['n_users'] / cons['n_total']
 
             # CSV.
