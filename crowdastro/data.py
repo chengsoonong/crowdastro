@@ -87,3 +87,12 @@ def get_radio(subject):
 
     with open_fits(subject, field, 'radio') as fits_file:
         return fits_file[0].data
+
+def get_contours(subject):
+    """Fetches the radio contours of a subject.
+
+    subject: RGZ subject dict.
+    -> JSON dict.
+    """
+    # TODO(MatthewJA): Cache these.
+    return requests.get(subject['location']['contours']).json()
