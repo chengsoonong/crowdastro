@@ -9,7 +9,7 @@ import numpy
 import pymongo
 import requests
 
-import config
+from . import config
 
 client = pymongo.MongoClient(config.get('host'), config.get('port'))
 db = client[config.get('db_name')]
@@ -25,6 +25,11 @@ def require_atlas(f):
         return f(subject, *args, **kwargs)
 
     return g
+
+def get_random_subject():
+    return list(db.radio_subjects.aggregate([
+        {'$match': {'metadata.survey': 'atlas'}},
+        {'$sample': {'size': 1}}]))[0]
 
 def get_subject(zid):
     """Gets a Radio Galaxy Zoo subject from the database.

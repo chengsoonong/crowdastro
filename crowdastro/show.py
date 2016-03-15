@@ -5,8 +5,8 @@ import matplotlib.colors
 import matplotlib.pyplot
 import numpy
 
-import config
-import data
+from . import config
+from . import data
 
 def image(im, contrast=0.05):
     """Plots an RGZ image.
@@ -62,3 +62,6 @@ def radio(subject):
     -> MatPlotLib image plot.
     """
     return image(data.get_radio(s))
+
+if __name__ == '__main__':
+    print(data.db.radio_subjects.count({'state': 'complete'}))

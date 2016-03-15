@@ -5,7 +5,9 @@ import os.path
 
 import numpy
 
-CONFIG_PATH = 'crowdastro.json'
+SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
+
+CONFIG_PATH = os.path.join(SCRIPT_PATH, 'crowdastro.json')
 
 with open(CONFIG_PATH) as config_file:
     config = json.load(config_file)
