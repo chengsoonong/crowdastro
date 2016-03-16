@@ -60,3 +60,5 @@ target/
 data/*
 rgz_cache/*
 crowdastro-data/*
+.ipynb_checkpoints/*
+notebooks/.ipynb_checkpoints/*
