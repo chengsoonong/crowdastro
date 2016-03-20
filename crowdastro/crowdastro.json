@@ -5,8 +5,8 @@
 
     "fits_image_width": 200,
     "fits_image_height": 200,
-    "click_image_width": 500,
-    "click_image_height": 500,
+    "click_image_width": 424,
+    "click_image_height": 424,
 
     "host": "localhost",
     "port": 27017,

@@ -22,7 +22,8 @@ config['click_to_fits_x'] = (config.get('fits_image_width') /
 config['click_to_fits_y'] = (config.get('fits_image_height') /
                              config.get('click_image_height'))
 config['click_to_fits'] = numpy.array([config['click_to_fits_x'],
-                                       config['click_to_fits_y']])
+                                       config['click_to_fits_y']],
+                                       dtype=float)
 
 # Wrapper function to neatly retrieve values.
 def get(*args, **kwargs):
