@@ -53,7 +53,7 @@ def ir(subject):
     subject: RGZ subject.
     -> MatPlotLib image plot.
     """
-    return image(data.get_ir(s))
+    return image(data.get_ir(subject))
 
 def radio(subject):
     """Plots the radio image of a subject.
@@ -61,7 +61,4 @@ def radio(subject):
     subject: RGZ subject.
     -> MatPlotLib image plot.
     """
-    return image(data.get_radio(s))
-
-if __name__ == '__main__':
-    print(data.db.radio_subjects.count({'state': 'complete'}))
+    return image(data.get_radio(subject))
