@@ -1,0 +1,5 @@
+site_name: crowdastro
+pages:
+  - Home: index.md
+  - Setup: setup.md
+theme: readthedocs
