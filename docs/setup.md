@@ -33,4 +33,6 @@ You need the following four data files:
 
 These files are currently not easily available. For access, email the [Radio Galaxy Zoo team](https://github.com/zooniverse/Radio-Galaxy-Zoo).
 
-From the project root, extract sanitized_radio_2016-03-01.tar.gz and ATLASDR3_cmpcat_23July2015.dat.gz to data/, elais_11JAN2014_2x2_5x5.tgz to data/elais, and cdfs_11JAN2014_2x2_5x5.tgz to data/cdfs. Run mongo_load_json.sh or mongo_load_json.bat to import the files into the `radio` MongoDB database. You will now be able to access the collections `radio.radio_classifications`, `radio.radio_groups`, and `radio.radio_subjects`.
+From the project root, run setup_data.sh. If this doesn't work, extract sanitized_radio_2016-03-01.tar.gz and ATLASDR3_cmpcat_23July2015.dat.gz to data/, elais_11JAN2014_2x2_5x5.tgz to data/elais, and cdfs_11JAN2014_2x2_5x5.tgz to data/cdfs.
+
+Run mongo_load_json.sh to import the files into the `radio` MongoDB database. You will now be able to access the collections `radio.radio_classifications`, `radio.radio_groups`, and `radio.radio_subjects`.
