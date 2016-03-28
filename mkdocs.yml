@@ -2,5 +2,6 @@ site_name: crowdastro
 pages:
   - Home: index.md
   - Setup: setup.md
+  - Notebooks: notebooks.md
   - ATLAS Data: datasets/atlas.md
 theme: readthedocs
