@@ -1,6 +1,6 @@
 # Notebooks
 
-0. mongo2pandas &mdash; Quick example of loading MongoDB data into Pandas.
+<!--0. mongo2pandas &mdash; Quick example of loading MongoDB data into Pandas.-->
 1. simple_rgz &mdash; Basic manipulation of Radio Galaxy Zoo data.
 2. potential_host_counting &mdash; Investigating detecting potential hosts galaxies in infrared images, and counting how many there are in each subject.
 3. click_consensus &mdash; Computing the radio consensus and click consensus with a PG-means Gaussian mixture algorithm, attempting to improve robustness and efficiency upon the existing method (Banfield et al., 2015).
