@@ -1,0 +1,33 @@
+%!TeX program=xelatex
+\documentclass[a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[margin=1.2in]{geometry}
+\usepackage{hyperref}
+
+\usepackage{fontspec}
+\setmainfont{Latin Modern Roman}
+
+\renewcommand{\vec}{\mathbf}
+
+\begin{document}
+    \title{Active Learning with Crowdsourced Labels}
+    \author{Matthew Alger \\ \emph{The Australian National University}}
+    \maketitle
+
+    Crowdsourcing provides an active learning domain where many standard active learning assumptions are broken: There is no longer just one labeller, labellers may be non-expert, labellers may not be independent, labellers' accuracy may differ depending on the examples presented, and different labellers may have different accuracies.
+
+    Yan et al.\cite{yan10} introduce a probabilistic model of the crowdsourced active learning problem. Denote examples as $\vec x_1, \dots, \vec x_N$ with $\vec x_i \in \mathbb{R}^D$, true (unknown) labels as $z_1, \dots, z_N$, and labels given by the labeller $t$ as $y^t_1, \dots, y^t_N$. Not all $y^t_i$ are observed and generally no $z_i$ are observed. Denote the $N \times D$ matrix of all examples as $X$, the $N \times 1$ matrix of all true labels as $Z$, and the $N \times T$ matrix of all labeller-generated labels as $Y$ (where $T$ is the number of labellers). Then
+    \[
+        p(Y, Z \mid X) = \prod_i p(z_i \mid \vec x_i) \prod_{t = 1}^T p(y^t_i \mid \vec x_i, z_i).
+    \]
+    This model makes the label $y^t_i$ dependent on not only the true label $z_i$ but also the specific example $\vec x_i$. As such, it addresses the problem of labellers' accuracy differing depending on the examples presented as well as differing from each other in general. $p(z_i \mid \vec x_i)$ models the likelihood (e.g. logistic regression) and $p(y^t_i \mid \vec x_i, z_i)$ models the labeller. For binary classification, Yan et al. use a Bernoulli model with
+    \[
+        p(y^t_i \mid \vec x_i, z_i) = (1 - \eta_t(\vec x_i))^{|y^t_i - z_i|} \eta_t(\vec x_i)^{1 - |y^t_i - z_i|}
+    \]
+
+    \bibliographystyle{unsrt}
+    \bibliography{papers}
+
+\end{document}
