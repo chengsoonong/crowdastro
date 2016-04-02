@@ -10,3 +10,4 @@
 7. mean_images &mdash; Computing the mean IR and radio image around potential hosts to see if there is a difference in the IR image between hosts and non-hosts (there isn't).
 8. click_consensus_distribution &mdash; Attempting to find out whether majority vote is a good way to decide what the collective classification made by the RGZ volunteers was (it is).
 9. pipeline &mdash; End-to-end classification pipeline.
+10. potential_host_detection &mdash; Detecting potential hosts with scikit-image.
