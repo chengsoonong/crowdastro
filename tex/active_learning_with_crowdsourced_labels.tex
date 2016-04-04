@@ -3,13 +3,14 @@
 
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage[margin=1.2in]{geometry}
+\usepackage[margin=1in]{geometry}
 \usepackage{hyperref}
 
 \usepackage{fontspec}
 \setmainfont{Latin Modern Roman}
 
-\renewcommand{\vec}{\mathbf}
+\renewcommand{\vec}{\boldsymbol}
+\newcommand{\vectilde}[1]{\tilde{\boldsymbol{#1}}}
 
 \begin{document}
     \title{Active Learning with Crowdsourced Labels}
@@ -22,10 +23,29 @@
     \[
         p(Y, Z \mid X) = \prod_i p(z_i \mid \vec x_i) \prod_{t = 1}^T p(y^t_i \mid \vec x_i, z_i).
     \]
-    This model makes the label $y^t_i$ dependent on not only the true label $z_i$ but also the specific example $\vec x_i$. As such, it addresses the problem of labellers' accuracy differing depending on the examples presented as well as differing from each other in general. $p(z_i \mid \vec x_i)$ models the likelihood (e.g. logistic regression) and $p(y^t_i \mid \vec x_i, z_i)$ models the labeller. For binary classification, Yan et al. use a Bernoulli model with
+    This model makes the label $y^t_i$ dependent on not only the true label $z_i$ but also the specific example $\vec x_i$. As such, it addresses the problem of labellers' accuracy differing depending on the examples presented as well as differing from each other in general. $p(z_i \mid \vec x_i)$ models the likelihood; Yan et al. use logistic regression:
+    \[
+        p(z_i \mid \vec x_i) = (1 + \exp(- \vec a \cdot \vec x_i - \beta))^{-1}
+    \]
+    $p(y^t_i \mid \vec x_i, z_i)$ models the labeller; for binary classification, Yan et al. use a Bernoulli model with
     \[
         p(y^t_i \mid \vec x_i, z_i) = (1 - \eta_t(\vec x_i))^{|y^t_i - z_i|} \eta_t(\vec x_i)^{1 - |y^t_i - z_i|}
     \]
+    where $\eta_t$ is a logistic function with parameters $\vec w$ and $\gamma$. This model can be trained with expectation maximisation.
+
+    Yan et al.\cite{yan11} use this model to select an unlabelled example, and then to select a labeller to show the example to. First, they select an unlabelled example using uncertainty sampling\cite{lewis94}. This amounts to finding $\vectilde x$ such that
+    \[
+        \vectilde x = \min_{\vec x_i} \left(\frac{1}{2} - p(z_i \mid \vec x_i)\right)^2
+    \]
+    Under logistic regression, this defines a hyperplane of $\vec x$ that we may select to label:
+    \[
+        \vec \alpha \cdot \vec x + \beta = 0
+    \]
+    We then want to choose a point on this hyperplane and a labeller such that the labeller has minimum error --- i.e., we want to find $\vectilde x$ and $\tilde t$ such that
+    \[
+        \vectilde x, \tilde t = \min_{\vectilde x, \tilde t} \eta_t(\vectilde x)
+    \]
+    Choosing both examples and labellers in this way results in improved performance over just choosing the examples (and dealing with label noise by majority vote) and just choosing the labeller (and randomly sampling examples).
 
     \bibliographystyle{unsrt}
     \bibliography{papers}
