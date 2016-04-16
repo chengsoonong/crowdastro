@@ -47,6 +47,26 @@
     \]
     Choosing both examples and labellers in this way results in improved performance over just choosing the examples (and dealing with label noise by majority vote) and just choosing the labeller (and randomly sampling examples).
 
+    Mozafari et al.\cite{mozafari12} make use of two nonparametric bootstrap methods to decide which examples to present to the crowd in a binary classification task. For a classifier $\theta$ trained on a set of training data $L$, and a data point $u \in L$, we want to find the uncertainty in $\theta_L(u)$. If we had many different $L$ drawn from the same distribution, then by evaluating $\theta_L(u)$ for all of these different $L$, we could measure properties of the distribution of $\theta(u)$, such as the variance. However, we generally can't draw more $L$ from the original distribution. This is where a nonparametric bootstrap method comes in: Consider $L$ as a proxy for the original distribution $L$ was drawn from, and draw sets of independent and identically distributed samples from $L$ with replacement. These sets are called ``bootstrap replicates''. Bootstrap replicates should have the same cardinality as $L$. Training a classifier on each of the bootstrap replicates then allows the distribution of $\theta(u)$ to be approximated. For bootstrapping to work, it is sufficient that $\theta$ is smooth. By using bootstrapping, the two methods proposed by Mozafari et al. work on most classifiers (most importantly, non-probabilistic classifiers) and treat these classifiers as ``black boxes'' (i.e., the internal state of the classifier is not used). According to the paper, bootstrapping gives less biased estimates of uncertainty than entropy- or margin-based approaches.
+
+    The two methods are the Uncertainty method and the MinExpError method. Both methods generate scores for each data point $u$. Uncertainty is a modification of uncertainty sampling\cite{cohn94}, and is given as
+    \[
+        \mbox{Uncertainty}(u) = \mbox{var}(\theta_L(u))
+    \]
+    where the variance is found by bootstrapping. MinExpError scores data points higher the more that their labelling affects the model. Let $l$ be the label of $u$ found by $\theta_L$. Train $k$ classifiers on $k$ bootstrap replicates and use these to generate $k$ labels $l_1, \dots, l_k$ for $u$. Then, use these to estimate the probability $l$ is incorrect as
+    \[
+        \hat p(u) = \frac{\sum_{i = 1}^k 1(l_i = l)}{k}
+    \]
+    where $1(c)$ is $1$ when $c$ is true and is $0$ otherwise. The MinExpError score is then given by
+    \[
+        \mbox{MinExpError}(u) = \hat p(u) \hat e_{\text{right}} + (1 - \hat p(u)) \hat e_{\text{wrong}}
+    \]
+    where $e_\text{right}$ is the error of the classifier trained on $L$ and $(u, l)$ and $e_\text{wrong}$ is the error of the classifier trained on $L$ and $(u, 1 - l)$.
+
+    Mozafari et al. also propose a method of dealing with crowd label noise, by dynamically finding the level of redundancy needed for different subsets of unlabelled examples. They observe that there is a labelling redundancy threshold above which there is no benefit in getting more labels for the same data point, and that different classes can have dramatically different accuracies. The partitioning based allocation (PBA) approach presented in the paper estimates the probability of correctly classifying a class, and then solves an integer linear program to find the level of redundancy needed. I have not reproduced the algorithm here.
+
+    The final section of Mozafari et al. deals with stopping criteria for active learning on crowds, but I will ignore this here.
+
     \bibliographystyle{unsrt}
     \bibliography{papers}
 
