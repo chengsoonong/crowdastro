@@ -62,3 +62,13 @@ def radio(subject):
     -> MatPlotLib image plot.
     """
     return image(data.get_radio(subject))
+
+def subject(s):
+    """Shows the IR and contours of a subject.
+
+    s: RGZ subject.
+    """
+    ir(s)
+    contours(s, colour='green')
+    matplotlib.pyplot.xlim(0, config.get('fits_image_width'))
+    matplotlib.pyplot.ylim(0, config.get('fits_image_height'))
