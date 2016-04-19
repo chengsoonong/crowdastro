@@ -80,6 +80,22 @@ def get_ir(subject, size='2x2'):
         return fits_file[0].data
 
 @require_atlas
+def get_ir_fits(subject, size='2x2'):
+    """Returns the IR image of a subject as a FITS image.
+
+    subject: RGZ subject dict, from the ATLAS survey.
+    size: Optional. '2x2' or '5x5'.
+    -> FITS image.
+    """
+    if subject['metadata']['source'].startswith('C'):
+        field = 'cdfs'
+    else:
+        field = 'elais'
+
+    with open_fits(subject, field, 'ir', size=size) as fits_file:
+        return fits_file[0]
+
+@require_atlas
 def get_radio(subject, size='2x2'):
     """Returns the radio image of a subject.
 
@@ -94,6 +110,22 @@ def get_radio(subject, size='2x2'):
 
     with open_fits(subject, field, 'radio', size=size) as fits_file:
         return fits_file[0].data
+
+@require_atlas
+def get_radio_fits(subject, size='2x2'):
+    """Returns the radio image of a subject as a FITS image.
+
+    subject: RGZ subject dict, from the ATLAS survey.
+    size: Optional. '2x2' or '5x5'.
+    -> FITS image.
+    """
+    if subject['metadata']['source'].startswith('C'):
+        field = 'cdfs'
+    else:
+        field = 'elais'
+
+    with open_fits(subject, field, 'radio', size=size) as fits_file:
+        return fits_file[0]
 
 def get_contours(subject):
     """Fetches the radio contours of a subject.

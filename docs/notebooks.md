@@ -11,3 +11,6 @@
 8. click_consensus_distribution &mdash; Attempting to find out whether majority vote is a good way to decide what the collective classification made by the RGZ volunteers was (it is).
 9. pipeline &mdash; End-to-end classification pipeline.
 10. potential_host_detection &mdash; Detecting potential hosts with scikit-image.
+11. classification &mdash; Trying different classifiers.
+12. labels &mdash; Ironing out the label processing pipeline so we can freeze the labels.
+13. source_catalogue &mdash; Investigating using astronomical catalogues to find potential hosts and features.
