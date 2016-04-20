@@ -48,7 +48,7 @@
         \includegraphics[width=0.3\linewidth]{images/ARG000180p_ir_potential_hosts.jpg}
     \end{figure}
 
-    For each potential radio source location, we want to find some set of features that represents the location in some meaningful way. To do this, we look at a small region around each location in the radio image --- it seems that the IR image itself doesn't contain much information once you extract the locations, though it's possible we could explicitly re-add information like brightness or spread as features.
+    For each potential radio source location, we want to find some set of features that represents the location in some meaningful way. The way I'm going about this is to extract features from the \emph{radio} image --- it seems that the IR image itself doesn't contain much information besides the locations, though it's possible we could explicitly re-add information like brightness or spread as features later. For each location in the IR image, we sample a region of the radio image centred on the location.
 
     \begin{figure}[!ht]
         \centering
