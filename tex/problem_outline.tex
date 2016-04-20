@@ -59,7 +59,9 @@
 
     We then run each radio image sample through an automatically-determined function to extract features. This gives us some features that represent each location.
 
-    Then, we run the features for each location through an automatically-determined function that attempts to classify each location as ``containing the radio source'' or ``not containing the radio source''. For each location, the function will also find the probability that the classification of that location is correct. We can then choose the location with the highest probability of containing the radio source.
+    Then, we run the features for each location through an automatically-determined function that attempts to classify each location as ``containing the radio source'' or ``not containing the radio source''. To incorporate the Radio Galaxy Zoo data, we can compare the classification of each location to whether or not volunteers thought that the radio source was located at that location.
+
+    For each location, the function will also find the probability that the classification of that location is correct. To finish the cross-identification task, we say that the location with the highest probability of containing the radio source is the location that contains the radio source.
 
 
 % \bibliographystyle{plain}
