@@ -43,6 +43,10 @@ def get_all_classifications():
     """Yields all RGZ classification dicts."""
     return db.radio_classifications.find()
 
+def get_all_subjects():
+    """Yields all RGZ subject dicts."""
+    return db.radio_subjects.find()
+
 @require_atlas
 def open_fits(subject, field, wavelength, size='2x2'):
     """Opens a FITS image of a subject.
