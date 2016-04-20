@@ -10,7 +10,7 @@
     "click_image_width": 424,
     "click_image_height": 424,
 
-    "host": "localhost",
-    "port": 27017,
-    "db_name": "radio"
+    "mongo_host": "localhost",
+    "mongo_port": 27017,
+    "mongo_db_name": "radio"
 }

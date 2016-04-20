@@ -11,8 +11,8 @@ import requests
 
 from . import config
 
-client = pymongo.MongoClient(config.get('host'), config.get('port'))
-db = client[config.get('db_name')]
+client = pymongo.MongoClient(config.get('mongo_host'), config.get('mongo_port'))
+db = client[config.get('mongo_db_name')]
 
 def require_atlas(f):
     """Decorator that ensures a subject (the first argument) is from the ATLAS
@@ -38,6 +38,10 @@ def get_subject(zid):
     -> RGZ subject dict.
     """
     return db.radio_subjects.find_one({'zooniverse_id': zid})
+
+def get_all_classifications():
+    """Yields all RGZ classification dicts."""
+    return db.radio_classifications.find()
 
 @require_atlas
 def open_fits(subject, field, wavelength, size='2x2'):
