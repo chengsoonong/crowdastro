@@ -81,6 +81,9 @@ def get_subject_consensus(subject, conn, table, significance=0.02):
           'source_y FROM classifications WHERE subject_id=?')
 
     classifications = list(cur.execute(sql, [str(subject['_id'])]))
+    if not classifications:
+        return {}
+
     frs_counter = collections.Counter([c['full_radio_signature']
                                        for c in classifications])
     most_common_frs = frs_counter.most_common(1)[0][0]
@@ -276,10 +279,12 @@ def freeze_consensuses(db_path, classification_table, consensus_table,
     for idx, subject in enumerate(data.get_all_subjects()):
         if idx % 1000 == 0:
             c.executemany(sql, params)
+            conn.commit()
             params = []
 
         print('Freezing consensus. Progress: {} ({:.02%})'.format(
                 idx, idx / n_subjects), file=sys.stderr, end='\r')
+
         subject_id = str(subject['_id'])
         cons = get_subject_consensus(subject, conn, classification_table)
         for radio_signature, (x, y) in cons.items():
@@ -287,5 +292,4 @@ def freeze_consensuses(db_path, classification_table, consensus_table,
     print()
 
     c.executemany(sql, params)
-
     conn.commit()

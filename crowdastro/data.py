@@ -45,7 +45,7 @@ def get_all_classifications():
 
 def get_all_subjects():
     """Yields all RGZ subject dicts."""
-    return db.radio_subjects.find()
+    return db.radio_subjects.find().batch_size(100)
 
 @require_atlas
 def open_fits(subject, field, wavelength, size='2x2'):
