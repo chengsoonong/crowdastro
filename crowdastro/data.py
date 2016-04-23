@@ -43,8 +43,15 @@ def get_all_classifications():
     """Yields all RGZ classification dicts."""
     return db.radio_classifications.find()
 
-def get_all_subjects():
-    """Yields all RGZ subject dicts."""
+def get_all_subjects(atlas):
+    """Yields all RGZ subject dicts.
+
+    atlas: Whether to only yield ATLAS subjects. Default False.
+    """
+    if atlas:
+        return db.radio_subjects.find(
+                {'metadata.survey': 'atlas'}).batch_size(100)
+
     return db.radio_subjects.find().batch_size(100)
 
 @require_atlas

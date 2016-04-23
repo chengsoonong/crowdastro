@@ -12,7 +12,7 @@ def raw_classifications(args):
 def consensuses(args):
     """Processes consensuses from the Radio Galaxy Zoo database."""
     labels.freeze_consensuses(args.database, args.classification_table,
-                              args.consensus_table)
+                              args.consensus_table, atlas=args.atlas)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -34,6 +34,8 @@ def main():
             help='name of classification database table')
     parser_raw_classifications.add_argument('consensus_table',
             help='name of consensus database table')
+    parser_raw_classifications.add_argument('--atlas', action='store_true',
+            help='only process ATLAS subjects')
     parser_raw_classifications.set_defaults(func=consensuses)
 
     args = parser.parse_args()

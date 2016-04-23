@@ -248,7 +248,7 @@ def freeze_classifications(db_path, table):
     conn.commit()
 
 def freeze_consensuses(db_path, classification_table, consensus_table,
-                       significance=0.02):
+                       significance=0.02, atlas=False):
     """Freezes Radio Galaxy Zoo consensuses into a SQLite database.
 
     Warning: table arguments are not validated! This could be dangerous.
@@ -258,6 +258,7 @@ def freeze_consensuses(db_path, classification_table, consensus_table,
     consensus_table: Name of table to freeze consensuses into. If this exists,
         it will be cleared.
     significance: Optional. Significance level for splitting consensus coords.
+    atlas: Whether to only freeze ATLAS subjects. Default False.
     """
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
@@ -275,8 +276,8 @@ def freeze_consensuses(db_path, classification_table, consensus_table,
 
     params = []
 
-    n_subjects = data.get_all_subjects().count()
-    for idx, subject in enumerate(data.get_all_subjects()):
+    n_subjects = data.get_all_subjects(atlas=atlas).count()
+    for idx, subject in enumerate(data.get_all_subjects(atlas=atlas)):
         if idx % 1000 == 0:
             c.executemany(sql, params)
             conn.commit()
