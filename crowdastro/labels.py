@@ -97,17 +97,36 @@ def get_subject_consensus(subject, conn, table, significance=0.02):
     
     consensus = {}  # Maps radio signatures to (x, y) NumPy arrays.
     for radio_signature in radio_consensus_classifications:
-        xs = [a[0] * config.get('click_to_fits_x')
-              for a in radio_consensus_classifications[radio_signature]
-              if a[0] is not None]
-        ys = [config.get('fits_image_height') -
-                    a[1] * config.get('click_to_fits_y')
-              for a in radio_consensus_classifications[radio_signature]
-              if a[1] is not None]
+        n_no_source = 0  # Number of people who think there is no source.
+        xs = []
+        ys = []
+        for c in radio_consensus_classifications[radio_signature]:
+            if c[0] is None or c[1] is None:
+                # No source.
+                n_no_source += 1
+                continue
+
+            x = c[0] * config.get('click_to_fits_x')
+            y = c[1] * config.get('click_to_fits_y')
+            xs.append(x)
+            ys.append(y)
+
+        if (n_no_source >
+                len(radio_consensus_classifications[radio_signature]) // 2):
+            # Majority think that there is no source.
+            # Note that if half of people think there is no source and half
+            # think that there is a source, we'll assume there is a source.
+            consensus[radio_signature] = numpy.array([None, None])
+            continue
+
+        # Find the consensus source.
         points = numpy.vstack([xs, ys])
         gmm = pg_means(points.T, significance=significance, projections=24)
 
         if gmm is None:
+            # In case of no agreement, assume we have no source.
+            logging.warning('No consensus for %s but non-zero classifications.',
+                            subject['zooniverse_id'])
             consensus[radio_signature] = numpy.array([None, None])
         else:
             consensus[radio_signature] = gmm.means_[gmm.weights_.argmax()]
