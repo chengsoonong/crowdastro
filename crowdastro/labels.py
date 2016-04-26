@@ -2,6 +2,7 @@
 
 import collections
 import functools
+import logging
 import operator
 import sqlite3
 import struct
