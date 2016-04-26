@@ -1,13 +1,17 @@
 """Utilities for interacting with the Radio Galaxy Zoo data."""
 
+import io
 import os.path
 
 import astropy.io.fits
+import astropy.io.votable
+import astropy.wcs
 import matplotlib.colors
 import matplotlib.pyplot
 import numpy
 import pymongo
 import requests
+import requests_cache
 
 from . import config
 
@@ -150,3 +154,66 @@ def get_contours(subject):
     """
     # TODO(MatthewJA): Cache these.
     return requests.get(subject['location']['contours']).json()
+
+@require_atlas
+def get_potential_hosts(subject, cache_name):
+    """Finds the potential hosts for a subject.
+
+    subject: RGZ subject dict.
+    -> dict mapping (x, y) tuples to
+        - flux at 3.6μm for aperture #2
+        - flux at 4.5μm for aperture #2
+        - flux at 5.8μm for aperture #2
+        - flux at 8.0μm for aperture #2
+        - flux at 24μm for aperture #2
+        - uncertainty in RA
+        - uncertainty in DEC
+    """
+    requests_cache.install_cache(cache_name=cache_name, backend='sqlite',
+                                 expire_after=None)
+
+    if subject['metadata']['source'].startswith('C'):
+        # CDFS
+        catalog = 'chandra_cat_f05'
+    else:
+        # ELAIS-S1
+        catalog = 'elaiss1_cat_f05'
+    
+    query = {
+        'catalog': catalog,
+        'spatial': 'box',
+        'objstr': '{} {}'.format(*subject['coords']),
+        'size': '120',
+        'outfmt': '3',
+    }
+    url = 'http://irsa.ipac.caltech.edu/cgi-bin/Gator/nph-query'
+
+    r = requests.get(url, params=query)
+    votable = astropy.io.votable.parse_single_table(io.BytesIO(r.content),
+                                                    pedantic=False)
+    
+    ras = votable.array['ra']
+    decs = votable.array['dec']
+
+    # Convert to px.
+    fits = get_ir_fits(subject)
+    wcs = astropy.wcs.WCS(fits.header)
+    xs, ys = wcs.all_world2pix(ras, decs, 0)
+    
+    out = {}
+    # Get the astronomical data.
+    for x, y, row_idx in zip(xs, ys, range(votable.nrows)):
+        row = votable.array[row_idx]
+        out[x, y] = {
+            'flux_ap2_36': row['flux_ap2_36'],
+            'flux_ap2_45': row['flux_ap2_45'],
+            'flux_ap2_58': row['flux_ap2_58'],
+            'flux_ap2_80': row['flux_ap2_80'],
+            'flux_ap2_24': row['flux_ap2_24'],
+            'unc_ra': row['unc_ra'],
+            'unc_dec': row['unc_dec'],
+        }
+
+    requests_cache.uninstall_cache()
+
+    return out

@@ -13,7 +13,8 @@ with open(CONFIG_PATH) as config_file:
     config = json.load(config_file)
 
 # Normalise paths.
-config['data_path'] = os.path.normpath(config['data_path'])
+config['data_path'] = os.path.normpath(
+        os.path.join(SCRIPT_PATH, config['data_path']))
 config['atlas_catalogue_path'] = os.path.normpath(config['atlas_catalogue_path'])
 
 # Generate some helper configuration info.
