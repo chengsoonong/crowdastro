@@ -3,7 +3,6 @@
 import contextlib
 import sqlite3
 
-import h5py
 import keras.models
 import numpy
 import pandas
@@ -71,7 +70,6 @@ def generate(db_path, consensus_table, cache_name, output_path, atlas=False):
                 output_ids.append(str(subject['_id'])),
                 output_xs.append(host_x)
                 output_ys.append(host_y)
-                output_features.append(numpy.nan_to_num(features))
                 output_labels.append(astro['is_host'])
                 output_flux_ap2_24.append(astro['flux_ap2_24'])
                 output_flux_ap2_36.append(astro['flux_ap2_36'])
@@ -90,7 +88,9 @@ def generate(db_path, consensus_table, cache_name, output_path, atlas=False):
         output_flux_ap2_80 = pandas.DataFrame(output_flux_ap2_80, dtype=float)
 
         frame = pandas.concat(
-            [output_ids, output_xs, output_ys, output_labels], axis=1,
+            [output_ids, output_xs, output_ys, output_flux_ap2_24,
+             output_flux_ap2_36, output_flux_ap2_45, output_flux_ap2_58,
+             output_flux_ap2_80, output_labels], axis=1,
             keys=['subject_id', 'x', 'y', 'flux_ap2_24', 'flux_ap2_36',
                   'flux_ap2_45', 'flux_ap2_58', 'flux_ap2_80', 'is_host'])
 
