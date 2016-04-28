@@ -4,6 +4,7 @@ import argparse
 import sys
 
 from . import labels
+from . import training_data as td
 
 def raw_classifications(args):
     """Processes raw classifications from the Radio Galaxy Zoo database."""
@@ -16,8 +17,8 @@ def consensuses(args):
 
 def training_data(args):
     """Generates training data."""
-    training_data.generate(args.database, args.consensus_table, args.model,
-                           args.weights, args.cache, args.output)
+    td.generate(args.database, args.consensus_table, args.cache, args.output,
+                atlas=args.atlas)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -48,10 +49,11 @@ def main():
             help='path to SQLite database')
     parser_training_data.add_argument('consensus_table',
             help='name of consensus database table')
-    parser_training_data.add_argument('model', help='path to CNN model')
-    parser_training_data.add_argument('weights', help='path to CNN weights')
     parser_training_data.add_argument('cache', help='name of Gator cache')
     parser_training_data.add_argument('output', help='path to output HDF5 file')
+    parser_training_data.add_argument('--atlas', action='store_true',
+            help='only process ATLAS subjects')
+    parser_training_data.set_defaults(func=training_data)
 
     args = parser.parse_args()
     
