@@ -15,3 +15,4 @@
 12. labels &mdash; Ironing out the label processing pipeline so we can freeze the labels.
 13. source_catalogue &mdash; Investigating using astronomical catalogues to find potential hosts and features.
 14. cnn &mdash; Training a convolutional neural network to learn features of radio images.
+15. cnn_test &mdash; Running the CNN from notebook 14.
