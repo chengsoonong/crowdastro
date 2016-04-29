@@ -16,3 +16,6 @@
 13. source_catalogue &mdash; Investigating using astronomical catalogues to find potential hosts and features.
 14. cnn &mdash; Training a convolutional neural network to learn features of radio images.
 15. cnn_test &mdash; Running the CNN from notebook 14.
+16. pca &mdash; Principal component analysis on the CNN outputs.
+17. training_with_features &mdash; Running the whole pipeline through logistic regression.
+18. distance_from_centre &mdash; Testing whether the distance from the centre of the image is a useful feature.
