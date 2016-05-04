@@ -28,7 +28,7 @@ def pg_means(points, significance=0.01, projections=24):
     -> sklearn.mixture.GMM
     """
     k = 1
-    
+
     while True:
         # Fit a Gaussian mixture model with k components.
         gmm = sklearn.mixture.GMM(n_components=k)
@@ -37,24 +37,24 @@ def pg_means(points, significance=0.01, projections=24):
         except ValueError:
             return None
 
-        
+
         for _ in range(projections):
             # Project the data to one dimension.
             projection_vector = numpy.random.random(size=(2,))
-            projected_points = points @ projection_vector
+            projected_points = numpy.dot(points, projection_vector)
             # Project the model to one dimension. We need the CDF in one
             # dimension, so we'll sample some data points and project them.
             n_samples = 1000
-            samples = gmm.sample(n_samples) @ projection_vector
+            samples = numpy.dot(gmm.sample(n_samples), projection_vector)
             samples.sort()
-            
+
             def cdf(x):
                 for sample, y in zip(samples,
                                      numpy.arange(n_samples) / n_samples):
                     if sample >= x:
                         break
                 return y
-            
+
             _, p_value = scipy.stats.kstest(projected_points,
                                             numpy.vectorize(cdf))
             if p_value < significance:
@@ -63,7 +63,7 @@ def pg_means(points, significance=0.01, projections=24):
         else:
             # Null hypothesis was not broken.
             return gmm
-        
+
         k += 1
 
 def get_subject_consensus(subject, conn, table, significance=0.02):
@@ -95,7 +95,7 @@ def get_subject_consensus(subject, conn, table, significance=0.02):
             radio_consensus_classifications[
                     classification['part_radio_signature']
             ].append((classification['source_x'], classification['source_y']))
-    
+
     consensus = {}  # Maps radio signatures to (x, y) NumPy arrays.
     for radio_signature in radio_consensus_classifications:
         n_no_source = 0  # Number of people who think there is no source.
@@ -131,12 +131,12 @@ def get_subject_consensus(subject, conn, table, significance=0.02):
             consensus[radio_signature] = numpy.array([None, None])
         else:
             consensus[radio_signature] = gmm.means_[gmm.weights_.argmax()]
-    
+
     return consensus
 
 def make_radio_combination_signature(radio_annotation):
     """Generates a unique signature for a radio annotation.
-    
+
     radio_annotation: 'radio' dictionary from a classification.
     -> Something immutable
     """
@@ -165,7 +165,7 @@ def make_radio_combination_signature(radio_annotation):
         # I'll just raise an error.
         if not 0 <= xmax <= 1:
             raise ValueError('Radio xmax out of range: {}'.format(xmax))
-        
+
         xmaxes.append(xmax)
 
     xmaxes.sort()
