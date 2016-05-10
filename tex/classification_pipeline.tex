@@ -1,0 +1,79 @@
+%!TeX program=xelatex
+\documentclass[a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[margin=1in]{geometry}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={green!50!black}
+}
+\usepackage{subcaption}
+
+\usepackage[numbers]{natbib}
+
+\usepackage[no-math]{fontspec}
+\setmainfont[Ligatures=TeX]{Comic Sans MS}
+\usepackage{unicode-math}
+\setmathfont{Comic Sans MS}
+
+\renewcommand{\vec}{\boldsymbol}
+\newcommand{\vectilde}[1]{\tilde{\boldsymbol{#1}}}
+
+\begin{document}
+    \title{Radio~Galaxy~Zoo Classification Pipeline}
+    \author{Matthew Alger \\ \emph{The Australian National University}}
+    \maketitle
+
+    In this document, I will describe the Radio Galaxy Zoo (RGZ) classification pipeline that I have implemented.
+
+    \section{Definitions}
+
+        % A \emph{radio source} is a single area of the sky emitting radio waves. This may be a black hole, or a jet from a black hole.
+
+        % A \emph{host galaxy}
+
+        A \emph{Radio Galaxy Zoo subject} is a representation of one radio source. It consists of a location in the sky (specified in right ascension/declination coordinates), an image of the sky at this location in radio wavelengths, and an image of the sky at this location in infrared wavelengths. The subject may contain other nearby radio sources.
+
+        The Radio Galaxy Zoo \emph{crowd classifications} are crowdsourced solutions to the classification task. Each crowd classification contains the combination of radio sources in a subject that a volunteer associates with the same active galactic nucleus (AGN), as well as the location where the volunteer believes the host galaxy is located. There are multiple crowd classifications for each RGZ subject.
+
+    \section{The Classification Task}
+
+        The goal of the classification task is to locate the host galaxy of the subject.
+
+        \subsection{Pipeline Inputs and Outputs}
+
+            As input to the classification pipeline we take a RGZ subject and (for training) a set of associated crowd classifications. The output of the pipeline is the location of the host galaxy associated with the subject.
+
+        \subsection{Assumptions and Limitations}
+
+            I am ignoring the fact that a RGZ subject may contain multiple host galaxies, and instead assuming that there is only one host galaxy per subject.
+
+            I am exclusively working with the Australia Telescope Large-Area Survey (ATLAS)\citep{norris06} data set for now, though I expect my results to generalise to both Faint Images of the Radio Sky at Twenty-Centimeters (FIRST)\citep{becker95} and the upcoming Evolutionary Map of the Universe (EMU)\citep{norris11}. This is important as the majority of RGZ subjects are from FIRST, and the vast majority of subjects to be classified in future will be from EMU. The reason for this limitation is twofold: the ATLAS data set is small and well-known (containing $2443$ radio subjects), and thus provides a good data set for exploring machine learning techniques; and the ATLAS data set is similar to the data that will be collected in EMU\cite{banfield15}.
+
+            I am assuming that radio sources associated with a host galaxy will be ``small'', i.e., that they are less than $2$ arcseconds in diameter. $2$ arcseconds is the width of an image presented to RGZ volunteers. This assumption does not hold in general, as some radio sources can be spread over a very large area and these are known to be present in the RGZ data\citep{banfield16}.
+
+    \section{Collating Crowd Classifications}
+
+        Raw crowd classifications are not immediately useful. There are multiple classifications for the same subject, and these may not agree. The first step in the pipeline is thus to collate the crowd classifications into labels for training. There are two components to collation. The first is collating the radio components associated with the same AGN, and the second is collating the locations of the host galaxies associated with each set AGN. The collated radio components are called the \emph{consensus radio combination} and the collated host galaxy locations are called the \emph{consensus host galaxy locations}.
+
+        Collating the radio components is straightforward and I loosely follow the method of \citet{banfield15}. I count the occurrences of each unique radio combination, and then the most popular radio combination is considered the consensus radio combination.
+
+        Collating the locations of each radio combination is more complicated. \citet{banfield15} use kernel density estimation to find the most common location chosen by volunteers, however this is not robust and does not allow us to find which galaxy was intended to be chosen by each volunteer (which is useful if we want to estimate the uncertainty in the consensus). Instead, I cluster the volunteers' locations using PG-means\citep{hamerly07} and choose the cluster with the most members as the consensus host galaxy location.
+
+        After collation, the crowd classifications provide us with a map between RGZ subjects and host galaxies.
+
+    \section{Locating Host Galaxies as Binary Classification}
+
+        Each subject contains a number of potential host galaxies. We can cast the problem of finding the true host galaxy as binary classification by labelling each potential host galaxy with $0$ if it is not the true host and $1$ if it is.
+
+        To find potential hosts galaxies, we use the Spitzer Wide-Area Infrared Extragalactic Survey (SWIRE) Chandra Deep Field South (CDFS) Region Fall '05 Spitzer Catalog\citep{lonsdale03}, available through the Gator 
+
+    \bibliographystyle{abbrvnat}
+    \bibliography{papers}
+
+\end{document}
