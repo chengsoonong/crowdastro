@@ -15,7 +15,8 @@ with open(CONFIG_PATH) as config_file:
 # Normalise paths.
 config['data_path'] = os.path.normpath(
         os.path.join(SCRIPT_PATH, config['data_path']))
-config['atlas_catalogue_path'] = os.path.normpath(config['atlas_catalogue_path'])
+config['atlas_catalogue_path'] = os.path.normpath(
+        os.path.join(SCRIPT_PATH, config['atlas_catalogue_path']))
 
 # Generate some helper configuration info.
 config['click_to_fits_x'] = (config.get('fits_image_width') /

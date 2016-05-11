@@ -3,6 +3,8 @@
 import contextlib
 import sqlite3
 
+import astropy.wcs
+
 from . import data
 
 def generate(db_path, cache_name, consensus_table, host_table, radio_table,
@@ -33,4 +35,7 @@ def generate(db_path, cache_name, consensus_table, host_table, radio_table,
                     'subject_id = ?'.format(consensus_table),
                     [str(subject['_id'])])
 
-            
+            fits = data.get_ir_fits(subject)
+            wcs = astropy.wcs.WCS(fits.header)
+            print(consensuses)
+            break

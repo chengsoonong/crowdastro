@@ -8,6 +8,8 @@ import sqlite3
 import struct
 import sys
 
+import astropy.coordinates
+import astropy.wcs
 import numpy
 import scipy.stats
 import sklearn.mixture
@@ -16,7 +18,11 @@ from . import config
 from . import data
 
 DEFAULT_SCALE_WIDTH = 2.1144278606965172
-FP_PRECISION = 14
+DEFAULT_SCALE_HEIGHT = 2.1144278606965172
+
+atlas_catalogue_cache = {}
+with open(config.get('atlas_catalogue_path')) as f:
+    atlas_catalogue = [l.split() for l in f if not l.startswith('#')]
 
 def pg_means(points, significance=0.01, projections=24):
     """Cluster points with the PG-means algorithm.
@@ -36,7 +42,6 @@ def pg_means(points, significance=0.01, projections=24):
             gmm.fit(points)
         except ValueError:
             return None
-
 
         for _ in range(projections):
             # Project the data to one dimension.
@@ -79,9 +84,9 @@ def get_subject_consensus(subject, conn, table, significance=0.02):
     cur = conn.cursor()
 
     sql = ('SELECT full_radio_signature, part_radio_signature, source_x, '
-          'source_y FROM classifications WHERE subject_id=?')
+          'source_y FROM classifications WHERE zooniverse_id=?')
 
-    classifications = list(cur.execute(sql, [str(subject['_id'])]))
+    classifications = list(cur.execute(sql, [str(subject['zooniverse_id'])]))
     if not classifications:
         return {}
 
@@ -95,6 +100,9 @@ def get_subject_consensus(subject, conn, table, significance=0.02):
             radio_consensus_classifications[
                     classification['part_radio_signature']
             ].append((classification['source_x'], classification['source_y']))
+
+    logging.debug('Most common radio signature for %s: %s',
+                  subject['zooniverse_id'], most_common_frs)
 
     consensus = {}  # Maps radio signatures to (x, y) NumPy arrays.
     for radio_signature in radio_consensus_classifications:
@@ -134,56 +142,114 @@ def get_subject_consensus(subject, conn, table, significance=0.02):
 
     return consensus
 
-def make_radio_combination_signature(radio_annotation):
+class CatalogueError(Exception):
+    pass
+
+def make_radio_combination_signature(radio_annotation, wcs, zooniverse_id=None):
     """Generates a unique signature for a radio annotation.
 
     radio_annotation: 'radio' dictionary from a classification.
+    wcs: World coordinate system associated with this classification. Generate
+        this using astropy.wcs.WCS(fits_header).
+    zooniverse_id: Zooniverse ID (for logging). Optional.
     -> Something immutable
     """
-    # My choice of immutable object will be a bytes object. This will be an
-    # encoding of a tuple of the xmax values, sorted to ensure determinism, and
-    # rounded to nix floating point errors.
-    xmaxes = []
+    # My choice of immutable object will be a semicolon-separated list of radio
+    # IDs, sorted to ensure determinism. These come from the ATLAS catalogue.
+    atlas_ids = []
     for c in radio_annotation.values():
         # Note that the x scale is not the same as the IR scale, but the scale
         # factor is included in the annotation, so I have multiplied this out
         # here for consistency.
         scale_width = c.get('scale_width', '')
+        scale_height = c.get('scale_height', '')
         if scale_width:
             scale_width = float(scale_width)
         else:
             # Sometimes, there's no scale, so I've included a default scale.
             scale_width = DEFAULT_SCALE_WIDTH
 
-        # Keep everything within the maximum width, so that we can accurately
-        # guess precision.
-        scale_width /= config.get('click_image_width')
+        if scale_height:
+            scale_height = float(scale_height)
+        else:
+            scale_height = DEFAULT_SCALE_HEIGHT
 
-        xmax = round(float(c['xmax']) * scale_width, FP_PRECISION)
+        # These numbers are in terms of the PNG images, so I need to multiply by
+        # the click-to-fits ratio.
+        scale_width *= config.get('click_to_fits_x')
+        scale_height *= config.get('click_to_fits_y')
 
-        # Some of the numbers are out of range. I don't have a good fallback, so
-        # I'll just raise an error.
-        if not 0 <= xmax <= 1:
-            raise ValueError('Radio xmax out of range: {}'.format(xmax))
+        # Get the bounding box of the radio source in pixels.
+        # Format: [xs, ys]
+        bbox = [
+            [
+                float(c['xmin']) * scale_width,
+                float(c['xmax']) * scale_width,
+            ],
+            [
+                float(c['ymin']) * scale_height,
+                float(c['ymax']) * scale_height,
+            ],
+        ]
 
-        xmaxes.append(xmax)
+        # Convert the bounding box into RA/DEC.
+        bbox = wcs.all_pix2world(bbox[0], bbox[1], 0)
 
-    xmaxes.sort()
+        # What is this radio source called?
+        # I wanted to check if each catalogued entity was within the
+        # bounding box, but due to uncertainties(?) boxes often contain no
+        # entities. Instead, I'll find the middle of the box and then find
+        # the radio source closest to it. As a sanity check, I'll limit the
+        # search to within 1 arcmin = 1/60 degrees, i.e. the radius of the
+        # RGZ subject.
+        cache_key = tuple(tuple(b) for b in bbox)
+        if cache_key in atlas_catalogue_cache:
+            # I expect a lot of overlap in the subjects, so caching should save
+            # some time.
+            name = atlas_catalogue_cache[cache_key]
+        else:
+            nearest = None
+            nearest_distance = float('inf')
+            for entity in atlas_catalogue:
+                ra_deg = float(entity[4])
+                dec_deg = float(entity[5])
+                distance = numpy.hypot(ra_deg - bbox[0].mean(),
+                                       dec_deg - bbox[1].mean())
+                if distance < nearest_distance and distance <= 1 / 60:
+                    nearest = entity
+                    nearest_distance = distance
 
-    # Pack the floats to convert them into bytes. I will use little-endian,
-    # 32-bit floats.
-    xmaxes = [struct.pack('<f', xmax) for xmax in xmaxes]
+            if nearest is None:
+                if zooniverse_id:
+                    logging.debug('Skipping radio source not in catalogue for '
+                                  '%s', zooniverse_id)
+                else:
+                    logging.debug('Skipping radio source not in catalogue.')
+                continue
 
-    return functools.reduce(operator.add, xmaxes, b'')
+            name = nearest[0]
+            atlas_catalogue_cache[cache_key] = name
 
-def parse_classification(classification):
+        atlas_ids.append(name)
+
+    atlas_ids.sort()
+
+    if not atlas_ids:
+        raise CatalogueError('No catalogued radio sources.')
+
+    return ';'.join(atlas_ids)
+
+def parse_classification(classification, subject):
     """Converts a raw RGZ classification into a classification dict.
 
     classification: RGZ classification dict.
-    -> (subject MongoDB ID,
-        dict mapping radio signature to corresponding IR host pixel location)
+    subject: Associated RGZ subject dict.
+    -> dict mapping radio signature to corresponding IR host pixel location
     """
     result = {}
+
+    fits = data.get_radio_fits(subject)
+    wcs = astropy.wcs.WCS(fits.header)
 
     for annotation in classification['annotations']:
         if 'radio' not in annotation:
@@ -196,9 +262,12 @@ def parse_classification(classification):
 
         try:
             radio_signature = make_radio_combination_signature(
-                    annotation['radio'])
-        except ValueError:
+                    annotation['radio'], wcs,
+                    zooniverse_id=subject['zooniverse_id'])
+        except CatalogueError:
             # Ignore invalid annotations.
+            logging.debug('Ignoring invalid annotation for %s.',
+                          subject['zooniverse_id'])
             continue
 
         if annotation['ir'] == 'No Sources':
@@ -218,11 +287,9 @@ def parse_classification(classification):
 
         result[radio_signature] = ir_location
 
-    assert len(classification['subject_ids']) == 1
+    return result
 
-    return classification['subject_ids'][0], result
-
-def freeze_classifications(db_path, table):
+def freeze_classifications(db_path, table, atlas=False):
     """Freezes Radio Galaxy Zoo classifications into a SQLite database.
 
     Warning: table argument is not validated! This could be dangerous.
@@ -230,6 +297,8 @@ def freeze_classifications(db_path, table):
     db_path: Path to SQLite database. If this doesn't exist, it will be created.
     table: Name of table to freeze classifications into. If this exists, it will
         be cleared.
+    atlas: Whether to only freeze ATLAS subjects. Default False (though this
+        function currently only works for True).
     """
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
@@ -237,31 +306,36 @@ def freeze_classifications(db_path, table):
     c.execute('DROP TABLE IF EXISTS {}'.format(table))
     conn.commit()
 
-    c.execute('CREATE TABLE {} (subject_id TEXT, full_radio_signature BLOB, '
-              'part_radio_signature BLOB, source_x REAL, source_y REAL'
+    c.execute('CREATE TABLE {} (zooniverse_id TEXT, full_radio_signature TEXT, '
+              'part_radio_signature TEXT, source_x REAL, source_y REAL'
               ')'.format(table))
     conn.commit()
 
-    sql = ('INSERT INTO {} (subject_id, full_radio_signature, '
+    sql = ('INSERT INTO {} (zooniverse_id, full_radio_signature, '
            'part_radio_signature, source_x, source_y) VALUES '
            '(?, ?, ?, ?, ?)'.format(table))
 
     def iter_sql_params():
-        for c in data.get_all_classifications():
-            subject_id, radio_locations = parse_classification(c)
-            # We add the length to full_radio to help prevent collisions.
-            full_radio = b''
-            for k in sorted(radio_locations.keys()):
-                full_radio += b'|' + k  # Spacer helps prevent collisions.
+        n_subjects = data.get_all_subjects(atlas=atlas).count()
+        for idx, subject in enumerate(data.get_all_subjects(atlas=atlas)):
+            print('Freezing consensus. Progress: {} ({:.02%})'.format(
+                    idx, idx / n_subjects), file=sys.stderr, end='\r')
 
-            for radio, location in radio_locations.items():
-                if location is None:
-                    x = None
-                    y = None
-                else:
-                    x, y = location
+            zooniverse_id = subject['zooniverse_id']
+            for c in data.get_subject_classifications(subject):
+                radio_locations = parse_classification(c, subject)
 
-                yield (str(subject_id), full_radio, radio, x, y)
+                # Different spacer (i.e. not semicolon) stops collisions.
+                full_radio = '|'.join(sorted(radio_locations.keys()))
+
+                for radio, location in radio_locations.items():
+                    if location is None:
+                        x = None
+                        y = None
+                    else:
+                        x, y = location
+
+                    yield (zooniverse_id, full_radio, radio, x, y)
 
     c.executemany(sql, iter_sql_params())
 
@@ -286,19 +360,20 @@ def freeze_consensuses(db_path, classification_table, consensus_table,
     c.execute('DROP TABLE IF EXISTS {}'.format(consensus_table))
     conn.commit()
 
-    c.execute('CREATE TABLE {} (subject_id TEXT, radio_signature BLOB, '
+    c.execute('CREATE TABLE {} (zooniverse_id TEXT, radio_signature TEXT, '
               'source_x REAL, source_y REAL'
               ')'.format(consensus_table))
     conn.commit()
 
-    sql = ('INSERT INTO {} (subject_id, radio_signature, source_x, source_y) '
+    sql = ('INSERT INTO {} (zooniverse_id, radio_signature, source_x, source_y) '
            'VALUES (?, ?, ?, ?)'.format(consensus_table))
 
     params = []
 
     n_subjects = data.get_all_subjects(atlas=atlas).count()
     for idx, subject in enumerate(data.get_all_subjects(atlas=atlas)):
-        if idx % 1000 == 0:
+        if idx % 500 == 0:
+            logging.debug('Executing %d queries.', len(params))
             c.executemany(sql, params)
             conn.commit()
             params = []
@@ -306,10 +381,10 @@ def freeze_consensuses(db_path, classification_table, consensus_table,
         print('Freezing consensus. Progress: {} ({:.02%})'.format(
                 idx, idx / n_subjects), file=sys.stderr, end='\r')
 
-        subject_id = str(subject['_id'])
+        zooniverse_id = subject['zooniverse_id']
         cons = get_subject_consensus(subject, conn, classification_table)
         for radio_signature, (x, y) in cons.items():
-            params.append((subject_id, radio_signature, x, y))
+            params.append((zooniverse_id, radio_signature, x, y))
     print()
 
     c.executemany(sql, params)

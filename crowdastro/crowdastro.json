@@ -1,6 +1,6 @@
 {
     "data_path": "../data",
-    "atlas_catalogue_path": "../ATLASDR3_cmpcat_23July2015.dat",
+    "atlas_catalogue_path": "../data/ATLASDR3_cmpcat_23July2015.dat",
     "tile_size": "2x2",
 
     "fits_image_width": 201,

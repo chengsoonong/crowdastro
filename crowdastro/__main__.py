@@ -1,6 +1,7 @@
 """Command-line scripts for crowdastro."""
 
 import argparse
+import logging
 import sys
 
 from . import labels
@@ -8,7 +9,7 @@ from . import training_data as td
 
 def raw_classifications(args):
     """Processes raw classifications from the Radio Galaxy Zoo database."""
-    labels.freeze_classifications(args.output, args.table)
+    labels.freeze_classifications(args.output, args.table, atlas=args.atlas)
 
 def consensuses(args):
     """Processes consensuses from the Radio Galaxy Zoo database."""
@@ -22,6 +23,8 @@ def training_data(args):
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--verbose', '-v', action='store_true',
+            help='verbose output')
     subparsers = parser.add_subparsers()
 
     parser_raw_classifications = subparsers.add_parser('raw_classifications',
@@ -30,6 +33,8 @@ def main():
     parser_raw_classifications.add_argument('output',
             help='path to output SQLite database')
     parser_raw_classifications.add_argument('table', help='database table name')
+    parser_raw_classifications.add_argument('--atlas', action='store_true',
+            help='only process ATLAS subjects')
     parser_raw_classifications.set_defaults(func=raw_classifications)
 
     parser_consensuses = subparsers.add_parser('consensuses',
@@ -56,6 +61,12 @@ def main():
     parser_training_data.set_defaults(func=training_data)
 
     args = parser.parse_args()
+
+    logging.captureWarnings(True)  # Mainly for Astropy.
+    if args.verbose:
+        logging.root.setLevel(logging.DEBUG)
+    else:
+        logging.root.setLevel(logging.INFO)
     
     if not hasattr(args, 'func'):
         parser.print_help()

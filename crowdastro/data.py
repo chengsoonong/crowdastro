@@ -43,11 +43,26 @@ def get_subject(zid):
     """
     return db.radio_subjects.find_one({'zooniverse_id': zid})
 
+def get_subject_raw_id(subject_id):
+    """Gets a Radio Galaxy Zoo subject from the database using its subject ID.
+
+    subject_id: Raw ID of subject.
+    -> RGZ subject dict.
+    """
+    return db.radio_subjects.find_one({'_id': subject_id})
+
 def get_all_classifications():
     """Yields all RGZ classification dicts."""
     return db.radio_classifications.find()
 
-def get_all_subjects(atlas):
+def get_subject_classifications(subject):
+    """Yields all classifications associated with a subject.
+
+    subject: RGZ subject dict.
+    """
+    return db.radio_classifications.find({'subject_ids': subject['_id']})
+
+def get_all_subjects(atlas=False):
     """Yields all RGZ subject dicts.
 
     atlas: Whether to only yield ATLAS subjects. Default False.
