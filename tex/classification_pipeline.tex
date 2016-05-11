@@ -19,6 +19,8 @@
 \usepackage{fontspec}
 \setmainfont[Ligatures=TeX]{Latin Modern Roman}
 
+\newcommand{\todo}[1]{{\color{red}{[\textbf{TODO:} \emph{#1}]}}}
+
 \renewcommand{\vec}{\boldsymbol}
 \newcommand{\vectilde}[1]{\tilde{\boldsymbol{#1}}}
 
@@ -57,11 +59,11 @@
 
     \section{Collating Crowd Classifications}
 
-        Raw crowd classifications are not immediately useful. There are multiple classifications for the same subject, and these may not agree. The first step in the pipeline is thus to collate the crowd classifications into labels for training. There are two components to collation. The first is collating the radio components associated with the same AGN, and the second is collating the locations of the host galaxies associated with each set AGN. The collated radio components are called the \emph{consensus radio combination} and the collated host galaxy locations are called the \emph{consensus host galaxy locations}.
+        Raw crowd classifications are not immediately useful. There are multiple classifications for the same subject, and these may not agree. The first step in the pipeline is thus to collate the crowd classifications into labels for training. There are two components to collation. The first is collating the radio components associated with the same AGN, and the second is collating the locations of the host galaxies associated with each set AGN. The collated radio components are called the \emph{consensus radio combination} and the collated host galaxy locations are called the \emph{consensus host galaxy locations}. \todo{Detail the method of collating radio components. My new method differs from Kyle's.}
 
-        Collating the radio components is straightforward and I loosely follow the method of \citet{banfield15}. I count the occurrences of each unique radio combination, and then the most popular radio combination is considered the consensus radio combination.
+        Collating the radio components is straightforward and I loosely follow the method of \citet{banfield15}. I count the occurrences of each unique radio combination, and then the most popular radio combination is considered the consensus radio combination. \todo{Elaborate.}
 
-        Collating the locations of each radio combination is more complicated. \citet{banfield15} use kernel density estimation to find the most common location chosen by volunteers, however this is not robust and does not allow us to find which galaxy was intended to be chosen by each volunteer (which is useful if we want to estimate the uncertainty in the consensus). Instead, I cluster the volunteers' locations using PG-means\citep{hamerly07} and choose the cluster with the most members as the consensus host galaxy location.
+        Collating the locations of each radio combination is more complicated. \citet{banfield15} use kernel density estimation to find the most common location chosen by volunteers, however this is not robust and does not allow us to find which galaxy was intended to be chosen by each volunteer (which is useful if we want to estimate the uncertainty in the consensus). Instead, I cluster the volunteers' locations using PG-means\citep{hamerly07} and choose the cluster with the most members as the consensus host galaxy location. \todo{Elaborate on PG-means. Compare to existing method. Have a diagram.}
 
         After collation, the crowd classifications provide us with a map between RGZ subjects and host galaxies.
 
@@ -69,7 +71,9 @@
 
         Each subject contains a number of potential host galaxies. We can cast the problem of finding the true host galaxy as binary classification by labelling each potential host galaxy with $0$ if it is not the true host and $1$ if it is.
 
-        To find potential hosts galaxies, we use the Spitzer Wide-Area Infrared Extragalactic Survey (SWIRE) Chandra Deep Field South (CDFS) Region Fall '05 Spitzer Catalog(TODO: CITE), available through the Infrared Science Archive's GATOR interface\footnote{\url{http://irsa.ipac.caltech.edu/applications/Gator/}}. This catalogue contains 
+        To find potential host galaxies, we use the Spitzer Wide-Area Infrared Extragalactic Survey (SWIRE) Chandra Deep Field South (CDFS) Region Fall '05 Spitzer Catalog\todo{Cite.} and the SWIRE European Large Area ISO Survey --- South 1 (ELAIS-S1) Region Fall '05 Spitzer Catalog\todo{Cite.}, available through the Infrared Science Archive's GATOR interface\footnote{\url{http://irsa.ipac.caltech.edu/applications/Gator/}}. These catalogues contain all infrared galaxies detected in the CDFS and ELAIS-S1 regions, which are the regions covered by ATLAS. \todo{Show a diagram.}
+
+        Finding the labels for each potential host amounts to finding the nearest SWIRE potential host for each true host identified by the crowd classifications. For the location in each crowd classification, the nearest SWIRE potential host is found and its label is set to $1$. All other labels are set to $0$.
 
     \bibliographystyle{abbrvnat}
     \bibliography{papers}
