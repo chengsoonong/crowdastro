@@ -6,6 +6,7 @@ import sys
 
 from . import labels
 from . import training_data as td
+from . import catalogue as cat
 
 def raw_classifications(args):
     """Processes raw classifications from the Radio Galaxy Zoo database."""
@@ -20,6 +21,11 @@ def training_data(args):
     """Generates training data."""
     td.generate(args.database, args.consensus_table, args.cache, args.output,
                 atlas=args.atlas)
+
+def catalogue(args):
+    """Generates the Radio Galaxy Zoo catalogue."""
+    cat.generate(args.database, args.cache, args.consensus_table,
+                 args.host_table, args.radio_table, atlas=args.atlas)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -59,6 +65,21 @@ def main():
     parser_training_data.add_argument('--atlas', action='store_true',
             help='only process ATLAS subjects')
     parser_training_data.set_defaults(func=training_data)
+
+    parser_catalogue = subparsers.add_parser('catalogue',
+            help='Generate Radio Galaxy Zoo catalogue.')
+    parser_catalogue.add_argument('database',
+            help='path to SQLite database')
+    parser_catalogue.add_argument('consensus_table',
+            help='name of consensus database table')
+    parser_catalogue.add_argument('cache', help='name of Gator cache')
+    parser_catalogue.add_argument('host_table',
+            help='name of output host database table')
+    parser_catalogue.add_argument('radio_table',
+            help='name of output radio component database table')
+    parser_catalogue.add_argument('--atlas', action='store_true',
+            help='only process ATLAS subjects')
+    parser_catalogue.set_defaults(func=catalogue)
 
     args = parser.parse_args()
 

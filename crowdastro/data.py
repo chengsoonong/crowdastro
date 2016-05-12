@@ -171,10 +171,13 @@ def get_contours(subject):
     return requests.get(subject['location']['contours']).json()
 
 @require_atlas
-def get_potential_hosts(subject, cache_name):
+def get_potential_hosts(subject, cache_name, convert_to_px=True):
     """Finds the potential hosts for a subject.
 
     subject: RGZ subject dict.
+    cache_name: Name of Gator cache.
+    convert_to_px: Whether to convert coordinates to pixels. Default True; if
+        False then coordinates will be RA/DEC.
     -> dict mapping (x, y) tuples to
         - flux at 3.6μm for aperture #2
         - flux at 4.5μm for aperture #2
@@ -210,16 +213,22 @@ def get_potential_hosts(subject, cache_name):
     ras = votable.array['ra']
     decs = votable.array['dec']
 
-    # Convert to px.
-    fits = get_ir_fits(subject)
-    wcs = astropy.wcs.WCS(fits.header)
-    xs, ys = wcs.all_world2pix(ras, decs, 0)
+    if convert_to_px:
+        # Convert to px.
+        fits = get_ir_fits(subject)
+        wcs = astropy.wcs.WCS(fits.header)
+        xs, ys = wcs.all_world2pix(ras, decs, 0)
+    else:
+        xs, ys = ras, decs
     
-    out = {}
-    # Get the astronomical data.
+    # Get the astronomical features.
+    out = {}  # Maps (x, y) to astronomical features.
     for x, y, row_idx in zip(xs, ys, range(votable.nrows)):
         row = votable.array[row_idx]
         out[x, y] = {
+            'name': row['object'],
+            'clon': row['clon'],
+            'clat': row['clat'],
             'flux_ap2_36': row['flux_ap2_36'],
             'flux_ap2_45': row['flux_ap2_45'],
             'flux_ap2_58': row['flux_ap2_58'],
