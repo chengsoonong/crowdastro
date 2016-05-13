@@ -145,6 +145,15 @@ def get_subject_consensus(subject, conn, table, significance=0.02):
 class CatalogueError(Exception):
     pass
 
+def contains(bbox, point):
+    """Checks if point is within bbox.
+
+    bbox: [[x0, x1], [y0, y1]]
+    point: [x, y]
+    -> bool
+    """
+    
+
 def make_radio_combination_signature(radio_annotation, wcs, zooniverse_id=None):
     """Generates a unique signature for a radio annotation.
 
