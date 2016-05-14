@@ -16,8 +16,9 @@ import sklearn.mixture
 
 from . import config
 from . import data
+from .exceptions import CatalogueError
 
-DEFAULT_SCALE_WIDTH = 2.1144278606965172
+DEFAULT_SCALE_WIDTH = 2.1144278606965172  # These only apply for ATLAS!
 DEFAULT_SCALE_HEIGHT = 2.1144278606965172
 
 atlas_catalogue_cache = {}
@@ -78,7 +79,9 @@ def get_subject_consensus(subject, conn, table, significance=0.02):
     conn: SQLite3 database connection.
     table: Name of table in database containing frozen classifications.
     significance: Optional. Significance level for splitting consensus coords.
-    -> dict mapping radio signatures to ((x, y) NumPy arrays, or None).
+    -> (dict mapping radio signatures to ((x, y) NumPy arrays, or None),
+        percentage agreement on radio combination,
+        dict mapping radio signatures to percentage agreement on location)
     """
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
@@ -88,7 +91,7 @@ def get_subject_consensus(subject, conn, table, significance=0.02):
 
     classifications = list(cur.execute(sql, [str(subject['zooniverse_id'])]))
     if not classifications:
-        return {}
+        return {}, 0, {}
 
     frs_counter = collections.Counter([c['full_radio_signature']
                                        for c in classifications])
@@ -104,7 +107,10 @@ def get_subject_consensus(subject, conn, table, significance=0.02):
     logging.debug('Most common radio signature for %s: %s',
                   subject['zooniverse_id'], most_common_frs)
 
+    radio_agreement = frs_counter.most_common(1)[0][1] / len(classifications)
+
     consensus = {}  # Maps radio signatures to (x, y) NumPy arrays.
+    location_agreement = {}  # Maps radio signatures to agreement percentages.
     for radio_signature in radio_consensus_classifications:
         n_no_source = 0  # Number of people who think there is no source.
         xs = []
@@ -126,6 +132,9 @@ def get_subject_consensus(subject, conn, table, significance=0.02):
             # Note that if half of people think there is no source and half
             # think that there is a source, we'll assume there is a source.
             consensus[radio_signature] = numpy.array([None, None])
+            agreement = n_no_source / len(
+                    radio_consensus_classifications[radio_signature])
+            location_agreement[radio_signature] = agreement
             continue
 
         # Find the consensus source.
@@ -134,16 +143,21 @@ def get_subject_consensus(subject, conn, table, significance=0.02):
 
         if gmm is None:
             # In case of no agreement, assume we have no source.
+            # TODO(MatthewJA): Kyle treats this situation by using the average
+            # location. I'm not sure how valid this is but I should do something
+            # similar. At any rate I should probably do more than return None.
             logging.warning('No consensus for %s but non-zero classifications.',
                             subject['zooniverse_id'])
             consensus[radio_signature] = numpy.array([None, None])
+            location_agreement[radio_signature] = 0
         else:
             consensus[radio_signature] = gmm.means_[gmm.weights_.argmax()]
+            classes = gmm.predict(points.T)
+            agreements = sum(classes == gmm.weights_.argmax())
+            agreement = agreements / len(classes)
+            location_agreement[radio_signature] = agreement
 
-    return consensus
-
-class CatalogueError(Exception):
-    pass
+    return consensus, radio_agreement, location_agreement
 
 def contains(bbox, point):
     """Checks if point is within bbox.
@@ -360,12 +374,13 @@ def freeze_consensuses(db_path, classification_table, consensus_table,
     conn.commit()
 
     c.execute('CREATE TABLE {} (zooniverse_id TEXT, radio_signature TEXT, '
-              'source_x REAL, source_y REAL'
-              ')'.format(consensus_table))
+              'source_x REAL, source_y REAL, radio_agreement REAL, '
+              'location_agreement REAL)'.format(consensus_table))
     conn.commit()
 
-    sql = ('INSERT INTO {} (zooniverse_id, radio_signature, source_x, source_y) '
-           'VALUES (?, ?, ?, ?)'.format(consensus_table))
+    sql = ('INSERT INTO {} (zooniverse_id, radio_signature, source_x, '
+           'source_y, radio_agreement, location_agreement) '
+           'VALUES (?, ?, ?, ?, ?, ?)'.format(consensus_table))
 
     params = []
 
@@ -381,9 +396,12 @@ def freeze_consensuses(db_path, classification_table, consensus_table,
                 idx, idx / n_subjects), file=sys.stderr, end='\r')
 
         zooniverse_id = subject['zooniverse_id']
-        cons = get_subject_consensus(subject, conn, classification_table)
+        cons, radio_agreement, location_agreement = get_subject_consensus(
+                subject, conn, classification_table)
         for radio_signature, (x, y) in cons.items():
-            params.append((zooniverse_id, radio_signature, x, y))
+            params.append((zooniverse_id, radio_signature, x, y,
+                           radio_agreement,
+                           location_agreement[radio_signature]))
     print()
 
     c.executemany(sql, params)

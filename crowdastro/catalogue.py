@@ -9,9 +9,9 @@ import astropy.units
 import astropy.wcs
 import numpy
 
+from . import config
 from . import data
-
-HOURS_PER_DEGREE = 1 / 15
+from .exceptions import CatalogueError
 
 def distance_from(point):
     """Returns a function that returns the distance from a point.
@@ -35,6 +35,10 @@ def make_host(subject, wcs, cache_name, consensus):
     # with the SWIRE result so that the coordinates we get are accurate and
     # reproducible. Convert pixel coordinates into RA/DEC.
     x, y = consensus['source_x'], consensus['source_y']
+    # TODO(MatthewJA): Verify that 0 is the right convention here.
+    # Note that the convention was 1 when we were using radio coordinates, but
+    # clicks are *inverted along the y axis* with respect to the images. So I
+    # believe this should be the opposite, and have a 0 here.
     x, y = wcs.all_pix2world([x], [y], 0)
 
     # Get the closest SWIRE object.
@@ -42,6 +46,15 @@ def make_host(subject, wcs, cache_name, consensus):
                                        convert_to_px=False)
     dist_func = distance_from((x, y))
     nearest = min(p_hosts, key=dist_func)
+
+    # Cutoff is in degrees.
+    if not dist_func(nearest) < config.get('swire_distance_cutoff'):
+        raise CatalogueError(
+            'Closest SWIRE object is not nearby for {}. '
+            'Distance: {:.02} degrees'.format(
+                    subject['zooniverse_id'],
+                    float(dist_func(nearest))))
+
     swire_name = p_hosts[nearest]['name'].decode('ascii')
 
     # This provides our coordinates. Separate out HHMMSS/DDMMSS. We can do this
@@ -65,7 +78,7 @@ def make_host(subject, wcs, cache_name, consensus):
                 dec_m=int(dec[2]),
                 dec_s=int(round(dec[3])))
 
-    return rgz_name, swire_name, clon, clat
+    return rgz_name, swire_name, clon, clat, consensus['location_agreement']
 
 def generate(db_path, cache_name, consensus_table, host_table, radio_table,
              atlas=False):
@@ -93,16 +106,18 @@ def generate(db_path, cache_name, consensus_table, host_table, radio_table,
 
         cur.execute('CREATE TABLE {} '
                     '(zooniverse_id TEXT, source TEXT, rgz_name TEXT, '
-                    'swire_name TEXT, ra TEXT, dec TEXT)'.format(host_table))
+                    'swire_name TEXT, ra TEXT, dec TEXT, agreement REAL)'
+                    ''.format(host_table))
         cur.execute('CREATE TABLE {} '
-                    '(rgz_name TEXT, radio_component TEXT)'.format(radio_table))
+                    '(rgz_name TEXT, radio_component TEXT, agreement REAL)'
+                    ''.format(radio_table))
         conn.commit()
 
         host_sql = ('INSERT INTO {} (zooniverse_id, source, rgz_name, '
-                    'swire_name, ra, dec) VALUES '
-                    '(?, ?, ?, ?, ?, ?)'.format(host_table))
-        radio_sql = ('INSERT INTO {} (rgz_name, radio_component) VALUES '
-                     '(?, ?)'.format(radio_table))
+                    'swire_name, ra, dec, agreement) VALUES '
+                    '(?, ?, ?, ?, ?, ?, ?)'.format(host_table))
+        radio_sql = ('INSERT INTO {} (rgz_name, radio_component, agreement) '
+                     'VALUES (?, ?, ?)'.format(radio_table))
 
         host_params = []
         radio_params = []
@@ -123,19 +138,26 @@ def generate(db_path, cache_name, consensus_table, host_table, radio_table,
                 # Each consensus represents one AGN.
                 if consensus['source_x'] and consensus['source_y']:
                     # Not null.
-                    rgz_name, swire_name, ra, dec = make_host(subject, wcs,
-                                                              cache_name,
-                                                              consensus)
+                    try:
+                        rgz_name, swire_name, ra, dec, agreement = make_host(
+                                subject, wcs, cache_name, consensus)
+                    except CatalogueError:
+                        logging.debug('No SWIRE object for %s (%.2f, %.2f).',
+                                subject['zooniverse_id'], consensus['source_x'],
+                                consensus['source_y'])
+                        continue
                     host_params.append((subject['zooniverse_id'],
                                         subject.get('metadata', {}).get(
                                                 'source'),
-                                        rgz_name, swire_name, ra, dec))
+                                        rgz_name, swire_name, ra, dec,
+                                        agreement))
 
                     # Get radio components.
                     radio_components = set(  # Set to nix duplicates.
                             consensus['radio_signature'].split(';'))
                     for radio_component in radio_components:
-                        radio_params.append((rgz_name, radio_component))
+                        radio_params.append((rgz_name, radio_component,
+                                             consensus['radio_agreement']))
                 else:
                     logging.debug('Skipping null consensus for subject %s.',
                                   subject['zooniverse_id'])
