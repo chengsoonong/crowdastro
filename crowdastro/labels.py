@@ -152,7 +152,8 @@ def contains(bbox, point):
     point: [x, y]
     -> bool
     """
-    
+    return (bbox[0][0] <= point[0] <= bbox[0][1] and
+            bbox[1][0] <= point[1] <= bbox[1][1])
 
 def make_radio_combination_signature(radio_annotation, wcs, zooniverse_id=None):
     """Generates a unique signature for a radio annotation.
@@ -202,33 +203,22 @@ def make_radio_combination_signature(radio_annotation, wcs, zooniverse_id=None):
         ]
 
         # Convert the bounding box into RA/DEC.
-        bbox = wcs.all_pix2world(bbox[0], bbox[1], 0)
+        bbox = wcs.all_pix2world(bbox[0], bbox[1], 1)
 
-        # What is this radio source called?
-        # I wanted to check if each catalogued entity was within the
-        # bounding box, but due to uncertainties(?) boxes often contain no
-        # entities. Instead, I'll find the middle of the box and then find
-        # the radio source closest to it. As a sanity check, I'll limit the
-        # search to within 1 arcmin = 1/60 degrees, i.e. the radius of the
-        # RGZ subject.
+        # What is this radio source called? Check if we have an object in the
+        # bounding box.
         cache_key = tuple(tuple(b) for b in bbox)
         if cache_key in atlas_catalogue_cache:
             # I expect a lot of overlap in the subjects, so caching should save
             # some time.
             name = atlas_catalogue_cache[cache_key]
         else:
-            nearest = None
-            nearest_distance = float('inf')
             for entity in atlas_catalogue:
                 ra_deg = float(entity[4])
                 dec_deg = float(entity[5])
-                distance = numpy.hypot(ra_deg - bbox[0].mean(),
-                                       dec_deg - bbox[1].mean())
-                if distance < nearest_distance and distance <= 1 / 60:
-                    nearest = entity
-                    nearest_distance = distance
-
-            if nearest is None:
+                if contains(bbox, (ra_deg, dec_deg)):
+                    break
+            else:
                 if zooniverse_id:
                     logging.debug('Skipping radio source not in catalogue for '
                                   '%s', zooniverse_id)
@@ -236,7 +226,7 @@ def make_radio_combination_signature(radio_annotation, wcs, zooniverse_id=None):
                     logging.debug('Skipping radio source not in catalogue.')
                 continue
 
-            name = nearest[0]
+            name = entity[0]
             atlas_catalogue_cache[cache_key] = name
 
         atlas_ids.append(name)
