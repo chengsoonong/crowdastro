@@ -96,72 +96,72 @@ def generate(db_path, cache_name, consensus_table, host_table, radio_table,
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
 
-        # cur.execute('DROP TABLE IF EXISTS {}'.format(host_table))
-        # cur.execute('DROP TABLE IF EXISTS {}'.format(radio_table))
-        # conn.commit()
+        cur.execute('DROP TABLE IF EXISTS {}'.format(host_table))
+        cur.execute('DROP TABLE IF EXISTS {}'.format(radio_table))
+        conn.commit()
 
-        # cur.execute('CREATE TABLE {} '
-        #             '(zooniverse_id TEXT, source TEXT, rgz_name TEXT, '
-        #             'swire_name TEXT, ra TEXT, dec TEXT, agreement REAL)'
-        #             ''.format(host_table))
-        # cur.execute('CREATE TABLE {} '
-        #             '(rgz_name TEXT, radio_component TEXT, agreement REAL)'
-        #             ''.format(radio_table))
-        # conn.commit()
+        cur.execute('CREATE TABLE {} '
+                    '(zooniverse_id TEXT, source TEXT, rgz_name TEXT, '
+                    'swire_name TEXT, ra TEXT, dec TEXT, agreement REAL)'
+                    ''.format(host_table))
+        cur.execute('CREATE TABLE {} '
+                    '(rgz_name TEXT, radio_component TEXT, agreement REAL)'
+                    ''.format(radio_table))
+        conn.commit()
 
-        # host_sql = ('INSERT INTO {} (zooniverse_id, source, rgz_name, '
-        #             'swire_name, ra, dec, agreement) VALUES '
-        #             '(?, ?, ?, ?, ?, ?, ?)'.format(host_table))
-        # radio_sql = ('INSERT INTO {} (rgz_name, radio_component, agreement) '
-        #              'VALUES (?, ?, ?)'.format(radio_table))
+        host_sql = ('INSERT INTO {} (zooniverse_id, source, rgz_name, '
+                    'swire_name, ra, dec, agreement) VALUES '
+                    '(?, ?, ?, ?, ?, ?, ?)'.format(host_table))
+        radio_sql = ('INSERT INTO {} (rgz_name, radio_component, agreement) '
+                     'VALUES (?, ?, ?)'.format(radio_table))
 
-        # host_params = []
-        # radio_params = []
+        host_params = []
+        radio_params = []
 
-        # n_subjects = data.get_all_subjects(atlas=atlas).count()
-        # for index, subject in enumerate(data.get_all_subjects(atlas=atlas)):
-        #     print('Generating catalogue: {}/{} ({:.02%})'.format(
-        #             index + 1, n_subjects, (index + 1) / n_subjects), end='\r')
-        #     consensuses = cur.execute(
-        #             'SELECT * FROM {} WHERE '
-        #             'zooniverse_id = ?'.format(consensus_table),
-        #             [subject['zooniverse_id']])
+        n_subjects = data.get_all_subjects(atlas=atlas).count()
+        for index, subject in enumerate(data.get_all_subjects(atlas=atlas)):
+            print('Generating catalogue: {}/{} ({:.02%})'.format(
+                    index + 1, n_subjects, (index + 1) / n_subjects), end='\r')
+            consensuses = cur.execute(
+                    'SELECT * FROM {} WHERE '
+                    'zooniverse_id = ?'.format(consensus_table),
+                    [subject['zooniverse_id']])
 
-        #     fits = data.get_ir_fits(subject)
-        #     wcs = astropy.wcs.WCS(fits.header)
+            fits = data.get_ir_fits(subject)
+            wcs = astropy.wcs.WCS(fits.header)
 
-        #     for consensus in consensuses:
-        #         # Each consensus represents one AGN.
-        #         if consensus['source_x'] and consensus['source_y']:
-        #             # Not null.
-        #             try:
-        #                 rgz_name, swire_name, ra, dec, agreement = make_host(
-        #                         subject, wcs, cache_name, consensus)
-        #             except CatalogueError:
-        #                 logging.debug('No SWIRE object for %s (%.2f, %.2f).',
-        #                         subject['zooniverse_id'], consensus['source_x'],
-        #                         consensus['source_y'])
-        #                 continue
-        #             host_params.append((subject['zooniverse_id'],
-        #                                 subject.get('metadata', {}).get(
-        #                                         'source'),
-        #                                 rgz_name, swire_name, ra, dec,
-        #                                 agreement))
+            for consensus in consensuses:
+                # Each consensus represents one AGN.
+                if consensus['source_x'] and consensus['source_y']:
+                    # Not null.
+                    try:
+                        rgz_name, swire_name, ra, dec, agreement = make_host(
+                                subject, wcs, cache_name, consensus)
+                    except CatalogueError:
+                        logging.debug('No SWIRE object for %s (%.2f, %.2f).',
+                                subject['zooniverse_id'], consensus['source_x'],
+                                consensus['source_y'])
+                        continue
+                    host_params.append((subject['zooniverse_id'],
+                                        subject.get('metadata', {}).get(
+                                                'source'),
+                                        rgz_name, swire_name, ra, dec,
+                                        agreement))
 
-        #             # Get radio components.
-        #             radio_components = set(  # Set to nix duplicates.
-        #                     consensus['radio_signature'].split(';'))
-        #             for radio_component in radio_components:
-        #                 radio_params.append((rgz_name, radio_component,
-        #                                      consensus['radio_agreement']))
-        #         else:
-        #             logging.debug('Skipping null consensus for subject %s.',
-        #                           subject['zooniverse_id'])
+                    # Get radio components.
+                    radio_components = set(  # Set to nix duplicates.
+                            consensus['radio_signature'].split(';'))
+                    for radio_component in radio_components:
+                        radio_params.append((rgz_name, radio_component,
+                                             consensus['radio_agreement']))
+                else:
+                    logging.debug('Skipping null consensus for subject %s.',
+                                  subject['zooniverse_id'])
 
-        # logging.debug('Writing to database.')
-        # cur.executemany(host_sql, host_params)
-        # cur.executemany(radio_sql, radio_params)
-        # conn.commit()
+        logging.debug('Writing to database.')
+        cur.executemany(host_sql, host_params)
+        cur.executemany(radio_sql, radio_params)
+        conn.commit()
 
         # Go back and clear up duplicates. The process is as follows:
         # 1. Check the components table for duplicates.
@@ -178,26 +178,41 @@ def generate(db_path, cache_name, consensus_table, host_table, radio_table,
                                         group by radio_component
                                         having count(*) > 1""".format(
                                                 radio_table))
+        mur = conn.cursor()
         for radio_component in all_duplicates:
             name = radio_component['radio_component']
-            best = next(cur.execute("""select rgz_name, agreement
+            logging.debug('Removing duplicates for %s.', name)
+            best = next(mur.execute("""select rgz_name, agreement
                                        from {}
                                        where radio_component = ?
                                        order by agreement desc
                                        limit 1""".format(radio_table), [name]))
-            cur.execute("""delete from {}
+            mur.execute("""delete from {}
                            where radio_component = ?""".format(radio_table),
                            [name])
-            cur.execute("""insert into {}
+            mur.execute("""insert into {}
                            (rgz_name, radio_component, agreement)
                            values (?, ?, ?)""".format(radio_table),
                            [best['rgz_name'], name, best['agreement']])
-
-        cur.execute("""delete {0}
-                       from {0}
-                       left join {1}
-                       on {0}.rgz_name = {1}.rgz_name
-                       where {1}.rgz_name is null""".format(
-                            host_table, radio_table))
         conn.commit()
 
+        logging.debug('Removing hosts with no components.')
+        cur.execute("""delete from {0}
+                       where
+                            rgz_name in (
+                                select {0}.rgz_name
+                                from {0}
+                                left join {1}
+                                   on {0}.rgz_name = {1}.rgz_name
+                                where {1}.rgz_name is null
+                            )""".format(
+                host_table, radio_table))
+        conn.commit()
+
+        logging.debug('Removing duplicate hosts.')
+        cur.execute("""delete from {0}
+                       where rowid not in
+                            (select min(rowid)
+                             from {0}
+                             group by rgz_name)""".format(host_table))
+        conn.commit()
