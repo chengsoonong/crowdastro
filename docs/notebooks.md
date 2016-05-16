@@ -20,3 +20,4 @@
 17. training_with_features &mdash; Running the whole pipeline through logistic regression.
 18. distance_from_centre &mdash; Testing whether the distance from the centre of the image is a useful feature.
 19. misc_experiments &mdash; Testing scaling and normalisation of input features.
+20. pg_means_for_location_consensus &mdash; Testing PG-means consensus against KDE consensus.
