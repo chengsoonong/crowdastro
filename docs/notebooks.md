@@ -19,3 +19,4 @@
 16. pca &mdash; Principal component analysis on the CNN outputs.
 17. training_with_features &mdash; Running the whole pipeline through logistic regression.
 18. distance_from_centre &mdash; Testing whether the distance from the centre of the image is a useful feature.
+19. misc_experiments &mdash; Testing scaling and normalisation of input features.
