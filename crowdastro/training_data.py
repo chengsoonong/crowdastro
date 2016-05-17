@@ -44,8 +44,8 @@ def generate(db_path, consensus_table, cache_name, output_path, atlas=False):
                     index + 1, n_subjects, (index + 1) / n_subjects), end='\r')
             consensuses = cur.execute(
                     'SELECT * FROM {} WHERE '
-                    'subject_id = ?'.format(consensus_table),
-                    [str(subject['_id'])])
+                    'zooniverse_id = ?'.format(consensus_table),
+                    [subject['zooniverse_id']])
 
             true_hosts = set()  # Set of (x, y) tuples of true hosts.
             potential_hosts = data.get_potential_hosts(subject, cache_name)
@@ -67,7 +67,7 @@ def generate(db_path, consensus_table, cache_name, output_path, atlas=False):
             # features.
 
             for (host_x, host_y), astro in potential_hosts.items():
-                output_ids.append(str(subject['_id'])),
+                output_ids.append(subject['zooniverse_id']),
                 output_xs.append(host_x)
                 output_ys.append(host_y)
                 output_labels.append(astro['is_host'])
@@ -91,7 +91,7 @@ def generate(db_path, consensus_table, cache_name, output_path, atlas=False):
             [output_ids, output_xs, output_ys, output_flux_ap2_24,
              output_flux_ap2_36, output_flux_ap2_45, output_flux_ap2_58,
              output_flux_ap2_80, output_labels], axis=1,
-            keys=['subject_id', 'x', 'y', 'flux_ap2_24', 'flux_ap2_36',
+            keys=['zooniverse_id', 'x', 'y', 'flux_ap2_24', 'flux_ap2_36',
                   'flux_ap2_45', 'flux_ap2_58', 'flux_ap2_80', 'is_host'])
 
         with pandas.HDFStore(output_path) as store:
