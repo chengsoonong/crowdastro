@@ -4,26 +4,26 @@ import argparse
 import logging
 import sys
 
-from . import labels
-from . import training_data as td
-from . import catalogue as cat
-
 def raw_classifications(args):
     """Processes raw classifications from the Radio Galaxy Zoo database."""
+    from . import labels
     labels.freeze_classifications(args.output, args.table, atlas=args.atlas)
 
 def consensuses(args):
     """Processes consensuses from the Radio Galaxy Zoo database."""
+    from . import labels
     labels.freeze_consensuses(args.database, args.classification_table,
                               args.consensus_table, atlas=args.atlas)
 
 def training_data(args):
     """Generates training data."""
+    from . import training_data as td
     td.generate(args.database, args.consensus_table, args.cache, args.output,
                 atlas=args.atlas)
 
 def catalogue(args):
     """Generates the Radio Galaxy Zoo catalogue."""
+    from . import catalogue as cat
     cat.generate(args.database, args.cache, args.consensus_table,
                  args.host_table, args.radio_table, atlas=args.atlas)
 
@@ -88,7 +88,7 @@ def main():
         logging.root.setLevel(logging.DEBUG)
     else:
         logging.root.setLevel(logging.INFO)
-    
+
     if not hasattr(args, 'func'):
         parser.print_help()
     else:
