@@ -14,5 +14,5 @@
     "mongo_port": 27017,
     "mongo_db_name": "radio",
 
-    "swire_distance_cutoff": 0.0042
+    "swire_distance_cutoff": 0.00083
 }

@@ -65,11 +65,11 @@ def make_host(subject, wcs, cache_name, consensus):
     dec = coords.dec.signed_dms
 
     # Construct the name.
-    rgz_name = ('RGZ_J{ra_h:02}{ra_m:02}{ra_s:02}{sign}'
+    rgz_name = ('RGZ_J{ra_h:02}{ra_m:02}{ra_s:04.01f}{sign}'
                 '{dec_d:02}{dec_m:02}{dec_s:02}').format(
                 ra_h=int(ra[0]),
                 ra_m=int(ra[1]),
-                ra_s=int(round(ra[2])),
+                ra_s=ra[2],
                 sign='-' if dec[0] < 0 else '+',
                 dec_d=int(dec[1]),
                 dec_m=int(dec[2]),
