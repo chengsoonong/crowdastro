@@ -40,12 +40,13 @@ def get_patch(source, x, y, images_path):
     return radio_image[int(x - RADIUS + PADDING) : int(x + RADIUS + PADDING),
                        int(y - RADIUS + PADDING) : int(y + RADIUS + PADDING)]
 
-def train(model_path, data_path, images_path):
+def train(data_path, images_path, model_path, weights_path):
   """Trains a CNN.
 
-  model_path: Path to JSON model.
   data_path: Path to input data HDF5 file.
   images_path: Path to images directory containing cdfs/elais folders.
+  model_path: Path to JSON model.
+  weights_path: Path to output weights HDF5 file.
   """
   with open(model_path) as f:
     model = keras.models.model_from_json(f.read())
@@ -72,4 +73,16 @@ def train(model_path, data_path, images_path):
   im_size = training_inputs.shape[1:]
   training_inputs = training_inputs.reshape(training_inputs.shape[0], 1,
                                             im_size[0], im_size[1])
+
   model.fit(training_inputs, training_outputs)
+  model.save_weights(weights_path)
+
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser()
+  parser.add_argument('data', help='path to training data HDF5')
+  parser.add_argument('images', help='path to images directory')
+  parser.add_argument('model', help='path to model JSON')
+  parser.add_argument('weights', help='path to output weights HDF5')
+  args = parser.parse_args()
+
+  train(args.data, args.images, args.model, args.weights)
