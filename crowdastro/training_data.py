@@ -29,6 +29,7 @@ def generate(db_path, consensus_table, cache_name, output_path, atlas=False):
 
         # We'll store our output here, then dump to HDF5.
         output_ids = []
+        output_sources = []
         output_xs = []
         output_ys = []
         output_flux_ap2_24 = []
@@ -68,6 +69,7 @@ def generate(db_path, consensus_table, cache_name, output_path, atlas=False):
 
             for (host_x, host_y), astro in potential_hosts.items():
                 output_ids.append(subject['zooniverse_id']),
+                output_sources.append(subject['metadata']['source']),
                 output_xs.append(host_x)
                 output_ys.append(host_y)
                 output_labels.append(astro['is_host'])
@@ -88,11 +90,12 @@ def generate(db_path, consensus_table, cache_name, output_path, atlas=False):
         output_flux_ap2_80 = pandas.DataFrame(output_flux_ap2_80, dtype=float)
 
         frame = pandas.concat(
-            [output_ids, output_xs, output_ys, output_flux_ap2_24,
-             output_flux_ap2_36, output_flux_ap2_45, output_flux_ap2_58,
-             output_flux_ap2_80, output_labels], axis=1,
-            keys=['zooniverse_id', 'x', 'y', 'flux_ap2_24', 'flux_ap2_36',
-                  'flux_ap2_45', 'flux_ap2_58', 'flux_ap2_80', 'is_host'])
+            [output_ids, output_source, output_xs, output_ys,
+             output_flux_ap2_24, output_flux_ap2_36, output_flux_ap2_45,
+             output_flux_ap2_58, output_flux_ap2_80, output_labels], axis=1,
+            keys=['zooniverse_id', 'source', 'x', 'y', 'flux_ap2_24',
+                  'flux_ap2_36', 'flux_ap2_45', 'flux_ap2_58', 'flux_ap2_80',
+                  'is_host'])
 
         with pandas.HDFStore(output_path) as store:
             store['data'] = frame
