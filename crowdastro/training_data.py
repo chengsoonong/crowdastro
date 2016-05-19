@@ -3,9 +3,9 @@
 import contextlib
 import sqlite3
 
+import h5py
 import keras.models
 import numpy
-import pandas
 
 from . import config
 from . import data
@@ -13,6 +13,12 @@ from . import labels
 
 RADIO_PADDING = (500 - 200) // 2
 PATCH_RADIUS = 40  # 80 x 80 patches.
+
+def remove_nans(n):
+    """Replaces NaN with 0."""
+    if numpy.ma.is_masked(n):
+        return 0
+    return float(n)
 
 def generate(db_path, consensus_table, cache_name, output_path, atlas=False):
     """Generates potential hosts and their astronomical features.
@@ -28,16 +34,7 @@ def generate(db_path, consensus_table, cache_name, output_path, atlas=False):
         cur = conn.cursor()
 
         # We'll store our output here, then dump to HDF5.
-        output_ids = []
-        output_sources = []
-        output_xs = []
-        output_ys = []
-        output_flux_ap2_24 = []
-        output_flux_ap2_36 = []
-        output_flux_ap2_45 = []
-        output_flux_ap2_58 = []
-        output_flux_ap2_80 = []
-        output_labels = []
+        output = []
 
         n_subjects = data.get_all_subjects(atlas=atlas).count()
         for index, subject in enumerate(data.get_all_subjects(atlas=atlas)):
@@ -66,36 +63,35 @@ def generate(db_path, consensus_table, cache_name, output_path, atlas=False):
 
             # We now have a dict mapping potential hosts to astronomical
             # features.
-
             for (host_x, host_y), astro in potential_hosts.items():
-                output_ids.append(subject['zooniverse_id']),
-                output_sources.append(subject['metadata']['source']),
-                output_xs.append(host_x)
-                output_ys.append(host_y)
-                output_labels.append(astro['is_host'])
-                output_flux_ap2_24.append(astro['flux_ap2_24'])
-                output_flux_ap2_36.append(astro['flux_ap2_36'])
-                output_flux_ap2_45.append(astro['flux_ap2_45'])
-                output_flux_ap2_58.append(astro['flux_ap2_58'])
-                output_flux_ap2_80.append(astro['flux_ap2_80'])
+                output.append((
+                    subject['zooniverse_id'],  # S24
+                    subject['metadata']['source'],  # S24
+                    host_x,  # float
+                    host_y,  # float
+                    remove_nans(astro['flux_ap2_24']),  # float
+                    remove_nans(astro['flux_ap2_36']),  # float
+                    remove_nans(astro['flux_ap2_45']),  # float
+                    remove_nans(astro['flux_ap2_58']),  # float
+                    remove_nans(astro['flux_ap2_80']),  # float
+                    astro['is_host'],  # bool
+                ))
 
-        output_ids = pandas.DataFrame(output_ids, dtype='S24')
-        output_xs = pandas.DataFrame(output_xs, dtype=float)
-        output_ys = pandas.DataFrame(output_ys, dtype=float)
-        output_labels = pandas.DataFrame(output_labels, dtype=float)
-        output_flux_ap2_24 = pandas.DataFrame(output_flux_ap2_24, dtype=float)
-        output_flux_ap2_36 = pandas.DataFrame(output_flux_ap2_36, dtype=float)
-        output_flux_ap2_45 = pandas.DataFrame(output_flux_ap2_45, dtype=float)
-        output_flux_ap2_58 = pandas.DataFrame(output_flux_ap2_58, dtype=float)
-        output_flux_ap2_80 = pandas.DataFrame(output_flux_ap2_80, dtype=float)
+        # Pandas really, really doesn't like this data, so I'm using structured
+        # NumPy arrays and h5py.
+        dtype = [
+            ('zooniverse_id', 'S24'),
+            ('source', 'S24'),
+            ('x', 'float32'),
+            ('y', 'float32'),
+            ('flux_ap2_24', 'float32'),
+            ('flux_ap2_36', 'float32'),
+            ('flux_ap2_45', 'float32'),
+            ('flux_ap2_58', 'float32'),
+            ('flux_ap2_80', 'float32'),
+            ('is_host', 'bool'),
+        ]
+        struct = numpy.array(output, dtype=dtype)
 
-        frame = pandas.concat(
-            [output_ids, output_source, output_xs, output_ys,
-             output_flux_ap2_24, output_flux_ap2_36, output_flux_ap2_45,
-             output_flux_ap2_58, output_flux_ap2_80, output_labels], axis=1,
-            keys=['zooniverse_id', 'source', 'x', 'y', 'flux_ap2_24',
-                  'flux_ap2_36', 'flux_ap2_45', 'flux_ap2_58', 'flux_ap2_80',
-                  'is_host'])
-
-        with pandas.HDFStore(output_path) as store:
-            store['data'] = frame
+        with h5py.File(output_path, 'w') as f:
+            dset = f.create_dataset('data', data=struct, dtype=dtype)
