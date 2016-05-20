@@ -65,3 +65,12 @@ notebooks/.ipynb_checkpoints/*
 
 # MkDocs
 site/*
+
+# LaTeX
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out

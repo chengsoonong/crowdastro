@@ -5,7 +5,7 @@
 This is a self-contained module.
 
 Usage:
-  ./train_cnn.py in_data_path images_path in_model_path out_weights_path epochs
+  ./train_cnn.py in_data_path in_model_path out_weights_path epochs batch_size
 
 Matthew Alger
 The Australian National University
