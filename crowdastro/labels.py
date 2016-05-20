@@ -38,7 +38,7 @@ def pg_means(points, significance=0.01, projections=24):
 
     while True:
         # Fit a Gaussian mixture model with k components.
-        gmm = sklearn.mixture.GMM(n_components=k)
+        gmm = sklearn.mixture.GMM(n_components=k, covariance_type='full')
         try:
             gmm.fit(points)
         except ValueError:
