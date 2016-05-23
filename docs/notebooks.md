@@ -22,3 +22,5 @@
 19. misc_experiments &mdash; Testing scaling and normalisation of input features.
 20. pg_means_for_location_consensus &mdash; Testing PG-means consensus against KDE consensus.
 21. cnn_vs_astro &mdash; Comparing CNN features to astronomical features as inputs.
+22.
+23. colour_by_numbers &mdash; How many galaxies are in our sample?
