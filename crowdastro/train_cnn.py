@@ -43,11 +43,6 @@ def train(data_path, model_path, weights_path, epochs, batch_size):
     training_inputs = hf['inputs']
     training_outputs = hf['outputs']
 
-    # Generate the training inputs. Each input is an image, so for each
-    # potential host I'll have to fetch the subject image, slice it, and store
-    # it. This is pretty big and pandas doesn't like it, otherwise I'd
-    # pregenerate it.
-
     n = training_inputs.shape[0] // 2  # Number of examples, 0.5 train/test.
     training_inputs = training_inputs[:n]
     training_outputs = training_outputs[:n]

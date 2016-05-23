@@ -11,12 +11,14 @@ import sys
 import astropy.coordinates
 import astropy.wcs
 import numpy
+import scipy.ndimage.morphology
 import scipy.stats
 import sklearn.mixture
 
 from . import config
 from . import data
 from .exceptions import CatalogueError
+from .rgz_analysis import consensus
 
 DEFAULT_SCALE_WIDTH = 2.1144278606965172  # These only apply for ATLAS!
 DEFAULT_SCALE_HEIGHT = 2.1144278606965172
@@ -72,7 +74,106 @@ def pg_means(points, significance=0.01, projections=24):
 
         k += 1
 
-def get_subject_consensus(subject, conn, table, significance=0.02):
+def get_subject_consensus_kde(subject, conn, table):
+    """Finds the volunteer consensus for radio combination and source location.
+
+    subject: RGZ subject dict.
+    conn: SQLite3 database connection.
+    table: Name of table in database containing frozen classifications.
+    -> (dict mapping radio signatures to ((x, y) NumPy arrays, or None),
+        percentage agreement on radio combination,
+        dict mapping radio signatures to boolean agreement on location)
+    """
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    sql = ('SELECT full_radio_signature, part_radio_signature, source_x, '
+          'source_y FROM classifications WHERE zooniverse_id=?')
+
+    classifications = list(cur.execute(sql, [str(subject['zooniverse_id'])]))
+    if not classifications:
+        return {}, 0, {}
+
+    frs_counter = collections.Counter([c['full_radio_signature']
+                                       for c in classifications])
+    most_common_frs = frs_counter.most_common(1)[0][0]
+    radio_consensus_classifications = collections.defaultdict(list)
+
+    for classification in classifications:
+        if classification['full_radio_signature'] == most_common_frs:
+            radio_consensus_classifications[
+                    classification['part_radio_signature']
+            ].append((classification['source_x'], classification['source_y']))
+
+    logging.debug('Most common radio signature for %s: %s',
+                  subject['zooniverse_id'], most_common_frs)
+
+    radio_agreement = frs_counter.most_common(1)[0][1] / len(classifications)
+
+    consensus = {}  # Maps radio signatures to (x, y) NumPy arrays.
+    location_agreement = {}  # Maps radio signatures to agreement percentages.
+    for radio_signature in radio_consensus_classifications:
+        n_no_source = 0  # Number of people who think there is no source.
+        xs = []
+        ys = []
+        for c in radio_consensus_classifications[radio_signature]:
+            if c[0] is None or c[1] is None:
+                # No source.
+                n_no_source += 1
+                continue
+
+            x = c[0] * config.get('click_to_fits_x')
+            y = c[1] * config.get('click_to_fits_y')
+            xs.append(x)
+            ys.append(y)
+
+        if (n_no_source >
+                len(radio_consensus_classifications[radio_signature]) // 2):
+            # Majority think that there is no source.
+            # Note that if half of people think there is no source and half
+            # think that there is a source, we'll assume there is a source.
+            consensus[radio_signature] = numpy.array([None, None])
+            agreement = n_no_source / len(
+                    radio_consensus_classifications[radio_signature])
+            location_agreement[radio_signature] = agreement
+            continue
+
+        # Find the consensus source.
+        X, Y = numpy.mgrid[0:200, 0:200]
+        positions = numpy.vstack([X.ravel(), Y.ravel()])
+        points = numpy.vstack([xs, ys])
+        try:
+            kernel = scipy.stats.gaussian_kde(points)
+        except scipy.linalg.basic.LinAlgError:
+            logging.debug('LinAlgError in KD estimation.')
+            continue
+        except ValueError:
+            logging.debug('ValueError in KD estimation.')
+            continue
+
+        kp = kernel(positions)
+        if numpy.isnan(kp).sum() > 0:
+            consensus[radio_signature] = points.mean(axis=1)
+            location_agreement[radio_signature] = 0
+            continue
+
+        neighborhood = numpy.ones((10, 10))
+        Z = numpy.reshape(kp.T, X.shape)
+        local_max = scipy.ndimage.filters.maximum_filter(
+                Z, footprint = neighborhood) == Z
+        background = (Z == 0)
+        eroded_background = scipy.ndimage.morphology.binary_erosion(
+                background, structure = neighborhood, border_value=1)
+        detected_peaks = local_max ^ eroded_background
+
+        x_peak = float(X[Z == Z.max()][0])
+        y_peak = float(Y[Z == Z.max()][0])
+        consensus[radio_signature] = (x_peak, y_peak)
+        location_agreement[radio_signature] = 1
+
+    return consensus, radio_agreement, location_agreement
+
+def get_subject_consensus_pg_means(subject, conn, table, significance=0.02):
     """Finds the volunteer consensus for radio combination and source location.
 
     subject: RGZ subject dict.
@@ -264,6 +365,8 @@ def parse_classification(classification, subject):
     fits = data.get_radio_fits(subject)
     wcs = astropy.wcs.WCS(fits.header)
 
+    n_invalid = 0
+
     for annotation in classification['annotations']:
         if 'radio' not in annotation:
             # This is a metadata annotation and we can ignore it.
@@ -279,6 +382,7 @@ def parse_classification(classification, subject):
                     zooniverse_id=subject['zooniverse_id'])
         except CatalogueError:
             # Ignore invalid annotations.
+            n_invalid += 1
             logging.debug('Ignoring invalid annotation for %s.',
                           subject['zooniverse_id'])
             continue
@@ -291,14 +395,19 @@ def parse_classification(classification, subject):
 
             # Ignore out-of-range data.
             if not 0 <= ir_x <= config.get('click_image_width'):
+                n_invalid += 1
                 continue
 
             if not 0 <= ir_y <= config.get('click_image_height'):
+                n_invalid += 1
                 continue
 
             ir_location = (ir_x, ir_y)
 
         result[radio_signature] = ir_location
+
+    logging.debug('%d invalid annotations for %s.', n_invalid,
+                  subject['zooniverse_id'])
 
     return result
 
@@ -354,17 +463,14 @@ def freeze_classifications(db_path, table, atlas=False):
 
     conn.commit()
 
-def freeze_consensuses(db_path, classification_table, consensus_table,
-                       significance=0.02, atlas=False):
+def freeze_consensuses(db_path, consensus_table, atlas=False):
     """Freezes Radio Galaxy Zoo consensuses into a SQLite database.
 
     Warning: table arguments are not validated! This could be dangerous.
 
     db_path: Path to SQLite database.
-    classification_table: Name of table containing frozen classifications.
     consensus_table: Name of table to freeze consensuses into. If this exists,
         it will be cleared.
-    significance: Optional. Significance level for splitting consensus coords.
     atlas: Whether to only freeze ATLAS subjects. Default False.
     """
     conn = sqlite3.connect(db_path)
@@ -396,8 +502,8 @@ def freeze_consensuses(db_path, classification_table, consensus_table,
                 idx, idx / n_subjects), file=sys.stderr, end='\r')
 
         zooniverse_id = subject['zooniverse_id']
-        cons, radio_agreement, location_agreement = get_subject_consensus(
-                subject, conn, classification_table)
+        cons, radio_agreement, location_agreement = (
+                get_subject_consensus_kde(subject, conn, consensus_table))
         for radio_signature, (x, y) in cons.items():
             params.append((zooniverse_id, radio_signature, x, y,
                            radio_agreement,

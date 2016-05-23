@@ -12,8 +12,8 @@ def raw_classifications(args):
 def consensuses(args):
     """Processes consensuses from the Radio Galaxy Zoo database."""
     from . import labels
-    labels.freeze_consensuses(args.database, args.classification_table,
-                              args.consensus_table, atlas=args.atlas)
+    labels.freeze_consensuses(args.database, args.consensus_table,
+                              atlas=args.atlas)
 
 def training_data(args):
     """Generates training data."""
@@ -46,8 +46,6 @@ def main():
     parser_consensuses = subparsers.add_parser('consensuses',
             help='Process consensuses from the Radio Galaxy Zoo database.')
     parser_consensuses.add_argument('database', help='path to SQLite database')
-    parser_consensuses.add_argument('classification_table',
-            help='name of classification database table')
     parser_consensuses.add_argument('consensus_table',
             help='name of consensus database table')
     parser_consensuses.add_argument('--atlas', action='store_true',

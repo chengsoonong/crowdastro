@@ -51,8 +51,8 @@ import scipy.stats
 import scipy.ndimage.morphology
 import scipy.linalg.basic
 
-import crowdastro.rgz_analysis.collinearity
-import crowdastro.rgz_analysis.load_contours
+import crowdastro.rgz_analysis.collinearity as collinearity
+import crowdastro.rgz_analysis.load_contours as load_contours
 
 # Mongo DB server.
 HOST = 'localhost'
@@ -111,6 +111,7 @@ rgz_dir = None  # Set after argument parsing.
 
 def consensus(
         zid,
+        make_radio_combination_signature,
         experts_only=False,
         excluded=[],
         no_anonymous=False,
@@ -215,7 +216,7 @@ def consensus(
             else:
                 checksum = -99
 
-            c['checksum'] = checksum
+            c['checksum'] = make_radio_combination_signature(c['annotations'])
 
             # Insert checksum into dictionary with number of galaxies as the
             # index
@@ -233,8 +234,7 @@ def consensus(
         c for lc,
         c in zip(
             listcount,
-            clist_all) if lc and c['checksum'] != -
-        99]
+            clist_all) if lc and c['checksum'] != None]
 
     clen_diff = clen_start - len(clist)
 
@@ -248,7 +248,7 @@ def consensus(
         mc = collections.Counter(v).most_common()
         # Check if the most common selection coordinate was for no radio
         # contours
-        if mc[0][0] == -99.0:
+        if mc[0][0] == None:
             if len(mc) > 1:
                 # If so, take the selection with the next-highest number of
                 # counts
