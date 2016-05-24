@@ -318,7 +318,7 @@ def make_radio_combination_signature(radio_annotation, wcs, zooniverse_id=None):
         ]
 
         # Convert the bounding box into RA/DEC.
-        bbox = wcs.all_pix2world(bbox[0], bbox[1], 1)
+        bbox = wcs.wcs_pix2world(bbox[0], bbox[1], 1)
 
         # What is this radio source called? Check if we have an object in the
         # bounding box.

@@ -34,9 +34,10 @@ def make_host(subject, wcs, cache_name, consensus):
     # We want RGZ_JHHMMSS-DDMMSS and an associated SWIRE result. Let's start
     # with the SWIRE result so that the coordinates we get are accurate and
     # reproducible. Convert pixel coordinates into RA/DEC.
-    x, y = consensus['source_x'], consensus['source_y']
-    # TODO(MatthewJA): Verify that 1 is the right convention here.
-    x, y = wcs.all_pix2world([x], [y], 1)
+    x = consensus['source_x']
+    # Pretty much following willettk's rgz-analysis code here.
+    y = config.get('fits_image_height') - consensus['source_y']
+    x, y = wcs.wcs_pix2world([x], [y], 1)
 
     # Get the closest SWIRE object.
     p_hosts = data.get_potential_hosts(subject, cache_name,
@@ -118,6 +119,9 @@ def generate(db_path, cache_name, consensus_table, host_table, radio_table,
         host_params = []
         radio_params = []
 
+        # Store how many hosts have no associated SWIRE object (for debugging).
+        n_no_matches = 0
+
         n_subjects = data.get_all_subjects(atlas=atlas).count()
         for index, subject in enumerate(data.get_all_subjects(atlas=atlas)):
             print('Generating catalogue: {}/{} ({:.02%})'.format(
@@ -141,6 +145,7 @@ def generate(db_path, cache_name, consensus_table, host_table, radio_table,
                         logging.debug('No SWIRE object for %s (%.2f, %.2f).',
                                 subject['zooniverse_id'], consensus['source_x'],
                                 consensus['source_y'])
+                        n_no_matches += 1
                         continue
                     host_params.append((subject['zooniverse_id'],
                                         subject.get('metadata', {}).get(
@@ -157,6 +162,8 @@ def generate(db_path, cache_name, consensus_table, host_table, radio_table,
                 else:
                     logging.debug('Skipping null consensus for subject %s.',
                                   subject['zooniverse_id'])
+
+        logging.debug('%d hosts with no associated SWIRE object.', n_no_matches)
 
         logging.debug('Writing to database.')
         cur.executemany(host_sql, host_params)
@@ -179,6 +186,8 @@ def generate(db_path, cache_name, consensus_table, host_table, radio_table,
                                         having count(*) > 1""".format(
                                                 radio_table))
         mur = conn.cursor()
+        # Number of deleted radio components.
+        n_deleted = 0
         for radio_component in all_duplicates:
             name = radio_component['radio_component']
             logging.debug('Removing duplicates for %s.', name)
@@ -190,11 +199,13 @@ def generate(db_path, cache_name, consensus_table, host_table, radio_table,
             mur.execute("""delete from {}
                            where radio_component = ?""".format(radio_table),
                            [name])
+            n_deleted += mur.rowcount
             mur.execute("""insert into {}
                            (rgz_name, radio_component, agreement)
                            values (?, ?, ?)""".format(radio_table),
                            [best['rgz_name'], name, best['agreement']])
         conn.commit()
+        logging.debug('Deleted %d duplicate radio components.', n_deleted)
 
         logging.debug('Removing hosts with no components.')
         cur.execute("""delete from {0}
@@ -208,6 +219,7 @@ def generate(db_path, cache_name, consensus_table, host_table, radio_table,
                             )""".format(
                 host_table, radio_table))
         conn.commit()
+        logging.debug('Deleted %d duplicate hosts.', cur.rowcount)
 
         logging.debug('Removing duplicate hosts.')
         cur.execute("""delete from {0}
