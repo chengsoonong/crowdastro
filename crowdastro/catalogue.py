@@ -122,6 +122,9 @@ def generate(db_path, cache_name, consensus_table, host_table, radio_table,
         # Store how many hosts have no associated SWIRE object (for debugging).
         n_no_matches = 0
 
+        # Store how many hosts have null consensuses (for debugging).
+        n_null = 0
+
         n_subjects = data.get_all_subjects(atlas=atlas).count()
         for index, subject in enumerate(data.get_all_subjects(atlas=atlas)):
             print('Generating catalogue: {}/{} ({:.02%})'.format(
@@ -160,10 +163,12 @@ def generate(db_path, cache_name, consensus_table, host_table, radio_table,
                         radio_params.append((rgz_name, radio_component,
                                              consensus['radio_agreement']))
                 else:
+                    n_null += 1
                     logging.debug('Skipping null consensus for subject %s.',
                                   subject['zooniverse_id'])
 
         logging.debug('%d hosts with no associated SWIRE object.', n_no_matches)
+        logging.debug('%d hosts with null consensuses.', n_null)
 
         logging.debug('Writing to database.')
         cur.executemany(host_sql, host_params)

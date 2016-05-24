@@ -20,7 +20,8 @@ def remove_nans(n):
         return 0
     return float(n)
 
-def generate(db_path, consensus_table, cache_name, output_path, atlas=False):
+def generate(db_path, consensus_table, cache_name, output_path, atlas=False,
+             simple=False):
     """Generates potential hosts and their astronomical features.
 
     db_path: Path to consensus SQLite database.
@@ -28,6 +29,7 @@ def generate(db_path, consensus_table, cache_name, output_path, atlas=False):
     cache_name: Name of Gator cache.
     output_path: Path to output HDF5 file. Training data will be output here.
     atlas: Optional. Whether to only use ATLAS data.
+    simple: Optional. Whether to only use simple (one-host) subjects.
     """
     with contextlib.closing(sqlite3.connect(db_path)) as conn:
         conn.row_factory = sqlite3.Row
@@ -40,10 +42,26 @@ def generate(db_path, consensus_table, cache_name, output_path, atlas=False):
         for index, subject in enumerate(data.get_all_subjects(atlas=atlas)):
             print('Generating training data: {}/{} ({:.02%})'.format(
                     index + 1, n_subjects, (index + 1) / n_subjects), end='\r')
-            consensuses = cur.execute(
-                    'SELECT * FROM {} WHERE '
-                    'zooniverse_id = ?'.format(consensus_table),
-                    [subject['zooniverse_id']])
+
+            if simple:
+                consensuses = cur.execute("""SELECT *
+                        FROM {}
+                        WHERE zooniverse_id = ?
+                        GROUP BY zooniverse_id
+                        HAVING COUNT(zooniverse_id) = 1""".format(
+                                consensus_table),
+                        [subject['zooniverse_id']])
+            else:
+                consensuses = cur.execute("""SELECT *
+                        FROM {}
+                        WHERE zooniverse_id = ?""".format(
+                                consensus_table),
+                        [subject['zooniverse_id']])
+
+            consensuses = list(consensuses)
+            if not consensuses:
+                # Skip subjects with no consensuses.
+                continue
 
             true_hosts = set()  # Set of (x, y) tuples of true hosts.
             potential_hosts = data.get_potential_hosts(subject, cache_name)

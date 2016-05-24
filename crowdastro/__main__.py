@@ -62,6 +62,8 @@ def main():
     parser_training_data.add_argument('output', help='path to output HDF5 file')
     parser_training_data.add_argument('--atlas', action='store_true',
             help='only process ATLAS subjects')
+    parser_training_data.add_argument('--simple', action='store_true',
+            help='only process simple subjects')
     parser_training_data.set_defaults(func=training_data)
 
     parser_catalogue = subparsers.add_parser('catalogue',
