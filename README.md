@@ -1,7 +1,11 @@
 # crowdastro
 Machine learning using crowd sourced data in astronomy.
 
-For setup details, see the documentation [here](docs/setup.md).
+For setup details, see the documentation [here](docs/setup.md), in particular start
+[mongodb](https://www.mongodb.com/).
+```bash
+mongod --config /usr/local/etc/mongod.conf --fork
+```
 
 For a brief description of each notebook, see the documentation [here](docs/notebooks.md).
 
