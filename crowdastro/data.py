@@ -184,6 +184,7 @@ def get_potential_hosts(subject, cache_name, convert_to_px=True):
         - flux at 5.8μm for aperture #2
         - flux at 8.0μm for aperture #2
         - flux at 24μm for aperture #2
+        - stellarity index at 3.6μm
         - uncertainty in RA
         - uncertainty in DEC
     """
@@ -234,6 +235,7 @@ def get_potential_hosts(subject, cache_name, convert_to_px=True):
             'flux_ap2_58': row['flux_ap2_58'],
             'flux_ap2_80': row['flux_ap2_80'],
             'flux_ap2_24': row['flux_ap2_24'],
+            'stell_36': row['stell_36'],
             'unc_ra': row['unc_ra'],
             'unc_dec': row['unc_dec'],
         }
