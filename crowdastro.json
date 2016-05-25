@@ -12,6 +12,8 @@
         "port": 27017
     },
 
+    "test_size": 0.2,
+
     "tile_size": "2x2",
 
     "fits_image_width": 201,
