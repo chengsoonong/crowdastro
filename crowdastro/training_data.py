@@ -75,6 +75,9 @@ def generate(db_path, consensus_table, cache_name, output_path, atlas=False,
                 if cx is None or cy is None:
                     continue
 
+                # Consensus is inverted vertically w.r.t. the potential hosts.
+                cy = config.get('fits_image_height') - cy
+
                 closest = min(potential_hosts,
                         key=lambda z: numpy.hypot(cx - z[0], cy - z[1]))
                 potential_hosts[closest]['is_host'] = 1
