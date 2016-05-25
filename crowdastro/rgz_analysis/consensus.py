@@ -216,7 +216,11 @@ def consensus(
             else:
                 checksum = -99
 
-            c['checksum'] = make_radio_combination_signature(c['annotations'])
+            if make_radio_combination_signature is not None:
+                c['checksum'] = make_radio_combination_signature(
+                    c['annotations'])
+            else:
+                c['checksum'] = checksum
 
             # Insert checksum into dictionary with number of galaxies as the
             # index
