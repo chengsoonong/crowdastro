@@ -1,4 +1,9 @@
-"""Loads the configuration file."""
+"""Loads the configuration file.
+
+Matthew Alger
+The Australian National University
+2016
+"""
 
 import json
 import os.path
@@ -13,10 +18,14 @@ with open(CONFIG_PATH) as config_file:
     config = json.load(config_file)
 
 # Normalise paths.
-config['data_path'] = os.path.normpath(
-        os.path.join(SCRIPT_PATH, config['data_path']))
-config['atlas_catalogue_path'] = os.path.normpath(
-        os.path.join(SCRIPT_PATH, config['atlas_catalogue_path']))
+config['data_sources']['atlas_catalogue'] = os.path.normpath(
+        os.path.join(SCRIPT_PATH, config['atlas_catalogue']))
+config['data_sources']['cdfs_fits'] = os.path.normpath(
+        os.path.join(SCRIPT_PATH, config['cdfs_fits']))
+config['data_sources']['elais_s1_fits'] = os.path.normpath(
+        os.path.join(SCRIPT_PATH, config['elais_s1_fits']))
+config['data_sources']['swire_catalogue'] = os.path.normpath(
+        os.path.join(SCRIPT_PATH, config['swire_catalogue']))
 
 # Generate some helper configuration info.
 config['click_to_fits_x'] = (config.get('fits_image_width') /

@@ -2,7 +2,7 @@
     "data_sources": {
         "atlas_catalogue": "data/ATLASDR3_cmpcat_23July2015.dat",
         "cdfs_fits": "data/cdfs",
-        "elais_fits": "data/elais",
+        "elais_s1_fits": "data/elais",
         "radio_galaxy_zoo_db": "radio",
         "swire_catalogue": "data/SWIRE3_CDFS_cat_IRAC24_21Dec05.tbl"
     },
