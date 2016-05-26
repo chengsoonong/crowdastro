@@ -57,28 +57,50 @@ def get_subject_raw_id(subject_id):
 
 
 def get_all_classifications():
-    """Yields all RGZ classification dicts."""
+    """Returns cursor yielding all RGZ classification dicts.
+
+    -> MongoDB cursor
+    """
     return db.radio_classifications.find()
 
 
 def get_subject_classifications(subject):
-    """Yields all classifications associated with a subject.
+    """Returns cursor yielding all classifications associated with a subject.
 
     subject: RGZ subject dict.
+    -> MongoDB cursor
     """
     return db.radio_classifications.find({'subject_ids': subject['_id']})
 
 
-def get_all_subjects(atlas=False):
-    """Yields all RGZ subject dicts.
+def get_all_subjects(survey=None, field=None):
+    """Returns cursor yielding RGZ subject dicts.
 
-    atlas: Whether to only yield ATLAS subjects. Default False.
+    survey: Optional. Survey subject was observed in. {'atlas', None}.
+    field: Optional. Field subject was observed in. {'cdfs', 'elais-s1', None}.
+    -> MongoDB cursor
     """
-    if atlas:
-        return db.radio_subjects.find(
-                {'metadata.survey': 'atlas'}).batch_size(100)
+    if survey is None:
+        return db.radio_subjects.find()
 
-    return db.radio_subjects.find().batch_size(100)
+    if survey == 'atlas':
+        if field is None:
+            return db.radio_subjects.find(
+                    {'metadata.survey': 'atlas'})
+
+        if field == 'cdfs':
+            return db.radio_subjects.find(
+                    {'metadata.survey': 'atlas',
+                     'metadata.source': {'$regex': '^CI'}})
+
+        if field == 'elais-s1':
+            return db.radio_subjects.find(
+                    {'metadata.survey': 'atlas',
+                     'metadata.source': {'$regex': '^EI'}})
+
+        raise ValueError('Unknown field: {}'.format(field))
+
+    raise ValueError('Unknown survey: {}'.format(survey))
 
 
 @require_atlas
