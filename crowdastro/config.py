@@ -12,20 +12,27 @@ import numpy
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 
-CONFIG_PATH = os.path.join(SCRIPT_PATH, 'crowdastro.json')
+# TODO(MatthewJA): Don't hardcode this.
+CONFIG_PATH = os.path.join(SCRIPT_PATH, '../crowdastro.json')
 
 with open(CONFIG_PATH) as config_file:
     config = json.load(config_file)
 
 # Normalise paths.
+# TODO(MatthewJA): Also don't hardcode these. They should be relative to the
+# JSON(?).
 config['data_sources']['atlas_catalogue'] = os.path.normpath(
-        os.path.join(SCRIPT_PATH, config['atlas_catalogue']))
+        os.path.join(SCRIPT_PATH, '..',
+                     config['data_sources']['atlas_catalogue']))
 config['data_sources']['cdfs_fits'] = os.path.normpath(
-        os.path.join(SCRIPT_PATH, config['cdfs_fits']))
+        os.path.join(SCRIPT_PATH, '..',
+                     config['data_sources']['cdfs_fits']))
 config['data_sources']['elais_s1_fits'] = os.path.normpath(
-        os.path.join(SCRIPT_PATH, config['elais_s1_fits']))
+        os.path.join(SCRIPT_PATH, '..',
+                     config['data_sources']['elais_s1_fits']))
 config['data_sources']['swire_catalogue'] = os.path.normpath(
-        os.path.join(SCRIPT_PATH, config['swire_catalogue']))
+        os.path.join(SCRIPT_PATH, '..',
+                     config['data_sources']['swire_catalogue']))
 
 # Generate some helper configuration info.
 config['click_to_fits_x'] = (config.get('fits_image_width') /

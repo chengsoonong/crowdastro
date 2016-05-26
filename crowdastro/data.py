@@ -123,7 +123,8 @@ def open_fits(subject, field, wavelength, size='2x2'):
 
     cid = subject['metadata']['source']
     filename = '{}_{}.fits'.format(cid, wavelength)
-    path = os.path.join(config.get('data_path'), field, size, filename)
+    path = os.path.join(config['data_sources']['{}_fits'.format(field)], size,
+                        filename)
     
     return astropy.io.fits.open(path, ignore_blank=True)
 
