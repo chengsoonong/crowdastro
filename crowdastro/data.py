@@ -13,10 +13,11 @@ import pymongo
 import requests
 import requests_cache
 
-from . import config
+from .config import config
 
-client = pymongo.MongoClient(config.get('mongo_host'), config.get('mongo_port'))
-db = client[config.get('mongo_db_name')]
+client = pymongo.MongoClient(config['mongo']['host'], config['mongo']['port'])
+db = client[config['data_sources']['radio_galaxy_zoo_db']]
+
 
 def require_atlas(f):
     """Decorator that ensures a subject (the first argument) is from the ATLAS
@@ -30,10 +31,12 @@ def require_atlas(f):
 
     return g
 
+
 def get_random_subject():
     return list(db.radio_subjects.aggregate([
         {'$match': {'metadata.survey': 'atlas'}},
         {'$sample': {'size': 1}}]))[0]
+
 
 def get_subject(zid):
     """Gets a Radio Galaxy Zoo subject from the database.
@@ -43,6 +46,7 @@ def get_subject(zid):
     """
     return db.radio_subjects.find_one({'zooniverse_id': zid})
 
+
 def get_subject_raw_id(subject_id):
     """Gets a Radio Galaxy Zoo subject from the database using its subject ID.
 
@@ -51,9 +55,11 @@ def get_subject_raw_id(subject_id):
     """
     return db.radio_subjects.find_one({'_id': subject_id})
 
+
 def get_all_classifications():
     """Yields all RGZ classification dicts."""
     return db.radio_classifications.find()
+
 
 def get_subject_classifications(subject):
     """Yields all classifications associated with a subject.
@@ -61,6 +67,7 @@ def get_subject_classifications(subject):
     subject: RGZ subject dict.
     """
     return db.radio_classifications.find({'subject_ids': subject['_id']})
+
 
 def get_all_subjects(atlas=False):
     """Yields all RGZ subject dicts.
@@ -72,6 +79,7 @@ def get_all_subjects(atlas=False):
                 {'metadata.survey': 'atlas'}).batch_size(100)
 
     return db.radio_subjects.find().batch_size(100)
+
 
 @require_atlas
 def open_fits(subject, field, wavelength, size='2x2'):
@@ -97,6 +105,7 @@ def open_fits(subject, field, wavelength, size='2x2'):
     
     return astropy.io.fits.open(path, ignore_blank=True)
 
+
 @require_atlas
 def get_ir(subject, size='2x2'):
     """Returns the IR image of a subject.
@@ -112,6 +121,7 @@ def get_ir(subject, size='2x2'):
 
     with open_fits(subject, field, 'ir', size=size) as fits_file:
         return fits_file[0].data
+
 
 @require_atlas
 def get_ir_fits(subject, size='2x2'):
@@ -129,6 +139,7 @@ def get_ir_fits(subject, size='2x2'):
     with open_fits(subject, field, 'ir', size=size) as fits_file:
         return fits_file[0]
 
+
 @require_atlas
 def get_radio(subject, size='2x2'):
     """Returns the radio image of a subject.
@@ -144,6 +155,7 @@ def get_radio(subject, size='2x2'):
 
     with open_fits(subject, field, 'radio', size=size) as fits_file:
         return fits_file[0].data
+
 
 @require_atlas
 def get_radio_fits(subject, size='2x2'):
@@ -161,6 +173,7 @@ def get_radio_fits(subject, size='2x2'):
     with open_fits(subject, field, 'radio', size=size) as fits_file:
         return fits_file[0]
 
+
 def get_contours(subject):
     """Fetches the radio contours of a subject.
 
@@ -169,6 +182,7 @@ def get_contours(subject):
     """
     # TODO(MatthewJA): Cache these.
     return requests.get(subject['location']['contours']).json()
+
 
 @require_atlas
 def get_potential_hosts(subject, cache_name, convert_to_px=True):
