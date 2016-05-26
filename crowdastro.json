@@ -12,6 +12,23 @@
         "port": 27017
     },
 
+    "surveys": {
+        "atlas": {
+            "fits_width": 201,
+            "fits_height": 201,
+            "fits_width_large": 501,
+            "fits_height_large": 501,
+            "web_width": 500,
+            "web_height": 500,
+            "click_width": 424,
+            "click_height": 424,
+            "distance_cutoff": 0.02
+        },
+        "swire": {
+            "distance_cutoff": 0.00083
+        }
+    },
+
     "test_size": 0.2,
 
     "tile_size": "2x2",
@@ -21,7 +38,5 @@
     "web_image_width": 500,
     "web_image_height": 500,
     "click_image_width": 424,
-    "click_image_height": 424,
-
-    "swire_distance_cutoff": 0.00083
+    "click_image_height": 424
 }
