@@ -129,6 +129,14 @@ def import_atlas(f_h5, f_csv):
         cdfs_infrareds_5x5[index] = infrared_5x5
 
 
+def remove_nulls(n):
+    """Swaps nulls with zeros."""
+    if n == 'null':
+        return 0
+
+    return n
+
+
 def import_swire(f_h5, f_csv):
     """Imports the SWIRE dataset into crowdastro.
 
@@ -139,11 +147,12 @@ def import_swire(f_h5, f_csv):
     rows = []
     with open(config['data_sources']['swire_catalogue']) as f_tbl:
         # This isn't a valid ASCII table, so Astropy can't handle it.
-        for _ in range(9):  # Skip the first five lines.
+        for _ in range(5):  # Skip the first five lines.
             next(f_tbl)
 
         # Get the column names.
-        columns = [c.strip() for c in next(f_tbl).strip().split('|')]
+        columns = [c.strip() for c in next(f_tbl).strip().split('|')][1:-1]
+        assert len(columns == 156)
 
         for _ in range(9):  # Skip the next three lines.
             next(f_tbl)
@@ -152,16 +161,15 @@ def import_swire(f_h5, f_csv):
             row = row.strip().split()
             assert len(row) == 156
             row = dict(zip(columns, row))
-
             name = row['object']
             ra = float(row['ra'])
             dec = float(row['dec'])
-            flux_ap2_36 = float(row['flux_ap2_36'])
-            flux_ap2_45 = float(row['flux_ap2_45'])
-            flux_ap2_58 = float(row['flux_ap2_58'])
-            flux_ap2_80 = float(row['flux_ap2_80'])
-            flux_ap2_24 = float(row['flux_ap2_24'])
-            stell_36 = float(row['stell_36'])
+            flux_ap2_36 = float(remove_nulls(row['flux_ap2_36']))
+            flux_ap2_45 = float(remove_nulls(row['flux_ap2_45']))
+            flux_ap2_58 = float(remove_nulls(row['flux_ap2_58']))
+            flux_ap2_80 = float(remove_nulls(row['flux_ap2_80']))
+            flux_ap2_24 = float(remove_nulls(row['flux_ap2_24']))
+            stell_36 = float(remove_nulls(row['stell_36']))
             rows.append((ra, dec, flux_ap2_36, flux_ap2_45, flux_ap2_58,
                          flux_ap2_80, flux_ap2_24, stell_36))
             names.append(name)
@@ -185,5 +193,5 @@ if __name__ == '__main__':
     with h5py.File('test.h5', 'w') as f_h5, open('test.csv', 'w') as f_csv:
         prep_h5(f_h5)
         prep_csv(f_csv)
-        import_atlas(f_h5, f_csv)
+        # import_atlas(f_h5, f_csv)
         import_swire(f_h5, f_csv)
