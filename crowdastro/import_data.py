@@ -77,7 +77,7 @@ def import_atlas(f_h5, f_csv):
             n_skipped += 1
             continue
 
-        name = min_obj[2]
+        name = min_obj[1]
 
         # Store the results.
         coords.append((ra, dec))
