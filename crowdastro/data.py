@@ -115,8 +115,8 @@ def open_fits(subject, field, wavelength, size='2x2'):
     size: Optional. '2x2' or '5x5'.
     -> FITS image file.
     """
-    if field not in {'elais', 'cdfs'}:
-        raise ValueError('field must be either "elais" or "cdfs".')
+    if field not in {'elais-s1', 'cdfs'}:
+        raise ValueError('field must be either "elais-s1" or "cdfs".')
 
     if wavelength not in {'ir', 'radio'}:
         raise ValueError('wavelength must be either "ir" or "radio".')
@@ -139,7 +139,7 @@ def get_ir(subject, size='2x2'):
     if subject['metadata']['source'].startswith('C'):
         field = 'cdfs'
     else:
-        field = 'elais'
+        field = 'elais-s1'
 
     with open_fits(subject, field, 'ir', size=size) as fits_file:
         return fits_file[0].data
@@ -156,7 +156,7 @@ def get_ir_fits(subject, size='2x2'):
     if subject['metadata']['source'].startswith('C'):
         field = 'cdfs'
     else:
-        field = 'elais'
+        field = 'elais-s1'
 
     with open_fits(subject, field, 'ir', size=size) as fits_file:
         return fits_file[0]
@@ -173,7 +173,7 @@ def get_radio(subject, size='2x2'):
     if subject['metadata']['source'].startswith('C'):
         field = 'cdfs'
     else:
-        field = 'elais'
+        field = 'elais-s1'
 
     with open_fits(subject, field, 'radio', size=size) as fits_file:
         return fits_file[0].data
@@ -190,7 +190,7 @@ def get_radio_fits(subject, size='2x2'):
     if subject['metadata']['source'].startswith('C'):
         field = 'cdfs'
     else:
-        field = 'elais'
+        field = 'elais-s1'
 
     with open_fits(subject, field, 'radio', size=size) as fits_file:
         return fits_file[0]
