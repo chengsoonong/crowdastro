@@ -8,3 +8,4 @@ mkdir data/elais
 tar -zxvf elais_11JAN2014_2x2_5x5.tgz -C data/elais
 mkdir data/cdfs
 tar -zxvf cdfs_11JAN2014_2x2_5x5.tgz -C data/cdfs
+cp RGZ-ATLAS-Bookkeeping.csv data/RGZ-ATLAS-Bookkeeping.csv
