@@ -17,11 +17,7 @@ import sklearn.mixture
 
 from . import config
 from . import data
-from .exceptions import CatalogueError
 from .rgz_analysis import consensus
-
-DEFAULT_SCALE_WIDTH = 2.1144278606965172  # These only apply for ATLAS!
-DEFAULT_SCALE_HEIGHT = 2.1144278606965172
 
 atlas_catalogue_cache = {}
 with open(config.get('atlas_catalogue_path')) as f:
@@ -122,6 +118,8 @@ def get_subject_consensus_kde(subject, conn, table):
                 n_no_source += 1
                 continue
 
+            raise NotImplementedError('Scales have been changed and code not '
+                                      'updated.')
             x = c[0] * config.get('click_to_fits_x')
             y = c[1] * config.get('click_to_fits_y')
             xs.append(x)
@@ -222,6 +220,8 @@ def get_subject_consensus_pg_means(subject, conn, table, significance=0.02):
                 n_no_source += 1
                 continue
 
+            raise NotImplementedError('Scales have been changed and code not '
+                                      'updated.')
             x = c[0] * config.get('click_to_fits_x')
             y = c[1] * config.get('click_to_fits_y')
             xs.append(x)
@@ -259,157 +259,6 @@ def get_subject_consensus_pg_means(subject, conn, table, significance=0.02):
             location_agreement[radio_signature] = agreement
 
     return consensus, radio_agreement, location_agreement
-
-def contains(bbox, point):
-    """Checks if point is within bbox.
-
-    bbox: [[x0, x1], [y0, y1]]
-    point: [x, y]
-    -> bool
-    """
-    return (bbox[0][0] <= point[0] <= bbox[0][1] and
-            bbox[1][0] <= point[1] <= bbox[1][1])
-
-def make_radio_combination_signature(radio_annotation, wcs, zooniverse_id=None):
-    """Generates a unique signature for a radio annotation.
-
-    radio_annotation: 'radio' dictionary from a classification.
-    wcs: World coordinate system associated with this classification. Generate
-        this using astropy.wcs.WCS(fits_header).
-    zooniverse_id: Zooniverse ID (for logging). Optional.
-    -> Something immutable
-    """
-    # My choice of immutable object will be a semicolon-separated list of radio
-    # IDs, sorted to ensure determinism. These come from the ATLAS catalogue.
-    atlas_ids = []
-    for c in radio_annotation.values():
-        # Note that the x scale is not the same as the IR scale, but the scale
-        # factor is included in the annotation, so I have multiplied this out
-        # here for consistency.
-        scale_width = c.get('scale_width', '')
-        scale_height = c.get('scale_height', '')
-        if scale_width:
-            scale_width = float(scale_width)
-        else:
-            # Sometimes, there's no scale, so I've included a default scale.
-            scale_width = DEFAULT_SCALE_WIDTH
-
-        if scale_height:
-            scale_height = float(scale_height)
-        else:
-            scale_height = DEFAULT_SCALE_HEIGHT
-
-        # These numbers are in terms of the PNG images, so I need to multiply by
-        # the click-to-fits ratio.
-        scale_width *= config.get('click_to_fits_x')
-        scale_height *= config.get('click_to_fits_y')
-
-        # Get the bounding box of the radio source in pixels.
-        # Format: [xs, ys]
-        bbox = [
-            [
-                float(c['xmin']) * scale_width,
-                float(c['xmax']) * scale_width,
-            ],
-            [
-                float(c['ymin']) * scale_height,
-                float(c['ymax']) * scale_height,
-            ],
-        ]
-
-        # Convert the bounding box into RA/DEC.
-        bbox = wcs.wcs_pix2world(bbox[0], bbox[1], 1)
-
-        # What is this radio source called? Check if we have an object in the
-        # bounding box.
-        cache_key = tuple(tuple(b) for b in bbox)
-        if cache_key in atlas_catalogue_cache:
-            # I expect a lot of overlap in the subjects, so caching should save
-            # some time.
-            name = atlas_catalogue_cache[cache_key]
-        else:
-            for entity in atlas_catalogue:
-                ra_deg = float(entity[4])
-                dec_deg = float(entity[5])
-                if contains(bbox, (ra_deg, dec_deg)):
-                    break
-            else:
-                if zooniverse_id:
-                    logging.debug('Skipping radio source not in catalogue for '
-                                  '%s', zooniverse_id)
-                else:
-                    logging.debug('Skipping radio source not in catalogue.')
-                continue
-
-            name = entity[0]
-            atlas_catalogue_cache[cache_key] = name
-
-        atlas_ids.append(name)
-
-    atlas_ids.sort()
-
-    if not atlas_ids:
-        raise CatalogueError('No catalogued radio sources.')
-
-    return ';'.join(atlas_ids)
-
-def parse_classification(classification, subject):
-    """Converts a raw RGZ classification into a classification dict.
-
-    classification: RGZ classification dict.
-    subject: Associated RGZ subject dict.
-    -> dict mapping radio signature to corresponding IR host pixel location
-    """
-    result = {}
-
-    fits = data.get_radio_fits(subject)
-    wcs = astropy.wcs.WCS(fits.header)
-
-    n_invalid = 0
-
-    for annotation in classification['annotations']:
-        if 'radio' not in annotation:
-            # This is a metadata annotation and we can ignore it.
-            continue
-
-        if annotation['radio'] == 'No Contours':
-            # I'm not sure how this occurs. I'm going to ignore it.
-            continue
-
-        try:
-            radio_signature = make_radio_combination_signature(
-                    annotation['radio'], wcs,
-                    zooniverse_id=subject['zooniverse_id'])
-        except CatalogueError:
-            # Ignore invalid annotations.
-            n_invalid += 1
-            logging.debug('Ignoring invalid annotation for %s.',
-                          subject['zooniverse_id'])
-            continue
-
-        if annotation['ir'] == 'No Sources':
-            ir_location = None
-        else:
-            ir_x = float(annotation['ir']['0']['x'])
-            ir_y = float(annotation['ir']['0']['y'])
-
-            # Ignore out-of-range data.
-            if not 0 <= ir_x <= config.get('click_image_width'):
-                n_invalid += 1
-                continue
-
-            if not 0 <= ir_y <= config.get('click_image_height'):
-                n_invalid += 1
-                continue
-
-            ir_location = (ir_x, ir_y)
-
-        result[radio_signature] = ir_location
-
-    logging.debug('%d invalid annotations for %s.', n_invalid,
-                  subject['zooniverse_id'])
-
-    return result
 
 def freeze_classifications(db_path, table, atlas=False):
     """Freezes Radio Galaxy Zoo classifications into a SQLite database.

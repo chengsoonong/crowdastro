@@ -7,25 +7,34 @@ The Australian National University
 
 #/usr/bin/env python3
 
+import argparse
 import csv
 import logging
 
+import astropy.wcs
 import h5py
 import numpy
 
 from . import data
 from .config import config
+from .exceptions import CatalogueError
+
+VERSION = '0.0.1'  # Data version, not module version!
+MAX_RADIO_SIGNATURE_LENGTH = 50  # max number of components * individual
+                                 # component signature size.
+
 
 def prep_h5(f_h5):
     """Creates hierarchy in HDF5 file."""
     cdfs = f_h5.create_group('/atlas/cdfs')
     swire_cdfs = f_h5.create_group('/swire/cdfs')
+    f_h5.attrs['version'] = VERSION
 
 
 def prep_csv(f_csv):
     """Writes headers of CSV."""
     writer = csv.writer(f_csv)
-    writer.writerow(['survey', 'field', 'zooniverse_id', 'name'])
+    writer.writerow(['index', 'survey', 'field', 'zooniverse_id', 'name'])
 
 
 def import_atlas(f_h5, f_csv):
@@ -34,11 +43,6 @@ def import_atlas(f_h5, f_csv):
     f_h5: An HDF5 file.
     f_csv: A CSV file.
     """
-    with open(config['data_sources']['atlas_catalogue']) as f:
-        atlas_catalogue = [l.split() for l in f if not l.startswith('#')]
-
-    n_skipped = 0  # Number of skipped subjects for debugging.
-
     # Fetch groups from HDF5.
     cdfs = f_h5['/atlas/cdfs']
     swire_cdfs = f_h5['/swire/cdfs']
@@ -50,52 +54,38 @@ def import_atlas(f_h5, f_csv):
     names = []
     zooniverse_ids = []
 
+    # We need the ATLAS name, but we can only get it by going through the
+    # ATLAS catalogue and finding the nearest component.
+    # https://github.com/chengsoonong/crowdastro/issues/63
+    # Fortunately, @jbanfield has already done this, so we can just load
+    # that CSV and match the names.
+    rgz_to_atlas = {}
+    with open(config['data_sources']['rgz_to_atlas']) as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            rgz_to_atlas[row['ID_RGZ']] = row['ID']
+
     for subject in data.get_all_subjects(survey='atlas', field='cdfs'):
         ra, dec = subject['coords']
         zooniverse_id = subject['zooniverse_id']
 
-        # We need the ATLAS name, but we can only get it by going through the
-        # ATLAS catalogue and finding the nearest component.
-        # https://github.com/chengsoonong/crowdastro/issues/63
-        min_dist = float('inf')
-        min_obj = None
-        for obj in atlas_catalogue:
-            # TODO(MatthewJA): Preprocess catalogue to speed this up.
-            test_ra = float(obj[4])
-            test_dec = float(obj[5])
-            dist = numpy.hypot(ra - test_ra, dec - test_dec)
-            if dist < min_dist:
-                min_dist = dist
-                min_obj = obj
-
-        if min_obj is None:
-            raise ValueError('No objects in ATLAS catalogue.')
-
-        if min_dist > config['surveys']['atlas']['distance_cutoff']:
-            logging.warning('Skipping {}. Nearest ATLAS component is {:.02} '
-                            'degrees away.'.format(zooniverse_id, min_dist))
-            n_skipped += 1
-            continue
-
-        name = min_obj[1]
+        rgz_source_id = subject['metadata']['source']
+        name = rgz_to_atlas[rgz_source_id]
 
         # Store the results.
         coords.append((ra, dec))
         names.append(name)
         zooniverse_ids.append(zooniverse_id)
 
-    if n_skipped:
-        logging.warning('Skipped {} ATLAS components.'.format(n_skipped))
-
     n_cdfs = len(names)
 
-    # Sort the data by ATLAS name.
-    coords_to_names = dict(zip(coords, names))
-    zooniverse_ids_to_names = dict(zip(zooniverse_ids, names))
+    # Sort the data by Zooniverse ID.
+    coords_to_zooniverse_ids = dict(zip(coords, zooniverse_ids))
+    names_to_zooniverse_ids = dict(zip(names, zooniverse_ids))
 
-    coords.sort(key=coords_to_names.get)
-    zooniverse_ids.sort(key=zooniverse_ids_to_names.get)
-    names.sort()
+    coords.sort(key=coords_to_zooniverse_ids.get)
+    names.sort(key=names_to_zooniverse_ids.get)
+    zooniverse_ids.sort()
 
     # Store coords in HDF5.
     coords = numpy.array(coords)
@@ -103,8 +93,8 @@ def import_atlas(f_h5, f_csv):
 
     # Store Zooniverse IDs and names in CSV.
     writer = csv.writer(f_csv)
-    for zooniverse_id, name in zip(zooniverse_ids, names):
-        writer.writerow(['atlas', 'cdfs', zooniverse_id, name])
+    for index, (zooniverse_id, name) in enumerate(zip(zooniverse_ids, names)):
+        writer.writerow([index, 'atlas', 'cdfs', zooniverse_id, name])
 
     # Second pass, I'll fetch the images.
     # Allocate space in the HDF5 file.
@@ -152,9 +142,9 @@ def import_swire(f_h5, f_csv):
 
         # Get the column names.
         columns = [c.strip() for c in next(f_tbl).strip().split('|')][1:-1]
-        assert len(columns == 156)
+        assert len(columns) == 156
 
-        for _ in range(9):  # Skip the next three lines.
+        for _ in range(3):  # Skip the next three lines.
             next(f_tbl)
 
         for row in f_tbl:
@@ -181,17 +171,268 @@ def import_swire(f_h5, f_csv):
 
     # Write names to CSV.
     writer = csv.writer(f_csv)
-    for name in names:
-        writer.writerow(['swire', '', '', name])
+    for index, name in enumerate(names):
+        writer.writerow([index, 'swire', '', '', name])
 
     # Write numeric data to HDF5.
     rows = numpy.array(rows)
     f_h5['/swire/cdfs'].create_dataset('catalogue', data=rows)
 
 
+def contains(bbox, point):
+    """Checks if point is within bbox.
+
+    bbox: [[x0, x1], [y0, y1]]
+    point: [x, y]
+    -> bool
+    """
+    return (bbox[0][0] <= point[0] <= bbox[0][1] and
+            bbox[1][0] <= point[1] <= bbox[1][1])
+
+
+bbox_cache_ = {}  # Should help speed up ATLAS membership checking.
+
+
+def make_radio_combination_signature(radio_annotation, wcs, atlas_positions,
+                                     zooniverse_id=None):
+    """Generates a unique signature for a radio annotation.
+
+    radio_annotation: 'radio' dictionary from a classification.
+    wcs: World coordinate system associated with this classification. Generate
+        this using astropy.wcs.WCS(fits_header).
+    atlas_positions: [[x, y]] NumPy array.
+    zooniverse_id: Zooniverse ID (for logging). Optional.
+    -> Something immutable
+    """
+    # TODO(MatthewJA): This only works on ATLAS. Generalise.
+    # My choice of immutable object will be stringified crowdastro ATLAS
+    # indices.
+    atlas_ids = []
+    for c in radio_annotation.values():
+        # Note that the x scale is not the same as the IR scale, but the scale
+        # factor is included in the annotation, so I have multiplied this out
+        # here for consistency.
+        scale_width = c.get('scale_width', '')
+        scale_height = c.get('scale_height', '')
+        if scale_width:
+            scale_width = float(scale_width)
+        else:
+            # Sometimes, there's no scale, so I've included a default scale.
+            scale_width = config['surveys']['atlas']['scale_width']
+
+        if scale_height:
+            scale_height = float(scale_height)
+        else:
+            scale_height = config['surveys']['atlas']['scale_height']
+
+        # These numbers are in terms of the PNG images, so I need to multiply by
+        # the click-to-fits ratio.
+        scale_width *= config['surveys']['atlas']['click_to_fits_x']
+        scale_height *= config['surveys']['atlas']['click_to_fits_y']
+
+        # Get the bounding box of the radio source in pixels.
+        # Format: [xs, ys]
+        bbox = [
+            [
+                float(c['xmin']) * scale_width,
+                float(c['xmax']) * scale_width,
+            ],
+            [
+                float(c['ymin']) * scale_height,
+                float(c['ymax']) * scale_height,
+            ],
+        ]
+        assert bbox[0][0] < bbox[0][1]
+        assert bbox[1][0] < bbox[1][1]
+
+        # Convert the bounding box into RA/DEC.
+        bbox = wcs.wcs_pix2world(bbox[0], bbox[1], 1)
+
+        # The bbox is backwards along the x-axis for some reason.
+        bbox[0] = bbox[0][::-1]
+        assert bbox[0][0] < bbox[0][1]
+        assert bbox[1][0] < bbox[1][1]
+
+        bbox = numpy.array(bbox)
+
+        # What is this radio source called? Check if we have an object in the
+        # bounding box. We'll cache these results because there is a lot of
+        # overlap.
+        cache_key = tuple(tuple(b) for b in bbox)
+        if cache_key in bbox_cache_:
+            index = bbox_cache_[cache_key]
+        else:
+            x_gt_min = atlas_positions[:, 0] >= bbox[0, 0]
+            x_lt_max = atlas_positions[:, 0] <= bbox[0, 1]
+            y_gt_min = atlas_positions[:, 1] >= bbox[1, 0]
+            y_lt_max = atlas_positions[:, 1] <= bbox[1, 1]
+            within = numpy.all([x_gt_min, x_lt_max, y_gt_min, y_lt_max], axis=0)
+            indices = numpy.where(within)[0]
+
+            if len(indices) == 0:
+                if zooniverse_id:
+                    logging.debug('Skipping radio source not in catalogue for '
+                                  '%s', zooniverse_id)
+                else:
+                    logging.debug('Skipping radio source not in catalogue.')
+                continue
+            else:
+                if len(indices) > 1:
+                    if zooniverse_id:
+                        logging.debug('Found multiple (%d) ATLAS matches '
+                                      'for %s', len(indices), zooniverse_id)
+                    else:
+                        logging.debug('Found multiple (%d) ATLAS matches',
+                                      len(indices))
+
+                index = indices[0]
+
+            bbox_cache_[cache_key] = index
+
+        atlas_ids.append(str(index))
+
+    atlas_ids.sort()
+
+    if not atlas_ids:
+        raise CatalogueError('No catalogued radio sources.')
+
+    return ';'.join(atlas_ids)
+
+
+def parse_classification(classification, subject, atlas_positions):
+    """Converts a raw RGZ classification into a classification dict.
+
+    Scales all positions and flips y axis of clicks.
+
+    classification: RGZ classification dict.
+    subject: Associated RGZ subject dict.
+    atlas_positions: [[x, y]] NumPy array.
+    -> dict mapping radio signature to corresponding IR host pixel location
+    """
+    result = {}
+
+    fits = data.get_radio_fits(subject)
+    wcs = astropy.wcs.WCS(fits.header)
+
+    n_invalid = 0
+
+    for annotation in classification['annotations']:
+        if 'radio' not in annotation:
+            # This is a metadata annotation and we can ignore it.
+            continue
+
+        if annotation['radio'] == 'No Contours':
+            # I'm not sure how this occurs. I'm going to ignore it.
+            continue
+
+        try:
+            radio_signature = make_radio_combination_signature(
+                    annotation['radio'], wcs, atlas_positions,
+                    zooniverse_id=subject['zooniverse_id'])
+        except CatalogueError:
+            # Ignore invalid annotations.
+            n_invalid += 1
+            logging.debug('Ignoring invalid annotation for %s.',
+                          subject['zooniverse_id'])
+            continue
+
+        if annotation['ir'] == 'No Sources':
+            ir_location = (None, None)
+        else:
+            ir_x = float(annotation['ir']['0']['x'])
+            ir_y = float(annotation['ir']['0']['y'])
+
+            # Rescale to a consistent size.
+            ir_x *= config['surveys']['atlas']['click_to_fits_x']
+            ir_y *= config['surveys']['atlas']['click_to_fits_y']
+
+            # Ignore out-of-range data.
+            if not 0 <= ir_x <= config['surveys']['atlas']['fits_width']:
+                n_invalid += 1
+                continue
+
+            if not 0 <= ir_y <= config['surveys']['atlas']['fits_height']:
+                n_invalid += 1
+                continue
+
+            # Flip the y axis to match other data conventions.
+            ir_y = config['surveys']['atlas']['fits_height'] - ir_y
+
+            ir_location = (ir_x, ir_y)
+
+        result[radio_signature] = ir_location
+
+    if n_invalid:
+        logging.debug('%d invalid annotations for %s.', n_invalid,
+                      subject['zooniverse_id'])
+
+    return result
+
+
+def import_classifications(f_h5, f_csv):
+    """Imports Radio Galaxy Zoo classifications into crowdastro.
+
+    f_h5: An HDF5 file.
+    f_csv: A CSV file.
+    """
+    # TODO(MatthewJA): This only works for ATLAS/CDFS. Generalise.
+    reader = csv.DictReader(f_csv)
+
+    atlas_positions = f_h5['/atlas/cdfs/positions']
+    classification_positions = []
+    classification_combinations = []
+    for obj_index, obj in enumerate(reader):
+        if obj['survey'] != 'atlas':
+            continue
+
+        assert obj['field'] == 'cdfs'
+
+        subject = data.get_subject(obj['zooniverse_id'])
+        classifications = data.get_subject_classifications(subject)
+        for c_index, classification in enumerate(classifications):
+            classification = parse_classification(classification, subject,
+                                                  atlas_positions)
+            for radio, location in classification.items():
+                pos_row = (int(obj['index']), location[0], location[1])
+                com_row = (int(obj['index']), radio)
+                # A little redundancy here with the index, but we can assert
+                # that they are the same later to check integrity.
+                classification_positions.append(pos_row)
+                classification_combinations.append(com_row)
+
+    combinations_dtype = [('index', 'int'),
+                          ('signature', '<S{}'.format(
+                                    MAX_RADIO_SIGNATURE_LENGTH))]
+    classification_positions = numpy.array(classification_positions,
+                                           dtype=float)
+    classification_combinations = numpy.array(classification_combinations,
+                                              dtype=combinations_dtype)
+
+    f_h5['/atlas/cdfs/'].create_dataset('classification_positions',
+                                        data=classification_positions,
+                                        dtype=float)
+    f_h5['/atlas/cdfs/'].create_dataset('classification_combinations',
+                                        data=classification_combinations,
+                                        dtype=combinations_dtype)
+
+
 if __name__ == '__main__':
-    with h5py.File('test.h5', 'w') as f_h5, open('test.csv', 'w') as f_csv:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--verbose', '-v', action='store_true',
+            help='verbose output')
+    parser.add_argument('--h5', default='crowdastro.h5',
+                        help='HDF5 output file')
+    parser.add_argument('--csv', default='crowdastro.csv',
+                        help='CSV output file')
+    args = parser.parse_args()
+
+    with h5py.File(args.h5, 'w') as f_h5, open(args.csv, 'w') as f_csv:
         prep_h5(f_h5)
         prep_csv(f_csv)
-        # import_atlas(f_h5, f_csv)
+        import_atlas(f_h5, f_csv)
         import_swire(f_h5, f_csv)
+
+    # logging.root.setLevel(logging.DEBUG)
+    with h5py.File('test.h5', 'r+') as f_h5, open('test.csv', 'r') as f_csv:
+        # Classifications shouldn't modify the CSV.
+        import_classifications(f_h5, f_csv)

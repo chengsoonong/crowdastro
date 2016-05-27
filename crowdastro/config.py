@@ -35,20 +35,26 @@ config['data_sources']['swire_catalogue'] = os.path.normpath(
                      config['data_sources']['swire_catalogue']))
 
 # Generate some helper configuration info.
-config['click_to_fits_x'] = (config.get('fits_image_width') /
-                             config.get('click_image_width'))
-config['click_to_fits_y'] = (config.get('fits_image_height') /
-                             config.get('click_image_height'))
-config['click_to_fits'] = numpy.array([config['click_to_fits_x'],
-                                       config['click_to_fits_y']],
-                                       dtype=float)
-config['web_to_click_x'] = (config.get('click_image_width') /
-                             config.get('web_image_width'))
-config['web_to_click_y'] = (config.get('click_image_height') /
-                             config.get('web_image_height'))
-config['web_to_click'] = numpy.array([config['web_to_click_x'],
-                                       config['web_to_click_y']],
-                                       dtype=float)
+config['surveys']['atlas']['click_to_fits_x'] = (
+    config['surveys']['atlas']['fits_width'] /
+    config['surveys']['atlas']['click_width'])
+config['surveys']['atlas']['click_to_fits_y'] = (
+    config['surveys']['atlas']['fits_height'] /
+    config['surveys']['atlas']['click_height'])
+config['surveys']['atlas']['click_to_fits'] = numpy.array(
+    [config['surveys']['atlas']['click_to_fits_x'],
+     config['surveys']['atlas']['click_to_fits_y']],
+    dtype=float)
+config['surveys']['atlas']['web_to_click_x'] = (
+    config['surveys']['atlas']['click_width'] /
+    config['surveys']['atlas']['web_width'])
+config['surveys']['atlas']['web_to_click_y'] = (
+    config['surveys']['atlas']['click_height'] /
+    config['surveys']['atlas']['web_height'])
+config['surveys']['atlas']['web_to_click'] = numpy.array(
+    [config['surveys']['atlas']['web_to_click_x'],
+     config['surveys']['atlas']['web_to_click_y']],
+    dtype=float)
 
 # Wrapper function to neatly retrieve values.
 def get(*args, **kwargs):
