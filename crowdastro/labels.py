@@ -20,7 +20,7 @@ from . import data
 from .rgz_analysis import consensus
 
 atlas_catalogue_cache = {}
-with open(config.get('atlas_catalogue_path')) as f:
+with open(config.get('data_sources')['atlas_catalogue']) as f:
     atlas_catalogue = [l.split() for l in f if not l.startswith('#')]
 
 def pg_means(points, significance=0.01, projections=24):

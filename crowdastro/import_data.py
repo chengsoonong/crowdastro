@@ -70,6 +70,10 @@ def import_atlas(f_h5, f_csv):
         zooniverse_id = subject['zooniverse_id']
 
         rgz_source_id = subject['metadata']['source']
+        if rgz_source_id not in rgz_to_atlas:
+            logging.debug('Skipping %s; no matching ATLAS component.',
+                          zooniverse_id)
+            continue
         name = rgz_to_atlas[rgz_source_id]
 
         # Store the results.
@@ -426,13 +430,13 @@ if __name__ == '__main__':
                         help='CSV output file')
     args = parser.parse_args()
 
-    with h5py.File(args.h5, 'w') as f_h5, open(args.csv, 'w') as f_csv:
-        prep_h5(f_h5)
-        prep_csv(f_csv)
-        import_atlas(f_h5, f_csv)
-        import_swire(f_h5, f_csv)
+    with h5py.File(args.h5, 'w') as f_h5:
+        with open(args.csv, 'w') as f_csv:
+            prep_h5(f_h5)
+            prep_csv(f_csv)
+            import_atlas(f_h5, f_csv)
+            import_swire(f_h5, f_csv)
 
-    # logging.root.setLevel(logging.DEBUG)
-    with h5py.File('test.h5', 'r+') as f_h5, open('test.csv', 'r') as f_csv:
-        # Classifications shouldn't modify the CSV.
-        import_classifications(f_h5, f_csv)
+        with open('test.csv', 'r') as f_csv:
+            # Classifications shouldn't modify the CSV.
+            import_classifications(f_h5, f_csv)
