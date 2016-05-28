@@ -32,14 +32,5 @@
         }
     },
 
-    "test_size": 0.2,
-
-    "tile_size": "2x2",
-
-    "fits_image_width": 201,
-    "fits_image_height": 201,
-    "web_image_width": 500,
-    "web_image_height": 500,
-    "click_image_width": 424,
-    "click_image_height": 424
+    "test_size": 0.2
 }
