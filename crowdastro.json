@@ -4,6 +4,7 @@
         "cdfs_fits": "data/cdfs",
         "elais_s1_fits": "data/elais",
         "radio_galaxy_zoo_db": "radio",
+        "rgz_to_atlas": "data/RGZ-ATLAS-Bookkeeping.csv",
         "swire_catalogue": "data/SWIRE3_CDFS_cat_IRAC24_21Dec05.tbl"
     },
 
@@ -22,7 +23,9 @@
             "web_height": 500,
             "click_width": 424,
             "click_height": 424,
-            "distance_cutoff": 0.02
+            "distance_cutoff": 0.02,
+            "scale_width": 2.1144278606965172,
+            "scale_height": 2.1144278606965172
         },
         "swire": {
             "distance_cutoff": 0.00083
