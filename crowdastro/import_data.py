@@ -19,7 +19,7 @@ from . import data
 from .config import config
 from .exceptions import CatalogueError
 
-VERSION = '0.0.1'  # Data version, not module version!
+VERSION = '0.1.0'  # Data version, not module version!
 MAX_RADIO_SIGNATURE_LENGTH = 50  # max number of components * individual
                                  # component signature size.
 
@@ -121,6 +121,22 @@ def import_atlas(f_h5, f_csv):
         cdfs_infrareds_2x2[index] = infrared_2x2
         infrared_5x5 = data.get_ir(subject, size='5x5')
         cdfs_infrareds_5x5[index] = infrared_5x5
+
+    # Finally, partition training/testing/validation data sets.
+    n_data = len(zooniverse_ids)
+    indices = numpy.arange(n_data, dtype='int')
+    numpy.random.shuffle(indices)
+
+    test_max = int(config['test_size'] * n_data)
+    n_training = int((1 - config['test_size']) * n_data)
+    validation_max = int(config['validation_size'] * n_training)
+    testing_indices = indices[:test_max]
+    validation_indices = indices[test_max:validation_max]
+    training_indices = indices[validation_max:]
+
+    cdfs.create_dataset('testing_indices', data=testing_indices)
+    cdfs.create_dataset('validation_indices', data=validation_indices)
+    cdfs.create_dataset('training_indices', data=training_indices)
 
 
 def remove_nulls(n):
