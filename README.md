@@ -11,10 +11,10 @@ For a brief description of each notebook, see the documentation [here](docs/note
 
 ## Running the pipeline
 
-Process the raw classifications:
+Import data sources:
 
 ```bash
-python3 -m crowdastro raw_classifications processed.db classifications --atlas
+python3 -m crowdastro.import_data
 ```
 
 Process the consensuses:
@@ -40,7 +40,7 @@ Here, `data` is the directory containing the `cdfs` and `elais` directories.
 Generate a model:
 
 ```bash
-crowdastro/compile_cnn.py model.json
+python -m crowdastro.compile_cnn model.json
 ```
 
 Train the CNN:
