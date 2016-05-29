@@ -2,10 +2,8 @@
 
 """Builds the convolutional neural network model.
 
-This is a self-contained module.
-
 Usage:
-  ./compile_cnn.py out_path [params]
+  python -m crowdastro.compile_cnn out_path [params]
 
 See --help for information on params.
 
