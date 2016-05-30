@@ -5,7 +5,8 @@
         "elais_s1_fits": "data/elais",
         "radio_galaxy_zoo_db": "radio",
         "rgz_to_atlas": "data/RGZ-ATLAS-Bookkeeping.csv",
-        "swire_catalogue": "data/SWIRE3_CDFS_cat_IRAC24_21Dec05.tbl"
+        "swire_catalogue": "data/SWIRE3_CDFS_cat_IRAC24_21Dec05.tbl",
+        "test_rgz_to_atlas": "data/TEST-RGZ-ATLAS-Bookkeeping.csv"
     },
 
     "mongo": {

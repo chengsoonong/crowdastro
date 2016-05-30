@@ -33,6 +33,9 @@ config['data_sources']['elais_s1_fits'] = os.path.normpath(
 config['data_sources']['swire_catalogue'] = os.path.normpath(
         os.path.join(SCRIPT_PATH, '..',
                      config['data_sources']['swire_catalogue']))
+config['data_sources']['test_rgz_to_atlas'] = os.path.normpath(
+        os.path.join(SCRIPT_PATH, '..',
+                     config['data_sources']['test_rgz_to_atlas']))
 
 # Generate some helper configuration info.
 config['surveys']['atlas']['click_to_fits_x'] = (
