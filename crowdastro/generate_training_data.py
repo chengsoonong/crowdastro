@@ -48,7 +48,13 @@ def generate(f_h5, out_f_h5, simple=False):
     # Save to HDF5.
     out_f_h5.create_dataset('labels', data=labels)
     out_f_h5.create_dataset('astro', data=fluxes)
-
+    indices = out_f_h5.create_group('indices')
+    indices.create_dataset('training',
+                           data=f_h5['/atlas/cdfs/training_indices'])
+    indices.create_dataset('validation',
+                           data=f_h5['/atlas/cdfs/validation_indices'])
+    indices.create_dataset('testing',
+                           data=f_h5['/atlas/cdfs/testing_indices'])
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
