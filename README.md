@@ -32,7 +32,7 @@ python3 -m crowdastro training_data processed.db consensuses gator_cache trainin
 Preprocess the CNN inputs/outputs:
 
 ```bash
-crowdastro/preprocess_cnn_images.py training.h5 data
+python3 -m crowdastro.preprocess_cnn_images training.h5 data
 ```
 
 Here, `data` is the directory containing the `cdfs` and `elais` directories.
@@ -40,13 +40,13 @@ Here, `data` is the directory containing the `cdfs` and `elais` directories.
 Generate a model:
 
 ```bash
-python -m crowdastro.compile_cnn model.json
+python3 -m crowdastro.compile_cnn model.json
 ```
 
 Train the CNN:
 
 ```bash
-crowdastro/train_cnn.py training.h5 model.json weights.h5 n_epochs batch_size
+python3 -m crowdastro.train_cnn training.h5 model.json weights.h5 n_epochs batch_size
 ```
 
 Coming soon: Fitting PCA, and finally classifying.
