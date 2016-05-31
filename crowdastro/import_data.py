@@ -412,15 +412,18 @@ def import_classifications(f_h5, f_csv):
         for c_index, classification in enumerate(classifications):
             classification = parse_classification(classification, subject,
                                                   atlas_positions)
+            full_radio = '|'.join(classification.keys())
             for radio, location in classification.items():
                 pos_row = (int(obj['index']), location[0], location[1])
-                com_row = (int(obj['index']), radio)
+                com_row = (int(obj['index']), full_radio, radio)
                 # A little redundancy here with the index, but we can assert
                 # that they are the same later to check integrity.
                 classification_positions.append(pos_row)
                 classification_combinations.append(com_row)
 
     combinations_dtype = [('index', 'int'),
+                          ('full_signature', '<S{}'.format(
+                                    MAX_RADIO_SIGNATURE_LENGTH)),
                           ('signature', '<S{}'.format(
                                     MAX_RADIO_SIGNATURE_LENGTH))]
     classification_positions = numpy.array(classification_positions,
@@ -438,8 +441,6 @@ def import_classifications(f_h5, f_csv):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--verbose', '-v', action='store_true',
-            help='verbose output')
     parser.add_argument('--h5', default='crowdastro.h5',
                         help='HDF5 output file')
     parser.add_argument('--csv', default='crowdastro.csv',
@@ -453,6 +454,6 @@ if __name__ == '__main__':
             import_atlas(f_h5, f_csv)
             import_swire(f_h5, f_csv)
 
-        with open('test.csv', 'r') as f_csv:
+        with open(args.csv, 'r') as f_csv:
             # Classifications shouldn't modify the CSV.
             import_classifications(f_h5, f_csv)
