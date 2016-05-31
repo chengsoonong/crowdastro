@@ -19,7 +19,7 @@ from . import data
 from .config import config
 from .exceptions import CatalogueError
 
-VERSION = '0.1.0'  # Data version, not module version!
+VERSION = '0.1.1'  # Data version, not module version!
 MAX_RADIO_SIGNATURE_LENGTH = 50  # max number of components * individual
                                  # component signature size.
 
@@ -377,6 +377,9 @@ def parse_classification(classification, subject, atlas_positions):
 
             # Flip the y axis to match other data conventions.
             ir_y = config['surveys']['atlas']['fits_height'] - ir_y
+
+            # Convert the location into RA/DEC.
+            (ir_x,), (ir_y,) = wcs.wcs_pix2world([ir_x], [ir_y], 1)
 
             ir_location = (ir_x, ir_y)
 

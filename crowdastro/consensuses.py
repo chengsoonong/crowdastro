@@ -18,6 +18,7 @@ import scipy.ndimage.filters
 import scipy.ndimage.morphology
 import scipy.stats
 import sklearn.mixture
+import sklearn.neighbors
 
 
 MAX_RADIO_SIGNATURE_LENGTH = 50  # max number of components * individual
@@ -91,19 +92,26 @@ def kde(points):
     points: [[x, y]] NumPy array.
     -> (x, y) consensus location, boolean of whether KDE succeeded
     """
+    if len(points) == 1:
+        return points.mean(axis=0), False
+
+    if len(points) == 0:
+        return (float('nan'), float('nan')), False
+
     X, Y = numpy.mgrid[0:200, 0:200]
     positions = numpy.vstack([X.ravel(), Y.ravel()])
     try:
         kernel = scipy.stats.gaussian_kde(points.T)
     except scipy.linalg.basic.LinAlgError:
-        logging.debug('LinAlgError in KD estimation.')
+        logging.warning('LinAlgError in KD estimation.')
         return maybe_mean(points), False
-    except ValueError:
-        logging.debug('ValueError in KD estimation.')
+    except ValueError as e:
+        logging.warning('ValueError in KD estimation: %s', e.message)
         return maybe_mean(points), False
 
     kp = kernel(positions)
     if numpy.isnan(kp).sum() > 0:
+        logging.warning('NaN in KD estimation.')
         return maybe_mean(points), False
 
     neighborhood = numpy.ones((10, 10))
@@ -124,15 +132,17 @@ def find_consensuses(f_h5, f_csv):
     """Find Radio Galaxy Zoo crowd consensuses.
 
     f_h5: crowdastro HDF5 file.
+    f_csv: crowdastro CSV file.
     """
-    if 'consensus_positions' in f_h5['/atlas/cdfs/']:
-        del f_h5['/atlas/cdfs/consensus_positions']
-
-    if 'consensus_combinations' in f_h5['/atlas/cdfs/']:
-        del f_h5['/atlas/cdfs/consensus_combinations']
+    if 'consensus_objects' in f_h5['/atlas/cdfs/']:
+        del f_h5['/atlas/cdfs/consensus_objects']
 
     class_positions = f_h5['/atlas/cdfs/classification_positions']
     class_combinations = f_h5['/atlas/cdfs/classification_combinations']
+
+    # Pre-build the SWIRE tree.
+    swire_coords = f_h5['/swire/cdfs/catalogue'][:, :2]
+    swire_tree = sklearn.neighbors.KDTree(swire_coords)
 
     cons_positions = []
     cons_combinations = []
@@ -151,6 +161,7 @@ def find_consensuses(f_h5, f_csv):
 
         com_group = list(com_group)  # For multiple iterations.
         pos_group = list(pos_group)
+        total_classifications = 0
 
         # Find the radio consensus. Be wary when counting: If there are multiple
         # AGNs identified in one subject, *that classification will appear
@@ -162,9 +173,13 @@ def find_consensuses(f_h5, f_csv):
             count += 1 / (full_com.count(b'|') + 1)
             radio_counts[full_com] = count
 
+            total_classifications += 1 / (full_com.count(b'|') + 1)
+
         for count in radio_counts.values():
             # Despite the divisions, we should end up with integers overall.
             assert numpy.isclose(round(count), count)
+        assert numpy.isclose(round(total_classifications),
+                             total_classifications)
 
         radio_consensus = max(radio_counts, key=radio_counts.get)
 
@@ -172,27 +187,64 @@ def find_consensuses(f_h5, f_csv):
         # location consensus function on the positions associated with that
         # combination.
         for radio_signature in radio_consensus.split(b'|'):
+            percentage_consensus = (radio_counts[radio_consensus] /
+                                    total_classifications)
             locations = []
             for (_, x, y), (_, full, radio) in zip(pos_group, com_group):
                 if full == radio_consensus and radio == radio_signature:
                     locations.append((x, y))
             locations = numpy.array(locations)
+            locations = locations[~numpy.all(numpy.isnan(locations), axis=1)]
             (x, y), success = pg_means(locations)
 
-            cons_positions.append((i, x, y, success))
-            cons_combinations.append((i, radio_signature))
+            if numpy.isnan(x) or numpy.isnan(y):
+                continue
+
+            # Match the (x, y) position to a SWIRE object.
+            dist, ind = swire_tree.query([(x, y)])
+
+            # TODO(MatthewJA): Cut-off based on distance.
+            # Since SWIRE data is sorted, we can deal directly with indices.
+            cons_positions.append((i, ind[0][0], success))
+            cons_combinations.append((i, radio_signature, percentage_consensus))
+
+    # Remove duplicates. For training data, I don't really care if radio
+    # combinations overlap (though I need to care if I generate a catalogue!) so
+    # just take duplicated locations and pick the one with the highest radio
+    # consensus that has success.
+    cons_objects = {}  # Maps SWIRE index to (ATLAS index, success,
+                       #                      percentage_consensus)
+    for (atlas_i, swire_i, success), (atlas_j, radio, percentage) in zip(
+            cons_positions, cons_combinations):
+        assert atlas_i == atlas_j
+
+        if swire_i not in cons_objects:
+            cons_objects[swire_i] = (atlas_i, success, percentage)
+            continue
+
+        if cons_objects[swire_i][1] and not success:
+            # Preference successful KDE/PG-means.
+            continue
+
+        if not cons_objects[swire_i][1] and success:
+            # Preference successful KDE/PG-means.
+            cons_objects[swire_i] = (atlas_i, success, percentage)
+            continue
+
+        # If we get this far, we have the same success state. Choose based on
+        # radio consensus.
+        if percentage > cons_objects[swire_i][2]:
+            cons_objects[swire_i] = (atlas_i, success, percentage)
+            continue
+
+    cons_objects = numpy.array([(atlas_i, swire_i, success, percentage)
+            for swire_i, (atlas_i, success, percentage)
+            in sorted(cons_objects.items())])
 
     # Write rows to file.
-    combinations_dtype = [('index', int),
-                          ('signature', '<S{}'.format(
-                                    MAX_RADIO_SIGNATURE_LENGTH))]
-    cons_positions = numpy.array(cons_positions, dtype=float)
-    cons_combinations = numpy.array(cons_combinations, dtype=combinations_dtype)
-    f_h5['/atlas/cdfs/'].create_dataset('consensus_positions',
-                                        data=cons_positions, dtype=float)
-    f_h5['/atlas/cdfs'].create_dataset('consensus_combinations',
-                                       data=cons_combinations,
-                                       dtype=combinations_dtype)
+    cons_objects = numpy.array(cons_objects, dtype=float)
+    f_h5['/atlas/cdfs/'].create_dataset('consensus_objects',
+                                        data=cons_objects, dtype=float)
 
 
 if __name__ == '__main__':
