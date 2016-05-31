@@ -20,7 +20,7 @@ python3 -m crowdastro.import_data
 Process the consensuses:
 
 ```bash
-python3 -m crowdastro consensuses processed.db classifications --atlas
+python3 -m crowdastro.consensuses
 ```
 
 Generate the training data:
