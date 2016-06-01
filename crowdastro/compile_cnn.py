@@ -1,11 +1,4 @@
-#!/usr/bin/env python3
-
 """Builds the convolutional neural network model.
-
-Usage:
-  python -m crowdastro.compile_cnn out_path [params]
-
-See --help for information on params.
 
 Matthew Alger
 The Australian National University
@@ -17,6 +10,7 @@ import argparse
 import keras.layers.core as core
 import keras.layers.convolutional as conv
 import keras.models as models
+
 
 def main(out_path, n_filters, conv_size, pool_size, dropout, hidden_layer_size,
          patch_size):
@@ -42,6 +36,7 @@ def main(out_path, n_filters, conv_size, pool_size, dropout, hidden_layer_size,
     model_json = model.to_json()
     with open(out_path, 'w') as f:
         f.write(model_json)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
