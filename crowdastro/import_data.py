@@ -19,7 +19,7 @@ from . import data
 from .config import config
 from .exceptions import CatalogueError
 
-VERSION = '0.1.1'  # Data version, not module version!
+VERSION = '0.2.1'  # Data version, not module version!
 MAX_RADIO_SIGNATURE_LENGTH = 50  # max number of components * individual
                                  # component signature size.
 
@@ -34,14 +34,16 @@ def prep_h5(f_h5):
 def prep_csv(f_csv):
     """Writes headers of CSV."""
     writer = csv.writer(f_csv)
-    writer.writerow(['index', 'survey', 'field', 'zooniverse_id', 'name'])
+    writer.writerow(['index', 'survey', 'field', 'zooniverse_id', 'name',
+                     'header'])
 
 
-def import_atlas(f_h5, f_csv):
+def import_atlas(f_h5, f_csv, test=False):
     """Imports the ATLAS dataset into crowdastro, as well as associated SWIRE.
 
     f_h5: An HDF5 file.
     f_csv: A CSV file.
+    test: Flag to run on only 10 subjects. Default False.
     """
     # Fetch groups from HDF5.
     cdfs = f_h5['/atlas/cdfs']
@@ -65,7 +67,11 @@ def import_atlas(f_h5, f_csv):
         for row in reader:
             rgz_to_atlas[row['ID_RGZ']] = row['ID']
 
-    for subject in data.get_all_subjects(survey='atlas', field='cdfs'):
+    all_subjects = data.get_all_subjects(survey='atlas', field='cdfs')
+    if test:
+        all_subjects = all_subjects.limit(10)
+
+    for subject in all_subjects:
         ra, dec = subject['coords']
         zooniverse_id = subject['zooniverse_id']
 
@@ -95,11 +101,6 @@ def import_atlas(f_h5, f_csv):
     coords = numpy.array(coords)
     coords_ds = cdfs.create_dataset('positions', data=coords)
 
-    # Store Zooniverse IDs and names in CSV.
-    writer = csv.writer(f_csv)
-    for index, (zooniverse_id, name) in enumerate(zip(zooniverse_ids, names)):
-        writer.writerow([index, 'atlas', 'cdfs', zooniverse_id, name])
-
     # Second pass, I'll fetch the images.
     # Allocate space in the HDF5 file.
     dim_2x2 = (n_cdfs, config['surveys']['atlas']['fits_height'],
@@ -111,6 +112,8 @@ def import_atlas(f_h5, f_csv):
     cdfs_infrareds_2x2 = swire_cdfs.create_dataset('images_2x2', dim_2x2)
     cdfs_infrareds_5x5 = swire_cdfs.create_dataset('images_5x5', dim_5x5)
 
+    headers = []
+
     for index, zooniverse_id in enumerate(zooniverse_ids):
         subject = data.get_subject(zooniverse_id)
         radio_2x2 = data.get_radio(subject, size='2x2')
@@ -121,6 +124,17 @@ def import_atlas(f_h5, f_csv):
         cdfs_infrareds_2x2[index] = infrared_2x2
         infrared_5x5 = data.get_ir(subject, size='5x5')
         cdfs_infrareds_5x5[index] = infrared_5x5
+
+        # TODO(MatthewJA): Remove dependency on FITS images.
+        radio_5x5_fits = data.get_radio_fits(subject, size='5x5')
+        header = radio_5x5_fits.header.tostring()
+        headers.append(header)
+
+    # Store Zooniverse IDs, names, and headers in CSV.
+    writer = csv.writer(f_csv)
+    for index, (zooniverse_id, name, header) in enumerate(
+            zip(zooniverse_ids, names, headers)):
+        writer.writerow([index, 'atlas', 'cdfs', zooniverse_id, name, header])
 
     # Finally, partition training/testing/validation data sets.
     n_data = len(zooniverse_ids)
@@ -192,7 +206,7 @@ def import_swire(f_h5, f_csv):
     # Write names to CSV.
     writer = csv.writer(f_csv)
     for index, name in enumerate(names):
-        writer.writerow([index, 'swire', '', '', name])
+        writer.writerow([index, 'swire', '', '', name, ''])
 
     # Write numeric data to HDF5.
     rows = numpy.array(rows)
@@ -448,13 +462,15 @@ if __name__ == '__main__':
                         help='HDF5 output file')
     parser.add_argument('--csv', default='crowdastro.csv',
                         help='CSV output file')
+    parser.add_argument('--test', action='store_true', default=False,
+                        help='Run with a small number of subjects',)
     args = parser.parse_args()
 
     with h5py.File(args.h5, 'w') as f_h5:
         with open(args.csv, 'w') as f_csv:
             prep_h5(f_h5)
             prep_csv(f_csv)
-            import_atlas(f_h5, f_csv)
+            import_atlas(f_h5, f_csv, test=args.test)
             import_swire(f_h5, f_csv)
 
         with open(args.csv, 'r') as f_csv:
