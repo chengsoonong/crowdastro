@@ -51,42 +51,25 @@ def generate(inputs_h5, inputs_csv, training_h5):
             shape=(n, PATCH_RADIUS * 2, PATCH_RADIUS * 2),
             dtype=float)
 
-    # Pregenerate SWIRE lookup tree so we can find which subject image each
-    # object is in.
-    swire = inputs_h5['/swire/cdfs/catalogue']
-    swire_tree = sklearn.neighbors.KDTree(swire[:, :2], metric='manhattan')
-
-    # Associate each SWIRE object with an ATLAS source it is in the
+    # Each SWIRE object is associated with an ATLAS source it is in the
     # neighbourhood of. This allows finding an image containing that SWIRE
     # object.
-    atlas_positions = inputs_h5['/atlas/cdfs/positions']
-    swire_to_atlas = {}
-    headers = []  # Collect headers for later use.
+    headers = []  # Collect FITS headers.
     logging.debug('Scanning ATLAS data.')
     for row in csv.DictReader(inputs_csv):
         if row['survey'] != 'atlas':
             continue
 
         assert row['field'] == 'cdfs'
-
         headers.append(row['header'])
 
-        # Find all SWIRE objects in a 1' radius.
-        position = atlas_positions[int(row['index'])]
-        objs = swire_tree.query_radius([position], ARCMIN)
-        # Associate each SWIRE object found with this ATLAS object.
-        for swire_i in objs[0]:
-            swire_to_atlas[swire_i] = int(row['index'])
-
-    n_patches = 0
+    n_patches = 0  # For debugging.
     images = inputs_h5['/atlas/cdfs/images_5x5']
     atlas_to_image_and_wcs = {}
     logging.debug('Scanning SWIRE data.')
+    swire_to_atlas = inputs_h5['/swire/cdfs/catalogue'][:, 8]
     for index, (ra, dec) in enumerate(training_h5['positions']):
-        if index not in swire_to_atlas:
-            continue
-
-        atlas_index = swire_to_atlas[index]
+        atlas_index = int(swire_to_atlas[index])
 
         if atlas_index not in atlas_to_image_and_wcs:
             image = images[atlas_index]
@@ -111,8 +94,6 @@ if __name__ == '__main__':
     parser.add_argument('--training', default='training.h5',
                         help='HDF5 training file')
     args = parser.parse_args()
-
-    logging.root.setLevel(logging.DEBUG)
 
     with h5py.File(args.h5, 'r') as inputs_h5:
         with open(args.csv, 'r') as inputs_csv:

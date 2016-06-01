@@ -14,14 +14,16 @@ import logging
 import astropy.wcs
 import h5py
 import numpy
+import sklearn.neighbors
 
 from . import data
 from .config import config
 from .exceptions import CatalogueError
 
-VERSION = '0.2.1'  # Data version, not module version!
+VERSION = '0.3.0'  # Data version, not module version!
 MAX_RADIO_SIGNATURE_LENGTH = 50  # max number of components * individual
                                  # component signature size.
+ARCMIN = 1 / 60
 
 
 def prep_h5(f_h5):
@@ -194,8 +196,9 @@ def import_swire(f_h5, f_csv):
             flux_ap2_80 = float(remove_nulls(row['flux_ap2_80']))
             flux_ap2_24 = float(remove_nulls(row['flux_ap2_24']))
             stell_36 = float(remove_nulls(row['stell_36']))
+            # Extra -1 is so we can store ATLAS subject indices later.
             rows.append((ra, dec, flux_ap2_36, flux_ap2_45, flux_ap2_58,
-                         flux_ap2_80, flux_ap2_24, stell_36))
+                         flux_ap2_80, flux_ap2_24, stell_36, -1))
             names.append(name)
 
     # Sort by name.
@@ -203,14 +206,61 @@ def import_swire(f_h5, f_csv):
     rows.sort(key=rows_to_names.get)
     names.sort()
 
+    # Find SWIRE objects that are within range of an ATLAS subject, and assign
+    # them to an ATLAS subject and a corresponding train/test/validation index.
+    # Only commit SWIRE objects within range.
+    rows = numpy.array(rows)
+    positions = rows[:, :2]
+    swire_tree = sklearn.neighbors.KDTree(positions, metric='manhattan')
+    training_indices = set()
+    testing_indices = set()
+    validation_indices = set()
+    seen = set()  # SWIRE objects we've already seen (to avoid reassignments).
+    atlas_train = set(f_h5['/atlas/cdfs/training_indices'])
+    atlas_test = set(f_h5['/atlas/cdfs/testing_indices'])
+    atlas_valid = set(f_h5['/atlas/cdfs/validation_indices'])
+    for index, atlas_pos in enumerate(f_h5['/atlas/cdfs/positions']):
+        neighbours = swire_tree.query_radius([atlas_pos], ARCMIN)[0]
+        for neighbour in neighbours:
+            if neighbour in seen:
+                continue
+
+            seen.add(neighbour)
+            rows[neighbour, -1] = index
+            if index in atlas_train:
+                training_indices.add(neighbour)
+            elif index in atlas_test:
+                testing_indices.add(neighbour)
+            elif index in atlas_valid:
+                validation_indices.add(neighbour)
+
+    training_indices = numpy.array(sorted(training_indices))
+    testing_indices = numpy.array(sorted(testing_indices))
+    validation_indices = numpy.array(sorted(validation_indices))
+
+    write_names = []
+    for index, name in enumerate(names):
+        if index in seen:
+            write_names.append(name)
+
+    seen = numpy.array(sorted(seen))
+    rows = rows[seen]
+    assert len(rows) == len(write_names)
+    logging.debug('Found %d SWIRE objects near an ATLAS subject.', len(rows))
+
     # Write names to CSV.
     writer = csv.writer(f_csv)
-    for index, name in enumerate(names):
+    for index, name in enumerate(write_names):
         writer.writerow([index, 'swire', '', '', name, ''])
 
     # Write numeric data to HDF5.
-    rows = numpy.array(rows)
     f_h5['/swire/cdfs'].create_dataset('catalogue', data=rows)
+    f_h5['/swire/cdfs'].create_dataset('training_indices',
+                                       data=training_indices)
+    f_h5['/swire/cdfs'].create_dataset('testing_indices',
+                                       data=testing_indices)
+    f_h5['/swire/cdfs'].create_dataset('validation_indices',
+                                       data=validation_indices)
 
 
 def contains(bbox, point):
@@ -464,7 +514,11 @@ if __name__ == '__main__':
                         help='CSV output file')
     parser.add_argument('--test', action='store_true', default=False,
                         help='Run with a small number of subjects',)
+    parser.add_argument('-v', '--verbose', default=False, action='store_true')
     args = parser.parse_args()
+
+    if args.verbose:
+        logging.root.setLevel(logging.DEBUG)
 
     with h5py.File(args.h5, 'w') as f_h5:
         with open(args.csv, 'w') as f_csv:
