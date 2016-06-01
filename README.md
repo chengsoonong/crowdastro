@@ -44,10 +44,26 @@ python3 -m crowdastro.compile_cnn
 Train the CNN:
 
 ```bash
-python3 -m crowdastro.train_cnn training.h5 model.json weights.h5 n_epochs batch_size
+python3 -m crowdastro.train_cnn
 ```
 
-Coming soon: Fitting PCA, and finally classifying.
+Generate the CNN outputs:
+
+```bash
+python3 -m crowdastro.generate_cnn_outputs
+```
+
+Train a logistic regression classifier:
+
+```bash
+python3 -m crowdastro.train_lr
+```
+
+Test the logistic regression classifier against subjects:
+
+```bash
+python3 -m crowdastro.test_lr
+```
 
 ## Generating the Radio Galaxy Zoo catalogue
 
