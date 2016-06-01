@@ -27,7 +27,9 @@
             "scale_height": 2.1144278606965172
         },
         "swire": {
-            "distance_cutoff": 0.00083
+            "distance_cutoff": 0.00083,
+            "stellarity_cutoff": 0.99,
+            "flux_cutoff": 1000.0
         }
     },
 
