@@ -23,24 +23,22 @@ Process the consensuses:
 python3 -m crowdastro.consensuses
 ```
 
-Generate the training data:
+Generate the (non-image) training data:
 
 ```bash
-python3 -m crowdastro training_data processed.db consensuses gator_cache training.h5 --atlas
+python3 -m crowdastro.generate_training_data
 ```
 
-Preprocess the CNN inputs/outputs:
+Generate the (raw) image training data:
 
 ```bash
-python3 -m crowdastro.preprocess_cnn_images training.h5 data
+python3 -m crowdastro.generate_image_patches
 ```
-
-Here, `data` is the directory containing the `cdfs` and `elais` directories.
 
 Generate a model:
 
 ```bash
-python3 -m crowdastro.compile_cnn model.json
+python3 -m crowdastro.compile_cnn
 ```
 
 Train the CNN:
