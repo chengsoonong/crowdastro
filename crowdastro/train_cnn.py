@@ -18,37 +18,49 @@ import numpy
 from .config import config
 
 
-PATCH_RADIUS = 40
+PATCH_RADIUS = config['patch_radius']
+PATCH_DIAMETER = PATCH_RADIUS * 2
 
 
-def train(training_h5, model_json, weights_h5, epochs, batch_size):
+def train(training_h5, model_json, weights_path, epochs, batch_size):
     """Trains a CNN.
 
     training_h5: Training HDF5 file.
     model_json: JSON model file.
-    weights_h5: Output weights HDF5 file.
+    weights_path: Output weights HDF5 file.
     epochs: Number of training epochs.
     batch_size: Batch size.
     """
     model = keras.models.model_from_json(model_json.read())
-    # model.compile(loss='binary_crossentropy', optimizer='adadelta')
+    model.compile(loss='binary_crossentropy', optimizer='adadelta')
 
-    training_inputs = training_h5['raw_patches']
-    training_outputs = training_h5['labels']
+    training_inputs = training_h5['raw_patches'].value
+    training_outputs = training_h5['labels'].value
+    assert training_inputs.shape[0] == training_outputs.shape[0]
 
-    # Screen empty inputs/outputs.
-    # TODO(MatthewJA): Pre-screen this in another part of the pipeline.
-    nonzero = training_inputs.value[:10] != 0
-    all_nonzero = numpy.apply_along_axis(numpy.any, 0, nonzero)
-    print(all_nonzero)
-    raise
+    sets = training_h5['sets']
+    training_indices = sets[:, 0].nonzero()[0]
+    training_inputs = training_inputs[training_indices]
+    training_outputs = training_outputs[training_indices]
 
-    n = training_inputs.shape[0] // 2  # Number of examples, 0.5 train/test.
-    training_inputs = training_inputs[:n]
-    training_outputs = training_outputs[:n]
+    zero_indices = (training_outputs == 0).nonzero()[0]
+    one_indices = (training_outputs == 1).nonzero()[0]
+    subset_zero_indices = numpy.random.choice(zero_indices,
+            size=(len(one_indices,)), replace=False)
+    all_indices = numpy.hstack([subset_zero_indices, one_indices])
+    all_indices.sort()
+
+    training_inputs = training_inputs[all_indices]
+    training_outputs = training_outputs[all_indices]
+    assert (training_outputs == 1).sum() == (training_outputs == 0).sum()
+
+    training_inputs = training_inputs.reshape((
+            training_inputs.shape[0], 1, training_inputs.shape[1],
+            training_inputs.shape[2]))
+
     model.fit(training_inputs, training_outputs, batch_size=batch_size,
               nb_epoch=epochs)
-    model.save_weights(weights_path)
+    model.save_weights(weights_path, overwrite=True)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -66,7 +78,6 @@ if __name__ == '__main__':
     logging.root.setLevel(logging.DEBUG)
 
     with h5py.File(args.h5, 'r') as training_h5:
-        with h5py.File(args.output, 'w') as weights_h5:
-            with open(args.model, 'r') as model_json:
-                train(training_h5, model_json, weights_h5, args.epochs,
-                      args.batch_size)
+        with open(args.model, 'r') as model_json:
+            train(training_h5, model_json, args.output, int(args.epochs),
+                  int(args.batch_size))

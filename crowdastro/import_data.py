@@ -197,8 +197,9 @@ def import_swire(f_h5, f_csv):
             flux_ap2_24 = float(remove_nulls(row['flux_ap2_24']))
             stell_36 = float(remove_nulls(row['stell_36']))
             # Extra -1 is so we can store ATLAS subject indices later.
+            # Extra 0s are so we can store the train/test/validation set.
             rows.append((ra, dec, flux_ap2_36, flux_ap2_45, flux_ap2_58,
-                         flux_ap2_80, flux_ap2_24, stell_36, -1))
+                         flux_ap2_80, flux_ap2_24, stell_36, -1, 0, 0, 0))
             names.append(name)
 
     # Sort by name.
@@ -212,9 +213,6 @@ def import_swire(f_h5, f_csv):
     rows = numpy.array(rows)
     positions = rows[:, :2]
     swire_tree = sklearn.neighbors.KDTree(positions, metric='manhattan')
-    training_indices = set()
-    testing_indices = set()
-    validation_indices = set()
     seen = set()  # SWIRE objects we've already seen (to avoid reassignments).
     atlas_train = set(f_h5['/atlas/cdfs/training_indices'])
     atlas_test = set(f_h5['/atlas/cdfs/testing_indices'])
@@ -226,26 +224,24 @@ def import_swire(f_h5, f_csv):
                 continue
 
             seen.add(neighbour)
-            rows[neighbour, -1] = index
+            rows[neighbour, 8] = index
             if index in atlas_train:
-                training_indices.add(neighbour)
-            elif index in atlas_test:
-                testing_indices.add(neighbour)
+                rows[neighbour, 9] = 1
             elif index in atlas_valid:
-                validation_indices.add(neighbour)
-
-    training_indices = numpy.array(sorted(training_indices))
-    testing_indices = numpy.array(sorted(testing_indices))
-    validation_indices = numpy.array(sorted(validation_indices))
+                rows[neighbour, 10] = 1
+            elif index in atlas_test:
+                rows[neighbour, 11] = 1
 
     write_names = []
+    write_rows = []
     for index, name in enumerate(names):
         if index in seen:
             write_names.append(name)
+            row = rows[index]
+            write_rows.append(row)
+    write_rows = numpy.array(write_rows)
 
-    seen = numpy.array(sorted(seen))
-    rows = rows[seen]
-    assert len(rows) == len(write_names)
+    assert len(write_rows) == len(write_names)
     logging.debug('Found %d SWIRE objects near an ATLAS subject.', len(rows))
 
     # Write names to CSV.
@@ -254,13 +250,7 @@ def import_swire(f_h5, f_csv):
         writer.writerow([index, 'swire', '', '', name, ''])
 
     # Write numeric data to HDF5.
-    f_h5['/swire/cdfs'].create_dataset('catalogue', data=rows)
-    f_h5['/swire/cdfs'].create_dataset('training_indices',
-                                       data=training_indices)
-    f_h5['/swire/cdfs'].create_dataset('testing_indices',
-                                       data=testing_indices)
-    f_h5['/swire/cdfs'].create_dataset('validation_indices',
-                                       data=validation_indices)
+    f_h5['/swire/cdfs'].create_dataset('catalogue', data=write_rows)
 
 
 def contains(bbox, point):

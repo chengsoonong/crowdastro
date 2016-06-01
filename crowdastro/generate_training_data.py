@@ -34,6 +34,7 @@ def generate(f_h5, out_f_h5, simple=False):
     fluxes = swire[:, 2:7]
     stellarities = swire[:, 7]
     coords = swire[:, :2]
+    sets = swire[:, 9:12]
 
     # We now need to find the labels for each.
     truths = set(f_h5['/atlas/cdfs/consensus_objects'][:, 1])
@@ -46,13 +47,8 @@ def generate(f_h5, out_f_h5, simple=False):
     out_f_h5.create_dataset('labels', data=labels)
     out_f_h5.create_dataset('astro', data=fluxes)
     out_f_h5.create_dataset('positions', data=coords)
-    indices = out_f_h5.create_group('indices')
-    indices.create_dataset('training',
-                           data=f_h5['/swire/cdfs/training_indices'])
-    indices.create_dataset('validation',
-                           data=f_h5['/swire/cdfs/validation_indices'])
-    indices.create_dataset('testing',
-                           data=f_h5['/swire/cdfs/testing_indices'])
+    out_f_h5.create_dataset('sets', data=sets)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
