@@ -83,13 +83,56 @@
 
       Over 100000 radio sources have been cross-identified by volunteers so far\footnote{Based on the data supplied to the author.} out of the Radio Galaxy Zoo database of around 177000 radio sources, compared to a few thousand classifications by experts\cite{banfield15}. However, new surveys such as the Evolutionary Map of the Universe (EMU) \cite{norris11} and Westerbork Observations of the Deep APERTIF Northern-Sky (WODAN) \cite{röttgering11} are expected to detect over 100 million radio sources\cite{banfield15}, making crowdsourcing an intractable solution to the cross-identification problem.
 
-      The hope is that the cross-identifications made by Radio Galaxy Zoo volunteers can be used as a training set for training supervised machine learning algorithms to automatically perform the cross-identification task.
+      In this report, I describe my research into using cross-identifications made by Radio Galaxy Zoo volunteers as a training set for training supervised machine learning algorithms to automatically perform the cross-identification task.
 
     \subsection{Related Work}
 
-  \section{As Binary Classification}
+      Proctor 2006\cite{proctor06}; Kimball \& Ivezić 2008; van Velzen, Falcke, \& Körding 2015; Fan et al. 2015\cite{fan15}
 
-  \section{A Pipeline}
+  \section{Data Sources}
+
+    \subsection{ATLAS}
+
+      ATLAS is a radio-wavelength survey of the Chandra Deep Field South (CDFS) and the European Large Area ISO Survey -- South 1 (ELAIS-S1) fields, chosen as they are areas of the sky covered by the earlier SWIRE survey. This means that the ATLAS observations have corresponding observations in infrared wavelengths\cite{franzen15}, which are necessary for cross-identification as the distant galaxies of interest emit infrared radiation.
+
+      While the Radio Galaxy Zoo data include classifications of objects in both the ATLAS and FIRST surveys, here I have only focused on the ATLAS observations of CDFS. Reasons\cite{franzen15}:
+      \begin{itemize}
+        \item ATLAS is small and nice
+        \item We have complete expert classifications of ATLAS
+        \item ATLAS is mostly well-behaved, compact objects
+        \item ATLAS is considered a test run for EMU
+      \end{itemize}
+
+      ATLAS observations of CDFS consist of a $3.6 \text{ deg}^2$ mosaic of radio images between $3^\text{h}26^\text{m}-27^\circ 00'$ and $3^\text{h}36^\text{m}-29^\circ 00'$. The full ATLAS image of the CDFS field is shown in \fig \ref{fig:cdfs}.
+
+      \begin{figure}[!ht]
+        \centering
+        \includegraphics[width=0.8\linewidth,]{images/ATLAS-CDFS-cropped.pdf}
+        \caption{ATLAS observations of CDFS. Reproduced from \citet{franzen15}.}.
+        \label{fig:cdfs}
+      \end{figure}
+
+      Each ATLAS object forms a subject. Each subject consists of a $2' \times 2'$ image patch from \fig \ref{fig:cdfs} and a corresponding image patch from SWIRE centred on the associated ATLAS object.
+
+    \subsection{SWIRE}
+
+      SWIRE is an infrared-wavelength survey of seven regions of the sky in seven infrared bands. Of these regions, CDFS and ELAIS-S1 overlap with ATLAS and are hence used in Radio Galaxy Zoo.
+
+      SWIRE observations are infrared images in the various fields, and are provided in Radio Galaxy Zoo as $2' \times 2'$ image patches centred on ATLAS subjects. In addition, I make use of the SWIRE CDFS Region Fall '05 Spitzer Catalog\cite{surace05}, which describes all objects detected in the CDFS field in the SWIRE survey.
+
+      For each object in CDFS, the catalogue provides the name, location, infrared fluxes, and stellarity index associated with that object. The location is specified in right ascension and declination. The fluxes are given in five bands ($3.6\ \mu$Jy, $4.5\ \mu$Jy, $5.8\ \mu$Jy, $8.0\ \mu$Jy, and $24\ \mu$Jy) and describe how bright each object is in the corresponding flux band. Finally, the stellarity index is an indicator of how star-like each object is according to the SExtractor software package, where $0$ denotes an object that is totally non-star-like, and $1$ denotes an object that is totally star-like\cite{surace05}.
+
+    \subsection{Radio Galaxy Zoo}
+
+  \section{Cross-Identification as Binary Classification}
+
+  \section{Classification Pipeline}
+
+  \section{Results}
+
+  \section{Discussion}
+
+  \section{Conclusion}
 
   \bibliographystyle{abbrvnat}
   \bibliography{../papers}
