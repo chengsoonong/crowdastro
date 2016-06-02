@@ -212,7 +212,7 @@ def import_swire(f_h5, f_csv):
     # Only commit SWIRE objects within range.
     rows = numpy.array(rows)
     positions = rows[:, :2]
-    swire_tree = sklearn.neighbors.KDTree(positions, metric='manhattan')
+    swire_tree = sklearn.neighbors.KDTree(positions, metric='chebyshev')
     seen = set()  # SWIRE objects we've already seen (to avoid reassignments).
     atlas_train = set(f_h5['/atlas/cdfs/training_indices'])
     atlas_test = set(f_h5['/atlas/cdfs/testing_indices'])
