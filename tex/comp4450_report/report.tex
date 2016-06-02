@@ -16,11 +16,14 @@
 }
 \usepackage{subcaption}
 \usepackage[numbers]{natbib}
+\usepackage[usenames,dvipsnames]{pstricks}
+\usepackage{epsfig}
 
 \usepackage{fontspec}
 \setmainfont[Ligatures=TeX]{Palatino Linotype}
 
 \newcommand{\fig}{Figure }
+\newcommand{\sect}{Section }
 
 \begin{document}
   {\Large\noindent  Machine Learning on the Radio Galaxy Zoo}\\
@@ -35,11 +38,11 @@
 
   \section{Introduction}
 
-    \subsection{Cross-identification of Active Galactic Nuclei and Host Galaxies}
+    \subsection{Cross-identification of Radio Sources and Host Galaxies}
 
-      Radio surveys such as Faint Images of the Radio Sky at Twenty-Centimeters (FIRST) \cite{white97,becker95} and the Australian Telescope Large Area Survey (ATLAS) \cite{franzen15} are dominated by \emph{active galactic nuclei} (AGNs) \cite{banfield15}, radio emissions emitted from the centre of galaxies by supermassive black holes\cite{peterson97}. Galaxies containing an AGN are referred to as \emph{host galaxies}. These galaxies are found in infrared surveys such as the Wide-field Infrared Survey Explorer (WISE) \cite{wright10} and the SIRTF Wide-area Infrared Extragalactic survey (SWIRE) \cite{surace05,lonsdale03}.
+      Radio surveys such as Faint Images of the Radio Sky at Twenty-Centimeters (FIRST) \cite{white97,becker95} and the Australian Telescope Large Area Survey (ATLAS) \cite{franzen15} have found many sources of radio emissions. These radio sources are dominated by \emph{active galactic nuclei} (AGNs) \cite{banfield15}, galactic centres with supermassive black holes that emit radio\cite{peterson97}. Galaxies containing a radio source are referred to as \emph{host galaxies}. These galaxies are found in infrared surveys such as the Wide-field Infrared Survey Explorer (WISE) \cite{wright10} and the SIRTF Wide-area Infrared Extragalactic survey (SWIRE) \cite{surace05,lonsdale03}.
 
-      Astrophysicists are interested in the properties of both AGNs and their host galaxies, but to investigate either, the AGNs need to be matched to their host galaxies. This is called \emph{cross-identification}. Many AGNs are associated with \emph{compact radio sources}, where the radio emissions directly and simply overlap the host galaxy (\fig \ref{fig:compact-source}), and these AGNs are easy to cross-identify\cite{banfield15}. However, many AGNS are instead associated with \emph{complex radio sources}, where radio emissions can be large, sprawling, and not relate to the host galaxy in any simple way (\fig \ref{fig:complex-source}).
+      Astrophysicists are interested in the properties of both AGNs and their host galaxies, but to investigate either, the radio sources need to be matched to their host galaxies. This is called \emph{cross-identification}. Many radio sources are \emph{compact radio sources}, where the radio emissions directly and simply overlap the host galaxy (\fig \ref{fig:compact-source}). These radio sources are easy to cross-identify\cite{banfield15}. However, many radio sources are instead \emph{complex radio sources}, where radio emissions can be large, sprawling, and not relate to the host galaxy in any simple way (\fig \ref{fig:complex-source}).
 
       \begin{figure}[!ht]
         \centering
@@ -124,11 +127,48 @@
 
     \subsection{Radio Galaxy Zoo}
 
-  \section{Cross-Identification as Binary Classification}
+      Each ATLAS subject in the Radio Galaxy Zoo data is associated with a set of \emph{crowd classifications}, cross-identifications performed by volunteers. Each classification describes which radio objects near the subject the volunteer believes are part of the same radio source (called a \emph{radio combination}), as well as the location that the volunteer believes the corresponding host galaxy is located at.
+
+      There are multiple classifications for each subject ($5$ for compact sources and $20$ for complex sources) to attempt to improve accuracy. These classifications differ from each other, so they need to be brought together in some way to identify a single radio combination/galaxy location label for each radio source in the data. The collated radio combinations for subjects are called \emph{radio consensuses}, the collated locations for a subject are called \emph{location consensuses}, and collated classifications on the whole are called \emph{consensuses}. Ideally, we want to take some ``majority vote'' and choose the most common radio combination as the radio consensus and then the most common corresponding locations as the location consensuses. The former is simple --- we just count the different combinations of radio objects and choose the most common --- but finding the location consensus is considerably more difficult as many different locations could represent the same host galaxy. \citet{banfield15} solve this problem by performing kernel density estimation on the locations associated with each radio combination, then choosing the location with the highest density. I have experimented with a different method that uses PG-means\cite{hamerly07}, described later in \sect \ref{sec:consensuses}.
+
+
+  \section{The Cross-identification Task}
+
+    \subsection{Cross-identification as Binary Classification}
+
+      The first step in applying machine learning methods to the cross-identification task is to find a machine learning framework that it fits in. The cross-identification task can be modelled as binary classification, allowing the use of standard binary classification methods. This is done as follows. For an ATLAS subject, consider all SWIRE objects within $1'$ Chebyshev distance of the corresponding ATLAS object's location, i.e., all galaxies that a volunteer would be allowed to choose from in the crowdsourced cross-identification task. Each SWIRE object is then either the host galaxy or not the host galaxy. ``Host galaxy'' and ``not host galaxy'' can then be interpreted as two distinct classes, forming a binary classification problem. After training a classifier on this task, we can find the host galaxy in a subject by using the classifier to predict the probabilities that each object is the host galaxy, and then simply choose the object with the highest probability of being the host galaxy. Note that I am ignoring the problem of having multiple host galaxies in a subject, and am assuming that any subject contains exactly one host. This is an oversimplification as there are indeed subjects that contain multiple hosts, but there are very few in the ATLAS data and they greatly increase the difficulty of the problem.
+
+    \subsection{Feature-space Representation of SWIRE Objects}
+
+      To be able to classify each SWIRE object, we need to find some feature-space representation of the object. I have chosen to use a combination of the fluxes obtained from the SWIRE catalogue and features extracted from $0.8' \times 0.8'$ radio images centred on each SWIRE object. The infrared images around each object seem to contain little predictive information, and so are not included in the features.
+
+      All five fluxes are included directly as features to the classifier. To obtain the radio features, $0.8' \times 0.8'$ patches of the ATLAS radio images are taken from around each SWIRE object. These images are passed through a convolutional neural network to obtain 32 features. The network architecture is shown in \fig \ref{fig:cnn}. This network was trained by appending a $32 \times 64$ dense layer and a $64 \times 1$ dense layer, then tasking the convolutional neural network with solving the entire binary classification problem in the hope that useful features would be found by the convolutional filters.
+
+      \begin{figure}
+        \centering
+        \input{cnn}
+        \caption{Convolutional neural network for radio feature extraction. An $80 \times 80$ pixel patch of radio image (corresponding to $0.8' \times 0.8'$ of radio sky) is passed through two convolutional layers to obtain 32 features.}
+        \label{fig:cnn}
+      \end{figure}
 
   \section{Classification Pipeline}
 
+    As input, we consider an ATLAS subject. We wish to automatically identify where the host galaxy that emitted this radio source is located.
+
+
+
+  \section{Collating Classifications}
+  \label{sec:consensuses}
+
+    talk about pg means
+
   \section{Results}
+
+    show logistic regression and random forest precision/recall plots and confusion matrices
+
+    show classification accuracies on the full problem, with and without different feature sets
+
+    show some examples of colour-coded subjects
 
   \section{Discussion}
 
