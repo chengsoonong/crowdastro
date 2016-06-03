@@ -139,6 +139,7 @@
       The first step in applying machine learning methods to the cross-identification task is to find a machine learning framework that it fits in. The cross-identification task can be modelled as binary classification, allowing the use of standard binary classification methods. This is done as follows. For an ATLAS subject, consider all SWIRE objects within $1'$ Chebyshev distance of the corresponding ATLAS object's location, i.e., all galaxies that a volunteer would be allowed to choose from in the crowdsourced cross-identification task. Each SWIRE object is then either the host galaxy or not the host galaxy. ``Host galaxy'' and ``not host galaxy'' can then be interpreted as two distinct classes, forming a binary classification problem. After training a classifier on this task, we can find the host galaxy in a subject by using the classifier to predict the probabilities that each object is the host galaxy, and then simply choose the object with the highest probability of being the host galaxy. Note that I am ignoring the problem of having multiple host galaxies in a subject, and am assuming that any subject contains exactly one host. This is an oversimplification as there are indeed subjects that contain multiple hosts, but there are very few in the ATLAS data and they greatly increase the difficulty of the problem.
 
     \subsection{Feature-space Representation of SWIRE Objects}
+    \label{sec:features}
 
       To be able to classify each SWIRE object, we need to find some feature-space representation of the object. I have chosen to use a combination of the fluxes obtained from the SWIRE catalogue and features extracted from $0.8' \times 0.8'$ radio images centred on each SWIRE object. The infrared images around each object seem to contain little predictive information, and so are not included in the features.
 
@@ -151,11 +152,19 @@
         \label{fig:cnn}
       \end{figure}
 
-  \section{Classification Pipeline}
+  \section{Classification Algorithm}
 
-    As input, we consider an ATLAS subject. We wish to automatically identify where the host galaxy that emitted this radio source is located.
+    As input, we consider an ATLAS subject. We wish to automatically identify where the host galaxy that emitted this radio source is located. To perform this identification, we perform the following steps.
 
+    \begin{enumerate}
+      \item Identify all SWIRE objects within $1'$ Chebyshev distance of the ATLAS subject.
+      \item For each SWIRE object, generate features (as described in \ref{sec:features}).
+      \item Classify each SWIRE object as being either the host galaxy or not being the host galaxy. This can be done with any classifier that can output a probability estimate.
+      \item Select the SWIRE object with the highest probability of being the host galaxy.
+      \item Return the coordinates of the selected SWIRE object.
+    \end{enumerate}
 
+    I have experimented with both logistic regression and random forest classifiers. These are trained in the standard way, with the SWIRE features as inputs and the crowd classifications as labels.
 
   \section{Collating Classifications}
   \label{sec:consensuses}
