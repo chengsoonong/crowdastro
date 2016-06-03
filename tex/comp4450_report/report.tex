@@ -18,12 +18,14 @@
 \usepackage[numbers]{natbib}
 \usepackage[usenames,dvipsnames]{pstricks}
 \usepackage{epsfig}
+\usepackage{pgf}
 
 \usepackage{fontspec}
 \setmainfont[Ligatures=TeX]{Palatino Linotype}
 
 \newcommand{\fig}{Figure }
 \newcommand{\sect}{Section }
+\newcommand{\app}{Appendix }
 
 \begin{document}
   {\Large\noindent  Machine Learning on the Radio Galaxy Zoo}\\
@@ -40,7 +42,7 @@
 
     \subsection{Cross-identification of Radio Sources and Host Galaxies}
 
-      Radio surveys such as Faint Images of the Radio Sky at Twenty-Centimeters (FIRST) \cite{white97,becker95} and the Australian Telescope Large Area Survey (ATLAS) \cite{franzen15} have found many sources of radio emissions. These radio sources are dominated by \emph{active galactic nuclei} (AGNs) \cite{banfield15}, galactic centres with supermassive black holes that emit radio\cite{peterson97}. Galaxies containing a radio source are referred to as \emph{host galaxies}. These galaxies are found in infrared surveys such as the Wide-field Infrared Survey Explorer (WISE) \cite{wright10} and the SIRTF Wide-area Infrared Extragalactic survey (SWIRE) \cite{surace05,lonsdale03}.
+      Radio surveys such as Faint Images of the Radio Sky at Twenty-Centimeters (FIRST) \cite{white97,becker95} and the Australian Telescope Large Area Survey (ATLAS) \cite{franzen15} have found many sources of radio emissions. These radio sources are dominated by \emph{active galactic nuclei} (AGNs) \cite{banfield15}, galactic centres with supermassive black holes that emit radio waves\cite{peterson97}. Galaxies containing a radio source are referred to as \emph{host galaxies}. These galaxies are found in infrared surveys such as the Wide-field Infrared Survey Explorer (WISE) \cite{wright10} and the SIRTF Wide-area Infrared Extragalactic survey (SWIRE) \cite{surace05,lonsdale03}.
 
       Astrophysicists are interested in the properties of both AGNs and their host galaxies, but to investigate either, the radio sources need to be matched to their host galaxies. This is called \emph{cross-identification}. Many radio sources are \emph{compact radio sources}, where the radio emissions directly and simply overlap the host galaxy (\fig \ref{fig:compact-source}). These radio sources are easy to cross-identify\cite{banfield15}. However, many radio sources are instead \emph{complex radio sources}, where radio emissions can be large, sprawling, and not relate to the host galaxy in any simple way (\fig \ref{fig:complex-source}).
 
@@ -84,29 +86,25 @@
 
       To increase cross-identification accuracy, each compact radio source is presented to $5$ volunteers, and each complex radio source is presented to $20$ volunteers\cite{banfield15}.
 
-      Over 100000 radio sources have been cross-identified by volunteers so far\footnote{Based on the data supplied to the author.} out of the Radio Galaxy Zoo database of around 177000 radio sources, compared to a few thousand classifications by experts\cite{banfield15}. However, new surveys such as the Evolutionary Map of the Universe (EMU) \cite{norris11} and Westerbork Observations of the Deep APERTIF Northern-Sky (WODAN) \cite{röttgering11} are expected to detect over 100 million radio sources\cite{banfield15}, making crowdsourcing an intractable solution to the cross-identification problem.
+      Over 100 000 radio sources have been cross-identified by volunteers so far\footnote{Based on the data supplied to the author.} out of the Radio Galaxy Zoo database of around 177 000 radio sources, compared to a few thousand classifications by experts\cite{banfield15}. However, new surveys such as the Evolutionary Map of the Universe (EMU) \cite{norris11} and Westerbork Observations of the Deep APERTIF Northern-Sky (WODAN) \cite{röttgering11} are expected to detect over 100 million radio sources\cite{banfield15}, making crowdsourcing an intractable solution to the cross-identification problem.
 
       In this report, I describe my research into using cross-identifications made by Radio Galaxy Zoo volunteers as a training set for training supervised machine learning algorithms to automatically perform the cross-identification task.
 
     \subsection{Related Work}
 
-      Proctor 2006\cite{proctor06}; Kimball \& Ivezić 2008; van Velzen, Falcke, \& Körding 2015; Fan et al. 2015\cite{fan15}
+      Proctor 2006\cite{proctor06}; Kimball \& Ivezić 2008; van Velzen, Falcke, \& Körding 2015
+
+      \citet{fan15} developed an probabilistic, automated method of cross-identifying radio sources and host galaxies based on explicit radio source models. They modelled radio sources as a central radio object and two surrounding lobes in an approximately straight line, as would be expected of emissions from a black hole. They achieved $85.8\%$ cross-identification accuracy against the manual cross-identifications made by \citet{norris06}. While their method is limited by its dependence on the model, it is also easily extended to different models, and so may provide a good basis for future astronomical model-based work. Their method is also able to determine whether nearby radio objects are part of the same source. This is one of the problems Radio Galaxy Zoo is attempting to solve, as collating radio objects is a difficult task for computers.
 
   \section{Data Sources}
 
     \subsection{ATLAS}
 
-      ATLAS is a radio-wavelength survey of the Chandra Deep Field South (CDFS) and the European Large Area ISO Survey -- South 1 (ELAIS-S1) fields, chosen as they are areas of the sky covered by the earlier SWIRE survey. This means that the ATLAS observations have corresponding observations in infrared wavelengths\cite{franzen15}, which are necessary for cross-identification as the distant galaxies of interest emit infrared radiation.
+      ATLAS is a radio-wavelength survey of the Chandra Deep Field South (CDFS) and the European Large Area ISO Survey -- South 1 (ELAIS-S1) fields, which were chosen as they are both areas of the sky covered by the earlier SWIRE survey. This means that the ATLAS observations have corresponding observations in infrared wavelengths\cite{franzen15}. Infrared observations are necessary for cross-identification, since the distant galaxies we want to cross-identify the radio objects with emit infrared radiation.
 
-      While the Radio Galaxy Zoo data include classifications of objects in both the ATLAS and FIRST surveys, here I have only focused on the ATLAS observations of CDFS. Reasons\cite{franzen15}:
-      \begin{itemize}
-        \item ATLAS is small and nice
-        \item We have complete expert classifications of ATLAS
-        \item ATLAS is mostly well-behaved, compact objects
-        \item ATLAS is considered a test run for EMU
-      \end{itemize}
+      While the Radio Galaxy Zoo data include classifications of objects in both the ATLAS and FIRST surveys, here I have only focused on the ATLAS observations of CDFS. Firstly, ATLAS contains only 2400 objects. This is a good size --- large enough to train supervised machine learning models, but small enough to quickly iterate on these models as is required for such exploratory research. Secondly, ATLAS is mostly well-behaved, compact objects. While the eventual goal of this project is to be able to automatically cross-identify even very complicated complex sources, being able to accurately cross-identify simple compact sources is a necessary step. Thirdly, ATLAS is considered a ``test run'' for the much larger EMU survey, as EMU is similar in resolution to ATLAS\cite{franzen15}. EMU is where many new radio observations will be made, and the scale of the survey is a key motivator behind this project. Finally, ATLAS subjects have been cross-identified by experts already\cite{norris06}, meaning that I do not need to rely entirely on volunteer consensuses from the crowdsourced Radio Galaxy Zoo, and I can thus better validate and evaluate my results.
 
-      ATLAS observations of CDFS consist of a $3.6 \text{ deg}^2$ mosaic of radio images between $3^\text{h}26^\text{m}-27^\circ 00'$ and $3^\text{h}36^\text{m}-29^\circ 00'$. The full ATLAS image of the CDFS field is shown in \fig \ref{fig:cdfs}.
+      ATLAS observations of CDFS consist of a $3.6 \text{ deg}^2$ mosaic of radio images between $3^\text{h}26^\text{m} 27^\circ 00'$ and $3^\text{h}36^\text{m} 29^\circ 00'$. The full ATLAS image of the CDFS field is shown in \fig \ref{fig:cdfs}.
 
       \begin{figure}[!ht]
         \centering
@@ -129,21 +127,54 @@
 
       Each ATLAS subject in the Radio Galaxy Zoo data is associated with a set of \emph{crowd classifications}, cross-identifications performed by volunteers. Each classification describes which radio objects near the subject the volunteer believes are part of the same radio source (called a \emph{radio combination}), as well as the location that the volunteer believes the corresponding host galaxy is located at.
 
-      There are multiple classifications for each subject ($5$ for compact sources and $20$ for complex sources) to attempt to improve accuracy. These classifications differ from each other, so they need to be brought together in some way to identify a single radio combination/galaxy location label for each radio source in the data. The collated radio combinations for subjects are called \emph{radio consensuses}, the collated locations for a subject are called \emph{location consensuses}, and collated classifications on the whole are called \emph{consensuses}. Ideally, we want to take some ``majority vote'' and choose the most common radio combination as the radio consensus and then the most common corresponding locations as the location consensuses. The former is simple --- we just count the different combinations of radio objects and choose the most common --- but finding the location consensus is considerably more difficult as many different locations could represent the same host galaxy. \citet{banfield15} solve this problem by performing kernel density estimation on the locations associated with each radio combination, then choosing the location with the highest density. I have experimented with a different method that uses PG-means\cite{hamerly07}, described later in \sect \ref{sec:consensuses}.
-
+      There are multiple classifications for each subject ($5$ for compact sources and $20$ for complex sources) to attempt to improve accuracy. These classifications differ from each other, so they need to be brought together in some way to identify a single radio combination/galaxy location label for each radio source in the data. The collated radio combinations for subjects are called \emph{radio consensuses}, the collated locations for a subject are called \emph{location consensuses}, and collated classifications on the whole are called \emph{consensuses}. Ideally, we want to take some ``majority vote'' and choose the most common radio combination as the radio consensus and then the most common corresponding locations as the location consensuses. The former is simple --- we just count the different combinations of radio objects and choose the most common --- but finding the location consensus is considerably more difficult as many different locations could represent the same host galaxy. \citet{banfield15} solve this problem by performing kernel density estimation on the locations associated with each radio combination, then choosing the location with the highest density. For this report, I have used a different method that uses a clustering algorithm called PG-means\cite{hamerly07}. The different locations are assigned to clusters, and the mean of the largest cluster becomes the location consensus.%, described later in \sect \ref{sec:consensuses}.
 
   \section{The Cross-identification Task}
 
     \subsection{Cross-identification as Binary Classification}
 
-      The first step in applying machine learning methods to the cross-identification task is to find a machine learning framework that it fits in. The cross-identification task can be modelled as binary classification, allowing the use of standard binary classification methods. This is done as follows. For an ATLAS subject, consider all SWIRE objects within $1'$ Chebyshev distance of the corresponding ATLAS object's location, i.e., all galaxies that a volunteer would be allowed to choose from in the crowdsourced cross-identification task. Each SWIRE object is then either the host galaxy or not the host galaxy. ``Host galaxy'' and ``not host galaxy'' can then be interpreted as two distinct classes, forming a binary classification problem. After training a classifier on this task, we can find the host galaxy in a subject by using the classifier to predict the probabilities that each object is the host galaxy, and then simply choose the object with the highest probability of being the host galaxy. Note that I am ignoring the problem of having multiple host galaxies in a subject, and am assuming that any subject contains exactly one host. This is an oversimplification as there are indeed subjects that contain multiple hosts, but there are very few in the ATLAS data and they greatly increase the difficulty of the problem.
+      The first step in applying machine learning methods to the cross-identification task is to find a machine learning framework that it fits in. The cross-identification task can be modelled as binary classification, allowing the use of standard binary classification methods. This is done as follows. For an ATLAS subject, consider all SWIRE objects within $1'$ Chebyshev distance of the corresponding ATLAS object's location, i.e., all galaxies that a volunteer would be allowed to choose from in the crowdsourced cross-identification task. These objects are called \emph{candidate hosts}. Each candidate is then either the host galaxy or not the host galaxy. ``Host galaxy'' and ``not host galaxy'' can thus be interpreted as two distinct classes, forming a binary classification problem. After training a classifier on this task, we can find the host galaxy in a subject by using the classifier to predict the probabilities that each candidate is the host galaxy, and then simply choose the candidate with the highest probability of being the host galaxy.\\
+
+      % Formally, consider a set of candidates $\mathcal X$. Each candidate $x_i \in \mathcal X$ has a true label $t_i \in \{0, 1\}$, where $t_i$ is $1$ if $x_i$ is the host galaxy and $0$ otherwise. We want to select the candidate that maximises $p(t_i = 1 \mid x_i)$.
+
+      % Formally, consider a set of candidates $\mathcal X$ and a function $t : \mathcal X \to \{0, 1\}$, defined such that $t(x)$ is $1$ if $x$ is the host galaxy and is $0$ otherwise. We want to find the $x \in \mathcal X$ that maximises the probability of $x$ being the host galaxy $p(t(x) = 1 \mid x)$:
+      % Formally, we consider a set of candidates $\mathcal X$ and a set of labels $\mathcal Y = \{0, 1\}$. We want to find a function $y : \mathcal X \to \mathcal Y$ such that for $x \in \mathcal X$, $y(x)$ is $1$ if $x$ is a host galaxy, and $0$ otherwise.
+
+      Note that I am ignoring the problem of having multiple host galaxies in a subject, and am assuming that any subject contains exactly one host. This is an oversimplification as there are indeed subjects that contain multiple hosts, but there are very few in the ATLAS data and they greatly increase the difficulty of the problem.
+
+      % To train a binary classifier on this problem, we need to have both inputs to classify and target labels to predict. For labels, I make use of the Radio Galaxy Zoo consensuses. Each candidate is labelled with a `$1$' or a `$0$', where `$1$' means that the candidate is a host galaxy and `$0$' means that the candidate is not a host galaxy. For each consensus location in Radio Galaxy Zoo, the nearest SWIRE object is found and labelled `$1$'. All other objects are labelled `$0$'.
+
+      % The inputs to the classifier are described in \sect \ref{sec:features}, and the labels are described in \sect \ref{sec:labels}.
+
+
+    \subsection{Labels}
+      \label{sec:labels}
+
+      For training and evaluating the classifier, each SWIRE object is assigned a ``true'' label. This label comes from Radio Galaxy Zoo consensuses: For each consensus location found by Radio Galaxy Zoo volunteers, the nearest SWIRE object is labelled ``host galaxy''. All other SWIRE objects are labelled ``not host galaxy''.
+
+      I make the assumption that these labels are accurate. However, this may not be the case, since volunteers may not correctly identify host galaxies. \citet{banfield15} found that when more than $75\%$ of volunteers agree, then their cross-identifications are as accurate as experts', and volunteers agree to this level on the vast majority of ATLAS subjects, so this assumption generally holds for the ATLAS Radio Galaxy Zoo classifications. It may not hold for other data sets such as the FIRST Radio Galaxy Zoo classifications.
+      % \subsubsection{Collating Classifications}
+      % \label{sec:consensuses}
+
+      %   talk about pg means
 
     \subsection{Feature-space Representation of SWIRE Objects}
     \label{sec:features}
 
-      To be able to classify each SWIRE object, we need to find some feature-space representation of the object. I have chosen to use a combination of the fluxes obtained from the SWIRE catalogue and features extracted from $0.8' \times 0.8'$ radio images centred on each SWIRE object. The infrared images around each object seem to contain little predictive information, and so are not included in the features.
+      To be able to classify a candidate, a feature-space representation of the candidate must be found. For a given candidate, the features used are to represent it are:
+      \begin{itemize}
+         \item the $3.6\ \mu$Jy flux of the candidate,
+         \item the $4.5\ \mu$Jy flux of the candidate,
+         \item the $5.8\ \mu$Jy flux of the candidate,
+         \item the $8.0\ \mu$Jy flux of the candidate,
+         \item the $24\ \mu$Jy flux of the candidate,
+         \item the Chebyshev distance from the candidate to the nearest ATLAS object, and
+         \item features extracted from patches of radio image centred on the candidate.
+       \end{itemize}
 
-      All five fluxes are included directly as features to the classifier. To obtain the radio features, $0.8' \times 0.8'$ patches of the ATLAS radio images are taken from around each SWIRE object. These images are passed through a convolutional neural network to obtain 32 features. The network architecture is shown in \fig \ref{fig:cnn}. This network was trained by appending a $32 \times 64$ dense layer and a $64 \times 1$ dense layer, then tasking the convolutional neural network with solving the entire binary classification problem in the hope that useful features would be found by the convolutional filters.
+      The infrared images around each candidate seem to contain little predictive information, and so are not included in the features.
+
+      The radio patches are $0.8' \times 0.8'$ ($80\text{ px} \times 80\text{ px}$) images centred on each candidate. Features are extracted from these patches by a convolutional neural network. The network architecture is shown in \fig \ref{fig:cnn}. The network is pre-trained by appending a $32 \times 64$ dense layer and a $64 \times 1$ dense layer, then training the new convolutional neural network to find a map from the radio patches to the associated binary labels using backpropagation.
 
       \begin{figure}
         \centering
@@ -152,38 +183,153 @@
         \label{fig:cnn}
       \end{figure}
 
-  \section{Classification Algorithm}
+      These features are all normalised, and the non-radio features are scaled. Scaling the radio features seems to significantly decrease classification accuracy, so I have chosen not to scale the radio features.
 
-    As input, we consider an ATLAS subject. We wish to automatically identify where the host galaxy that emitted this radio source is located. To perform this identification, we perform the following steps.
+    \subsection{Classification Algorithm}
+      \label{sec:algorithm}
 
-    \begin{enumerate}
-      \item Identify all SWIRE objects within $1'$ Chebyshev distance of the ATLAS subject.
-      \item For each SWIRE object, generate features (as described in \ref{sec:features}).
-      \item Classify each SWIRE object as being either the host galaxy or not being the host galaxy. This can be done with any classifier that can output a probability estimate.
-      \item Select the SWIRE object with the highest probability of being the host galaxy.
-      \item Return the coordinates of the selected SWIRE object.
-    \end{enumerate}
+      As input, we consider an ATLAS subject. We wish to automatically identify where the host galaxy that emitted this radio source is located. To perform this identification, we perform the following steps.
 
-    I have experimented with both logistic regression and random forest classifiers. These are trained in the standard way, with the SWIRE features as inputs and the crowd classifications as labels.
+      \begin{enumerate}
+        \item Identify all candidates (SWIRE objects) within $1'$ Chebyshev distance of the ATLAS subject.
+        \item For each candidate, generate features (as described in \ref{sec:features}).
+        \item Classify each candidate as being either the host galaxy or not being the host galaxy. This can be done with any classifier that can output a probability estimate.
+        \item Select the candidate with the highest probability of being the host galaxy.
+        \item Return the coordinates of the selected candidate.
+      \end{enumerate}
 
-  \section{Collating Classifications}
-  \label{sec:consensuses}
+      The above classification algorithm is pictured in \fig \ref{fig:pipeline}. In this report, I have experimented with using both logistic regression and random forest classifiers.
 
-    talk about pg means
+      \begin{figure}[!ht]
+        \centering
+        \includegraphics[width=0.9\linewidth]{images/pipeline.pdf}
+        \caption{Classification algorithm. Non-image features are not pictured. Values are for indication only and are not the actual output of the classifier on the displayed inputs.}
+        \label{fig:pipeline}
+      \end{figure}
+
+    \subsection{Evaluating the Classifier}
+
+      There are two main ways to evaluate the classifier. Firstly, the classifier can be used to label a set of training SWIRE objects with known labels, and the classification accuracy can be found. This is very easy, but does not capture the cross-identification task --- labelling an individual SWIRE object may be more or less difficult than finding the host galaxy amongst a set of other candidate hosts. The second way to evaluate the classifier is to find the host coordinates for a set of training \emph{ATLAS subjects}, and then compare these coordinates to those found by Radio Galaxy Zoo volunteers. The performance measure is then how many ATLAS subjects the classifier is able to find the correct host location for.
 
   \section{Results}
 
-    show logistic regression and random forest precision/recall plots and confusion matrices
+    \subsection{Logistic Regression}
 
-    show classification accuracies on the full problem, with and without different feature sets
+      Logistic regression was used in the classification algorithm described in \sect \ref{sec:algorithm}, with $1.0\ L_2$ regularisation. This resulted in $87.83\%$ classification accuracy when classifying individual SWIRE objects, and $72.12\%$ accuracy when finding the host galaxy for ATLAS subjects. The precision--recall and ROC curves for the individual classification task are displayed in \fig \ref{fig:precision-recall-roc-lr}, and the confusion matrix for the individual classification task is displayed in \fig \ref{fig:confusion-lr}. These metrics are not well-defined for the full host galaxy task, but sample outputs are displayed in \app I.
 
-    show some examples of colour-coded subjects
+      \begin{figure}[!ht]
+        \centering
+        \includegraphics[width=\linewidth]{images/metrics_lr.pdf}
+        \caption{Precision--recall and ROC curves for logistic regression on the individual SWIRE object classification task.}
+        \label{fig:precision-recall-roc-lr}
+      \end{figure}
+
+      \begin{figure}[!ht]
+        \centering
+        \includegraphics[width=0.5\linewidth]{images/confusion_lr.pdf}
+        \caption{Confusion matrix for logistic regression on the individual SWIRE object classification task. The colour axis represents classification accuracy for each category.}
+        \label{fig:confusion-lr}
+      \end{figure}
+
+    \subsection{Random Forests}
+
+      Random forests with 10 trees were used in the classification algorithm described in \sect \ref{sec:algorithm}. This resulted in $99.34\%$ classification accuracy when classifying individual SWIRE objects, and $80.75\%$ accuracy when finding the host galaxy for ATLAS subjects. The precision--recall and ROC curves for the individual classification task are displayed in \fig \ref{fig:precision-recall-roc-rf}, and the confusion matrix for the individual classification task is displayed in \fig \ref{fig:confusion-rf}. These metrics are not well-defined for the full host galaxy task, but sample outputs are displayed in \app II.
+
+      \begin{figure}
+        \centering
+        \includegraphics[width=\linewidth]{images/metrics_rf.pdf}
+        \caption{Precision--recall and ROC curves for random forests on the individual SWIRE object classification task.}
+        \label{fig:precision-recall-roc-rf}
+      \end{figure}
+
+      \begin{figure}
+        \centering
+        \includegraphics[width=0.5\linewidth]{images/confusion_rf.pdf}
+        \caption{Confusion matrix for random forests on the individual SWIRE object classification task. The colour axis represents classification accuracy for each category.}
+        \label{fig:confusion-rf}
+      \end{figure}
+
+    % show classification accuracies on the full problem, with and without different feature sets
 
   \section{Discussion}
+
+  \section{Future Work}
+
+    \begin{itemize}
+      \item using the radio/location percentage consensuses to guess uncertainty
+      \item model label noise
+      \item active learning
+    \end{itemize}
 
   \section{Conclusion}
 
   \bibliographystyle{abbrvnat}
   \bibliography{../papers}
+
+  \newpage
+  \section*{Appendix I}
+
+    This appendix contains sample outputs from the logistic regression classifier. On the left of each figure is an ATLAS subject, with the infrared image from SWIRE in the background and intensity contours of the ATLAS radio image in the foreground. Candidate hosts are plotted on top of these images, coloured based on the predicted probability that they are the true host (where blue is least likely, and pink is most likely). On the right of each figure is a plot of each candidate's predicted probability with an arbitrary $x$ axis. The candidates have been sorted by increasing probability. This helps to visualise the spread of the probabilities.
+
+    \begin{figure}[!ht]
+      \centering
+      \includegraphics[width=\linewidth]{images/ARG0003r2o_lr.pdf}
+      \caption{Logistic regression output for ARG0003r2o, an easy-to-classify compact source.}
+      \label{fig:ARG0003r2o_lr}
+    \end{figure}
+
+    \begin{figure}[!ht]
+      \centering
+      \includegraphics[width=\linewidth]{images/ARG0003r2w_lr.pdf}
+      \caption{Logistic regression output for ARG0003r2w, an easy-to-classify compact source.}
+      \label{fig:ARG0003r2w_lr}
+    \end{figure}
+
+    \begin{figure}[!ht]
+      \centering
+      \includegraphics[width=\linewidth]{images/ARG0003r25_lr.pdf}
+      \caption{Logistic regression output for ARG0003r25, a complex source.}
+      \label{fig:ARG0003r25_lr}
+    \end{figure}
+
+    \begin{figure}[!ht]
+      \centering
+      \includegraphics[width=\linewidth]{images/ARG0003r1r_lr.pdf}
+      \caption{Logistic regression output for ARG0003r1r, consisting of two (possibly three) radio sources. This is hard to classify even for humans, and the difficulty is clear from the plot.}
+      \label{fig:ARG0003r1r_lr}
+    \end{figure}
+
+  \newpage
+  \section*{Appendix II}
+
+    This appendix contains sample outputs from the random forest classifier. On the left of each figure is an ATLAS subject, with the infrared image from SWIRE in the background and intensity contours of the ATLAS radio image in the foreground. Candidate hosts are plotted on top of these images, coloured based on the predicted probability that they are the true host (where blue is least likely, and pink is most likely). On the right of each figure is a plot of each candidate's predicted probability with an arbitrary $x$ axis. The candidates have been sorted by increasing probability.
+
+    \begin{figure}[!ht]
+      \centering
+      \includegraphics[width=\linewidth]{images/ARG0003r2o_rf.pdf}
+      \caption{Random forests output for ARG0003r2o, an easy-to-classify compact source.}
+      \label{fig:ARG0003r2o_rf}
+    \end{figure}
+
+    \begin{figure}[!ht]
+      \centering
+      \includegraphics[width=\linewidth]{images/ARG0003r2w_rf.pdf}
+      \caption{Random forests output for ARG0003r2w, a compact source. Logistic regression classifies this easily, but random forests finds two candidates with equal probability of being the true host.}
+      \label{fig:ARG0003r2w_rf}
+    \end{figure}
+
+    \begin{figure}[!ht]
+      \centering
+      \includegraphics[width=\linewidth]{images/ARG0003r25_rf.pdf}
+      \caption{Random forests output for ARG0003r25, a complex source.}
+      \label{fig:ARG0003r25_rf}
+    \end{figure}
+
+    \begin{figure}[!ht]
+      \centering
+      \includegraphics[width=\linewidth]{images/ARG0003r1r_rf.pdf}
+      \caption{Random forests output for ARG0003r1r, consisting of two (possibly three) radio sources. Random forests does well on this subject despite it being quite complicated.}
+      \label{fig:ARG0003r1r_rf}
+    \end{figure}
 
 \end{document}
