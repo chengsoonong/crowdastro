@@ -28,7 +28,7 @@
         },
         "swire": {
             "distance_cutoff": 0.00083,
-            "stellarity_cutoff": 0.99,
+            "stellarity_cutoff": 0.90,
             "flux_cutoff": 1000.0
         }
     },
