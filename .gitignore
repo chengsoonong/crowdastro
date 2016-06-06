@@ -78,3 +78,8 @@ site/*
 # Pickles
 *.pkl
 *.npy
+
+# Output
+*.csv
+*.json
+*.h5
