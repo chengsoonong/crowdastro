@@ -11,6 +11,7 @@ import argparse
 
 import h5py
 import numpy
+import sklearn.neighbors
 
 from .config import config
 
@@ -36,6 +37,15 @@ def generate(f_h5, out_f_h5, simple=False):
     coords = swire[:, :2]
     sets = swire[:, 9:12]
 
+    # Generate the distance feature. This is the Euclidean distance from the
+    # nearest ATLAS object. Ideally, it would be the distance from the ATLAS
+    # object we are trying to classify, but this will be an okay approximation.
+    atlas = f_h5['/atlas/cdfs/positions'].value
+    atlas_tree = sklearn.neighbors.KDTree(atlas)
+    dists, _ = atlas_tree.query(coords)
+    assert dists.shape[0] == coords.shape[0]
+    assert dists.shape[1] == 1
+
     # We now need to find the labels for each.
     truths = set(f_h5['/atlas/cdfs/consensus_objects'][:, 1])
     labels = numpy.array([o in truths for o in range(len(swire))])
@@ -43,9 +53,11 @@ def generate(f_h5, out_f_h5, simple=False):
     assert len(labels) == len(fluxes)
     assert len(fluxes) == len(stellarities)
 
+    astro = numpy.hstack([fluxes, dists])
+
     # Save to HDF5.
     out_f_h5.create_dataset('labels', data=labels)
-    out_f_h5.create_dataset('astro', data=fluxes)
+    out_f_h5.create_dataset('astro', data=astro)
     out_f_h5.create_dataset('positions', data=coords)
     out_f_h5.create_dataset('sets', data=sets)
 
