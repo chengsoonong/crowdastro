@@ -14,9 +14,7 @@ import h5py
 import keras.models
 import numpy
 
-
 from .config import config
-
 
 PATCH_RADIUS = config['patch_radius']
 PATCH_DIAMETER = PATCH_RADIUS * 2
@@ -61,6 +59,7 @@ def train(training_h5, model_json, weights_path, epochs, batch_size):
     model.fit(training_inputs, training_outputs, batch_size=batch_size,
               nb_epoch=epochs)
     model.save_weights(weights_path, overwrite=True)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

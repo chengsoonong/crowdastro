@@ -5,8 +5,6 @@ The Australian National University
 2016
 """
 
-#/usr/bin/env python3
-
 import argparse
 import csv
 import logging

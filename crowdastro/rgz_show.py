@@ -1,4 +1,4 @@
-"""Visualisations of Radio Galaxy Zoo data."""
+"""Visualisations of Radio Galaxy Zoo subjects."""
 
 import astropy.io.fits
 import matplotlib.colors
@@ -28,7 +28,7 @@ def clicks(cs, colour='gray'):
     -> MatPlotLib scatter plot.
     """
     cs = (config['surveys']['atlas']['fits_height'] -
-          numpy.array(cs) * config.get('click_to_fits'))
+          numpy.array(cs) * config['surveys']['atlas']['click_to_fits'])
     return matplotlib.pyplot.scatter(cs[:, 0], cs[:, 1], color=colour)
 
 def contours(subject, colour='gray'):

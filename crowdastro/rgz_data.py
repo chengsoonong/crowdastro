@@ -1,4 +1,9 @@
-"""Utilities for interacting with the Radio Galaxy Zoo data."""
+"""Utilities for interacting with the Radio Galaxy Zoo database.
+
+Matthew Alger
+The Australian National University
+2016
+"""
 
 import io
 import os.path

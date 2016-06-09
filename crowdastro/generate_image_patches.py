@@ -18,7 +18,6 @@ import sklearn.neighbors
 
 from .config import config
 
-
 PATCH_RADIUS = config['patch_radius']
 ARCMIN = 1 / 60
 
