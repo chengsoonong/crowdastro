@@ -1,12 +1,12 @@
-"""Visualisations of Radio Galaxy Zoo data."""
+"""Visualisations of Radio Galaxy Zoo subjects."""
 
 import astropy.io.fits
 import matplotlib.colors
 import matplotlib.pyplot
 import numpy
 
-from . import config
 from . import data
+from .config import config
 
 def image(im, contrast=0.05):
     """Plots an RGZ image.
@@ -27,8 +27,8 @@ def clicks(cs, colour='gray'):
     cs: List of (x, y) click tuples.
     -> MatPlotLib scatter plot.
     """
-    cs = (config.get('fits_image_height') -
-          numpy.array(cs) * config.get('click_to_fits'))
+    cs = (config['surveys']['atlas']['fits_height'] -
+          numpy.array(cs) * config['surveys']['atlas']['click_to_fits'])
     return matplotlib.pyplot.scatter(cs[:, 0], cs[:, 1], color=colour)
 
 def contours(subject, colour='gray'):
@@ -44,7 +44,7 @@ def contours(subject, colour='gray'):
             for pair in col['arr']:
                 xs.append(pair['x'])
                 ys.append(pair['y'])
-            ys = config.get('fits_image_height') - numpy.array(ys)
+            ys = config['surveys']['atlas']['fits_height'] - numpy.array(ys)
             matplotlib.pyplot.plot(xs, ys, c=colour)
 
 def ir(subject):
@@ -70,5 +70,5 @@ def subject(s):
     """
     ir(s)
     contours(s, colour='green')
-    matplotlib.pyplot.xlim(0, config.get('fits_image_width'))
-    matplotlib.pyplot.ylim(0, config.get('fits_image_height'))
+    matplotlib.pyplot.xlim(0, config['surveys']['atlas']['fits_width'])
+    matplotlib.pyplot.ylim(0, config['surveys']['atlas']['fits_height'])

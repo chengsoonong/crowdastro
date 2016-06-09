@@ -1,21 +1,12 @@
-#!/usr/bin/env python3
-
 """Trains a convolutional neural network model.
-
-This is a self-contained module.
-
-Usage:
-  ./train_cnn.py in_data_path in_model_path out_weights_path epochs batch_size
 
 Matthew Alger
 The Australian National University
 2016
 """
 
-# This module should have minimal imports, so we can easily run it on GPU
-# clusters.
-
 import argparse
+import logging
 import os.path
 
 import astropy.io.fits
@@ -23,40 +14,69 @@ import h5py
 import keras.models
 import numpy
 
-RADIUS = 40
+from .config import config
 
-def train(data_path, model_path, weights_path, epochs, batch_size):
-  """Trains a CNN.
+PATCH_RADIUS = config['patch_radius']
+PATCH_DIAMETER = PATCH_RADIUS * 2
 
-  data_path: Path to input data HDF5 file.
-  model_path: Path to JSON model.
-  weights_path: Path to output weights HDF5 file.
-  epochs: Number of training epochs.
-  batch_size: Batch size.
-  """
-  with open(model_path) as f:
-    model = keras.models.model_from_json(f.read())
-  model.compile(loss='binary_crossentropy', optimizer='adadelta')
 
-  with h5py.File(data_path) as hf:
-    sources = hf['data']['source']
-    training_inputs = hf['inputs']
-    training_outputs = hf['outputs']
+def train(training_h5, model_json, weights_path, epochs, batch_size):
+    """Trains a CNN.
 
-    n = training_inputs.shape[0] // 2  # Number of examples, 0.5 train/test.
-    training_inputs = training_inputs[:n]
-    training_outputs = training_outputs[:n]
+    training_h5: Training HDF5 file.
+    model_json: JSON model file.
+    weights_path: Output weights HDF5 file.
+    epochs: Number of training epochs.
+    batch_size: Batch size.
+    """
+    model = keras.models.model_from_json(model_json.read())
+    model.compile(loss='binary_crossentropy', optimizer='adadelta')
+
+    training_inputs = training_h5['raw_patches'].value
+    training_outputs = training_h5['labels'].value
+    assert training_inputs.shape[0] == training_outputs.shape[0]
+
+    sets = training_h5['sets']
+    training_indices = sets[:, 0].nonzero()[0]
+    training_inputs = training_inputs[training_indices]
+    training_outputs = training_outputs[training_indices]
+
+    zero_indices = (training_outputs == 0).nonzero()[0]
+    one_indices = (training_outputs == 1).nonzero()[0]
+    subset_zero_indices = numpy.random.choice(zero_indices,
+            size=(len(one_indices,)), replace=False)
+    all_indices = numpy.hstack([subset_zero_indices, one_indices])
+    all_indices.sort()
+
+    training_inputs = training_inputs[all_indices]
+    training_outputs = training_outputs[all_indices]
+    assert (training_outputs == 1).sum() == (training_outputs == 0).sum()
+
+    training_inputs = training_inputs.reshape((
+            training_inputs.shape[0], 1, training_inputs.shape[1],
+            training_inputs.shape[2]))
+
     model.fit(training_inputs, training_outputs, batch_size=batch_size,
               nb_epoch=epochs)
-    model.save_weights(weights_path)
+    model.save_weights(weights_path, overwrite=True)
+
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument('data', help='path to training data HDF5')
-  parser.add_argument('model', help='path to model JSON')
-  parser.add_argument('weights', help='path to output weights HDF5')
-  parser.add_argument('epochs', help='number of epochs', type=int)
-  parser.add_argument('batch_size', help='batch size', type=int)
-  args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--h5', default='training.h5',
+                        help='HDF5 training data file')
+    parser.add_argument('--model', default='model.json',
+                        help='JSON model file')
+    parser.add_argument('--output', default='weights.h5',
+                        help='HDF5 file for output weights')
+    parser.add_argument('--epochs', default=10,
+                        help='number of epochs to train for')
+    parser.add_argument('--batch_size', default=100, help='batch size')
+    args = parser.parse_args()
 
-  train(args.data, args.model, args.weights, args.epochs, args.batch_size)
+    logging.root.setLevel(logging.DEBUG)
+
+    with h5py.File(args.h5, 'r') as training_h5:
+        with open(args.model, 'r') as model_json:
+            train(training_h5, model_json, args.output, int(args.epochs),
+                  int(args.batch_size))

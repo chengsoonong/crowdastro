@@ -11,45 +11,59 @@ For a brief description of each notebook, see the documentation [here](docs/note
 
 ## Running the pipeline
 
-Process the raw classifications:
+Import data sources:
 
 ```bash
-python3 -m crowdastro raw_classifications processed.db classifications --atlas
+python3 -m crowdastro.import_data
 ```
 
 Process the consensuses:
 
 ```bash
-python3 -m crowdastro consensuses processed.db consensuses --atlas
+python3 -m crowdastro.consensuses
 ```
 
-Generate the training data:
+Generate the (non-image) training data:
 
 ```bash
-python3 -m crowdastro training_data processed.db consensuses gator_cache training.h5 --atlas
+python3 -m crowdastro.generate_training_data
 ```
 
-Preprocess the CNN inputs/outputs:
+Generate the (raw) image training data:
 
 ```bash
-crowdastro/preprocess_cnn_images.py training.h5 data
+python3 -m crowdastro.generate_image_patches
 ```
-
-Here, `data` is the directory containing the `cdfs` and `elais` directories.
 
 Generate a model:
 
 ```bash
-crowdastro/compile_cnn.py model.json
+python3 -m crowdastro.compile_cnn
 ```
 
 Train the CNN:
 
 ```bash
-crowdastro/train_cnn.py training.h5 model.json weights.h5 n_epochs batch_size
+python3 -m crowdastro.train_cnn
 ```
 
-Coming soon: Fitting PCA, and finally classifying.
+Generate the CNN outputs:
+
+```bash
+python3 -m crowdastro.generate_cnn_outputs
+```
+
+Train a logistic regression classifier:
+
+```bash
+python3 -m crowdastro.train_lr
+```
+
+Test the logistic regression classifier against subjects:
+
+```bash
+python3 -m crowdastro.test_lr
+```
 
 ## Generating the Radio Galaxy Zoo catalogue
 

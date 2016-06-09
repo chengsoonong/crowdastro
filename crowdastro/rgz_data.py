@@ -1,4 +1,9 @@
-"""Utilities for interacting with the Radio Galaxy Zoo data."""
+"""Utilities for interacting with the Radio Galaxy Zoo database.
+
+Matthew Alger
+The Australian National University
+2016
+"""
 
 import io
 import os.path
@@ -13,10 +18,11 @@ import pymongo
 import requests
 import requests_cache
 
-from . import config
+from .config import config
 
-client = pymongo.MongoClient(config.get('mongo_host'), config.get('mongo_port'))
-db = client[config.get('mongo_db_name')]
+client = pymongo.MongoClient(config['mongo']['host'], config['mongo']['port'])
+db = client[config['data_sources']['radio_galaxy_zoo_db']]
+
 
 def require_atlas(f):
     """Decorator that ensures a subject (the first argument) is from the ATLAS
@@ -30,10 +36,12 @@ def require_atlas(f):
 
     return g
 
+
 def get_random_subject():
     return list(db.radio_subjects.aggregate([
         {'$match': {'metadata.survey': 'atlas'}},
         {'$sample': {'size': 1}}]))[0]
+
 
 def get_subject(zid):
     """Gets a Radio Galaxy Zoo subject from the database.
@@ -43,6 +51,7 @@ def get_subject(zid):
     """
     return db.radio_subjects.find_one({'zooniverse_id': zid})
 
+
 def get_subject_raw_id(subject_id):
     """Gets a Radio Galaxy Zoo subject from the database using its subject ID.
 
@@ -51,27 +60,53 @@ def get_subject_raw_id(subject_id):
     """
     return db.radio_subjects.find_one({'_id': subject_id})
 
+
 def get_all_classifications():
-    """Yields all RGZ classification dicts."""
+    """Returns cursor yielding all RGZ classification dicts.
+
+    -> MongoDB cursor
+    """
     return db.radio_classifications.find()
 
+
 def get_subject_classifications(subject):
-    """Yields all classifications associated with a subject.
+    """Returns cursor yielding all classifications associated with a subject.
 
     subject: RGZ subject dict.
+    -> MongoDB cursor
     """
     return db.radio_classifications.find({'subject_ids': subject['_id']})
 
-def get_all_subjects(atlas=False):
-    """Yields all RGZ subject dicts.
 
-    atlas: Whether to only yield ATLAS subjects. Default False.
+def get_all_subjects(survey=None, field=None):
+    """Returns cursor yielding RGZ subject dicts.
+
+    survey: Optional. Survey subject was observed in. {'atlas', None}.
+    field: Optional. Field subject was observed in. {'cdfs', 'elais-s1', None}.
+    -> MongoDB cursor
     """
-    if atlas:
-        return db.radio_subjects.find(
-                {'metadata.survey': 'atlas'}).batch_size(100)
+    if survey is None:
+        return db.radio_subjects.find()
 
-    return db.radio_subjects.find().batch_size(100)
+    if survey == 'atlas':
+        if field is None:
+            return db.radio_subjects.find(
+                    {'metadata.survey': 'atlas'})
+
+        if field == 'cdfs':
+            return db.radio_subjects.find(
+                    {'metadata.survey': 'atlas',
+                     'metadata.source': {'$regex': '^CI'}})
+
+        if field == 'elais-s1':
+            return db.radio_subjects.find(
+                    {'metadata.survey': 'atlas',
+                     'metadata.source': {'$regex': '^EI'}})
+
+        raise ValueError('Unknown field: {}'.format(field))
+
+    raise ValueError('Unknown survey: {}'.format(survey))
+
 
 @require_atlas
 def open_fits(subject, field, wavelength, size='2x2'):
@@ -85,17 +120,19 @@ def open_fits(subject, field, wavelength, size='2x2'):
     size: Optional. '2x2' or '5x5'.
     -> FITS image file.
     """
-    if field not in {'elais', 'cdfs'}:
-        raise ValueError('field must be either "elais" or "cdfs".')
+    if field not in {'elais-s1', 'cdfs'}:
+        raise ValueError('field must be either "elais-s1" or "cdfs".')
 
     if wavelength not in {'ir', 'radio'}:
         raise ValueError('wavelength must be either "ir" or "radio".')
 
     cid = subject['metadata']['source']
     filename = '{}_{}.fits'.format(cid, wavelength)
-    path = os.path.join(config.get('data_path'), field, size, filename)
+    path = os.path.join(config['data_sources']['{}_fits'.format(field)], size,
+                        filename)
     
     return astropy.io.fits.open(path, ignore_blank=True)
+
 
 @require_atlas
 def get_ir(subject, size='2x2'):
@@ -108,10 +145,11 @@ def get_ir(subject, size='2x2'):
     if subject['metadata']['source'].startswith('C'):
         field = 'cdfs'
     else:
-        field = 'elais'
+        field = 'elais-s1'
 
     with open_fits(subject, field, 'ir', size=size) as fits_file:
         return fits_file[0].data
+
 
 @require_atlas
 def get_ir_fits(subject, size='2x2'):
@@ -124,10 +162,11 @@ def get_ir_fits(subject, size='2x2'):
     if subject['metadata']['source'].startswith('C'):
         field = 'cdfs'
     else:
-        field = 'elais'
+        field = 'elais-s1'
 
     with open_fits(subject, field, 'ir', size=size) as fits_file:
         return fits_file[0]
+
 
 @require_atlas
 def get_radio(subject, size='2x2'):
@@ -140,10 +179,11 @@ def get_radio(subject, size='2x2'):
     if subject['metadata']['source'].startswith('C'):
         field = 'cdfs'
     else:
-        field = 'elais'
+        field = 'elais-s1'
 
     with open_fits(subject, field, 'radio', size=size) as fits_file:
         return fits_file[0].data
+
 
 @require_atlas
 def get_radio_fits(subject, size='2x2'):
@@ -156,10 +196,11 @@ def get_radio_fits(subject, size='2x2'):
     if subject['metadata']['source'].startswith('C'):
         field = 'cdfs'
     else:
-        field = 'elais'
+        field = 'elais-s1'
 
     with open_fits(subject, field, 'radio', size=size) as fits_file:
         return fits_file[0]
+
 
 def get_contours(subject):
     """Fetches the radio contours of a subject.
@@ -169,6 +210,7 @@ def get_contours(subject):
     """
     # TODO(MatthewJA): Cache these.
     return requests.get(subject['location']['contours']).json()
+
 
 @require_atlas
 def get_potential_hosts(subject, cache_name, convert_to_px=True):
