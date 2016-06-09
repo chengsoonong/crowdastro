@@ -1,13 +1,4 @@
-#!/usr/bin/env python3
-
 """Builds the convolutional neural network model.
-
-This is a self-contained module.
-
-Usage:
-  ./compile_cnn.py out_path [params]
-
-See --help for information on params.
 
 Matthew Alger
 The Australian National University
@@ -19,6 +10,7 @@ import argparse
 import keras.layers.core as core
 import keras.layers.convolutional as conv
 import keras.models as models
+
 
 def main(out_path, n_filters, conv_size, pool_size, dropout, hidden_layer_size,
          patch_size):
@@ -45,9 +37,11 @@ def main(out_path, n_filters, conv_size, pool_size, dropout, hidden_layer_size,
     with open(out_path, 'w') as f:
         f.write(model_json)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('out_path', help='path to output model JSON')
+    parser.add_argument('--out_path', help='path to output model JSON',
+                        default='model.json')
     parser.add_argument('--n_filters', help='number of convolutional filters',
                         default=32)
     parser.add_argument('--conv_size', help='size of convolutional filters',

@@ -74,3 +74,12 @@ site/*
 *.fls
 *.log
 *.out
+
+# Pickles
+*.pkl
+*.npy
+
+# Output
+*.csv
+*.json
+*.h5

@@ -36,6 +36,7 @@ def make_host(subject, wcs, cache_name, consensus):
     # reproducible. Convert pixel coordinates into RA/DEC.
     x = consensus['source_x']
     # Pretty much following willettk's rgz-analysis code here.
+    raise NotImplementedError('Scales have been changed and code not updated.')
     y = config.get('fits_image_height') - consensus['source_y']
     x, y = wcs.wcs_pix2world([x], [y], 1)
 
