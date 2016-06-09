@@ -41,8 +41,9 @@ def generate(training_h5, cnn_model_json, cnn_weights_path):
     if 'cnn_outputs' in training_h5:
         del training_h5['cnn_outputs']
 
+    test_out = get_convolutional_features(images[:1, :, :, :])
     out = training_h5.create_dataset('cnn_outputs', dtype=float,
-                                     shape=(len(images), 32))
+                                     shape=(len(images), test_out.shape[1]))
 
     batch_size = 1000
     for i in range(0, len(images), batch_size):
