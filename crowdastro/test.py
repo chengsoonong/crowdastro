@@ -112,7 +112,7 @@ if __name__ == '__main__':
                         help='use only single-AGN subjects')
     args = parser.parse_args()
 
-    logging.root.setLevel(logging.DEBUG)
+    logging.getLogger('sknn.mlp').setLevel(logging.WARNING)
 
     with h5py.File(args.training, 'r') as training_h5:
         with h5py.File(args.inputs, 'r') as inputs_h5:

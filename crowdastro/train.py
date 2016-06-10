@@ -15,6 +15,9 @@ import sklearn.ensemble
 import sklearn.linear_model
 import sklearn.pipeline
 import sklearn.preprocessing
+import sklearn.svm
+import sknn.mlp
+import unbalanced_dataset.over_sampling.random_over_sampler as ros
 
 from .config import config
 
@@ -23,7 +26,7 @@ PATCH_DIAMETER = PATCH_RADIUS * 2
 
 def train(inputs_h5, training_h5, classifier_out_path,
           astro_transformer_out_path, image_transformer_out_path,
-          classifier='lr', use_astro=True, use_cnn=True):
+          classifier='lr', use_astro=True, use_cnn=True, n_jobs=-1):
     """Trains logistic regression.
 
     inputs_h5: Inputs HDF5 file.
@@ -34,19 +37,11 @@ def train(inputs_h5, training_h5, classifier_out_path,
     classifier: Classifier to use in {'lr', 'rf'}. Default 'lr'.
     use_astro: Use astronomical features. Default True.
     use_cnn: Use CNN features. Default True.
+    n_jobs: Number of cores to use. Default all.
     -> classifier
     """
     if not any([use_astro, use_cnn]):
         raise ValueError('Must have features.')
-
-    if classifier == 'lr':
-        classifier = sklearn.linear_model.LogisticRegression(
-                class_weight='balanced')
-    elif classifier == 'rf':
-        classifier = sklearn.ensemble.RandomForestClassifier(
-                class_weight='balanced')
-    else:
-        raise ValueError('Unknown classifier: {}'.format(classifier))
 
     training_indices = (training_h5['sets'][:, 0] == 1).nonzero()[0]
     outputs = training_h5['labels'].value
@@ -72,6 +67,28 @@ def train(inputs_h5, training_h5, classifier_out_path,
     inputs = inputs[training_indices]
     outputs = outputs[training_indices]
 
+    if classifier == 'lr':
+        classifier = sklearn.linear_model.LogisticRegression(
+                class_weight='balanced', n_jobs=n_jobs)
+    elif classifier == 'rf':
+        classifier = sklearn.ensemble.RandomForestClassifier(
+                class_weight='balanced', n_jobs=n_jobs)
+    elif classifier == 'nn':
+        classifier = sknn.mlp.Classifier(
+                layers=[sknn.mlp.Layer('Sigmoid', units=inputs.shape[1] // 2),
+                        sknn.mlp.Layer('Softmax')],
+                # Match sklearn parameters. They're default for sklearn, but
+                # not for sknn.
+                n_iter=100,
+                regularize='L2')
+        sampler = ros.RandomOverSampler()
+        sampler.fit(inputs, outputs)
+        inputs, outputs = sampler.transform(inputs, outputs)
+    elif classifier == 'svm':
+        classifier = sklearn.svm.SVC(class_weight='balanced', probability=True)
+    else:
+        raise ValueError('Unknown classifier: {}'.format(classifier))
+
     classifier.fit(inputs, outputs)
 
     sklearn.externals.joblib.dump(classifier, classifier_out_path)
@@ -93,12 +110,14 @@ if __name__ == '__main__':
                         help='astro_transformer output file')
     parser.add_argument('--it_out', default='image_transformer.pkl',
                         help='image_transformer output file')
-    parser.add_argument('--classifier', choices={'lr', 'rf'}, default='lr',
-                        help='which classifier to train')
+    parser.add_argument('--classifier', choices={'lr', 'rf', 'nn', 'svm'},
+                        default='lr', help='which classifier to train')
     parser.add_argument('--no_astro', action='store_false', default=True,
                         help='ignore astro features')
     parser.add_argument('--no_cnn', action='store_false', default=True,
                         help='ignore CNN features')
+    parser.add_argument('--n_jobs', default=-1, type=int,
+                        help='number of cores to use')
     args = parser.parse_args()
 
     logging.root.setLevel(logging.DEBUG)
