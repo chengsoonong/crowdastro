@@ -24,12 +24,13 @@ K:\MongoDB\Server\3.2\bin\mongod.exe --dbpath J:\data\mongodb
 
 ## Data
 
-You need the following four data files:
+You need the following five data files:
 
 - ATLASDR3_cmpcat_23July2015.dat.gz
 - cdfs_11JAN2014_2x2_5x5.tgz
 - elais_11JAN2014_2x2_5x5.tgz
 - sanitized_radio_2016-03-01.tar.gz
+- [SWIRE3_CDFS_cat_IRAC24_21Dec05.tbl.gz](http://swire.ipac.caltech.edu/swire/astronomers/data/SWIRE3_CDFS_cat_IRAC24_21Dec05.tbl.gz)
 
 These files are currently not easily available. For access, email the [Radio Galaxy Zoo team](https://github.com/zooniverse/Radio-Galaxy-Zoo).
 

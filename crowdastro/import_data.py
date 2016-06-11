@@ -14,7 +14,7 @@ import h5py
 import numpy
 import sklearn.neighbors
 
-from . import data
+from . import rgz_data as data
 from .config import config
 from .exceptions import CatalogueError
 
