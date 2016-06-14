@@ -97,7 +97,7 @@ def train(inputs_h5, training_h5, classifier_out_path,
         dists = sklearn.metrics.pairwise_distances(input_sample, n_jobs=n_jobs)
         gamma = 1 / numpy.percentile(dists ** 2, 75)
         sampler = sklearn.kernel_approximation.RBFSampler(gamma=gamma,
-                n_components=100)
+                n_components=1000)
         lr = sklearn.linear_model.LogisticRegression(
                 class_weight='balanced', n_jobs=n_jobs)
         classifier = sklearn.pipeline.Pipeline([
