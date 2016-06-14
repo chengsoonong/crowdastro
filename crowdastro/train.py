@@ -89,10 +89,15 @@ def train(inputs_h5, training_h5, classifier_out_path,
     elif classifier == 'svm':
         classifier = sklearn.svm.SVC(class_weight='balanced', probability=True)
     elif classifier == 'klr':
-        dists = sklearn.metrics.pairwise_distances(inputs, n_jobs=n_jobs)
+        # A bit of a hack to reduce the size of the data so we can guess a gamma
+        # value. Otherwise we run out of memory!
+        # TODO(MatthewJA): This will break for bigger data sets.
+        input_sample, _ = sklearn.cross_validation.train_test_split(
+                inputs, train_size=0.2, stratify=outputs)
+        dists = sklearn.metrics.pairwise_distances(input_sample, n_jobs=n_jobs)
         gamma = 1 / (dists ** 2).median()
         sampler = sklearn.kernel_approximation.RBFSampler(gamma=gamma,
-                n_components=1000)
+                n_components=100)
         lr = sklearn.linear_model.LogisticRegression(
                 class_weight='balanced', n_jobs=n_jobs)
         classifier = sklearn.pipeline.Pipeline([
