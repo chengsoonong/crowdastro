@@ -17,6 +17,7 @@ import sklearn.linear_model
 import sklearn.pipeline
 import sklearn.preprocessing
 import sklearn.svm
+import sklearn.metrics
 import sknn.mlp
 import unbalanced_dataset.over_sampling.random_over_sampler as ros
 
@@ -88,7 +89,13 @@ def train(inputs_h5, training_h5, classifier_out_path,
     elif classifier == 'svm':
         classifier = sklearn.svm.SVC(class_weight='balanced', probability=True)
     elif classifier == 'klr':
-        gamma = 9.3046119711918889e-05
+        # A bit of a hack to reduce the size of the data so we can guess a gamma
+        # value. Otherwise we run out of memory!
+        # TODO(MatthewJA): This will break for bigger data sets.
+        input_sample, _ = sklearn.cross_validation.train_test_split(
+                inputs, train_size=0.2, stratify=outputs)
+        dists = sklearn.metrics.pairwise_distances(input_sample, n_jobs=n_jobs)
+        gamma = 1 / numpy.percentile(dists ** 2, 75)
         sampler = sklearn.kernel_approximation.RBFSampler(gamma=gamma,
                 n_components=1000)
         lr = sklearn.linear_model.LogisticRegression(
