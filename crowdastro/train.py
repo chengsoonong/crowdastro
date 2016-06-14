@@ -12,6 +12,7 @@ import h5py
 import numpy
 import sklearn.externals.joblib
 import sklearn.ensemble
+import sklearn.kernel_approximation
 import sklearn.linear_model
 import sklearn.pipeline
 import sklearn.preprocessing
@@ -50,11 +51,11 @@ def train(inputs_h5, training_h5, classifier_out_path,
     image_inputs = training_h5['cnn_outputs'].value
 
     astro_transformer = sklearn.pipeline.Pipeline([
-        ('normalise', sklearn.preprocessing.Normalizer()),
-        ('scale', sklearn.preprocessing.StandardScaler()),
+            ('normalise', sklearn.preprocessing.Normalizer()),
+            ('scale', sklearn.preprocessing.StandardScaler()),
     ])
     image_transformer = sklearn.pipeline.Pipeline([
-        ('normalise', sklearn.preprocessing.Normalizer())
+            ('normalise', sklearn.preprocessing.Normalizer())
     ])
 
     features = []
@@ -86,6 +87,15 @@ def train(inputs_h5, training_h5, classifier_out_path,
         inputs, outputs = sampler.transform(inputs, outputs)
     elif classifier == 'svm':
         classifier = sklearn.svm.SVC(class_weight='balanced', probability=True)
+    elif classifier == 'klr':
+        gamma = 9.3046119711918889e-05
+        sampler = sklearn.kernel_approximation.RBFSampler(gamma=gamma,
+                n_components=1000)
+        lr = sklearn.linear_model.LogisticRegression(
+                class_weight='balanced', n_jobs=n_jobs)
+        classifier = sklearn.pipeline.Pipeline([
+                ("feature_map", sampler),
+                ("lr", lr)])
     else:
         raise ValueError('Unknown classifier: {}'.format(classifier))
 
@@ -110,7 +120,8 @@ if __name__ == '__main__':
                         help='astro_transformer output file')
     parser.add_argument('--it_out', default='image_transformer.pkl',
                         help='image_transformer output file')
-    parser.add_argument('--classifier', choices={'lr', 'rf', 'nn', 'svm'},
+    parser.add_argument('--classifier',
+                        choices={'lr', 'rf', 'nn', 'svm', 'klr'},
                         default='lr', help='which classifier to train')
     parser.add_argument('--no_astro', action='store_false', default=True,
                         help='ignore astro features')

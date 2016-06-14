@@ -19,7 +19,7 @@ class QBCSampler(Sampler):
     """Pool-based active learning with query-by-committee, with uncertainty
     based on confidence."""
 
-    def __init__(self, pool, labels, Classifier, n_classifiers=10,
+    def __init__(self, pool, labels, Classifier, n_classifiers=20,
                  classifier_params=None):
         """
         pool: (n_samples, n_features) array of partially labelled data points.
