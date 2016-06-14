@@ -95,7 +95,7 @@ def train(inputs_h5, training_h5, classifier_out_path,
         input_sample, _ = sklearn.cross_validation.train_test_split(
                 inputs, train_size=0.2, stratify=outputs)
         dists = sklearn.metrics.pairwise_distances(input_sample, n_jobs=n_jobs)
-        gamma = 1 / numpy.median(dists ** 2)
+        gamma = 1 / numpy.percentile(dists ** 2, 25)
         sampler = sklearn.kernel_approximation.RBFSampler(gamma=gamma,
                 n_components=100)
         lr = sklearn.linear_model.LogisticRegression(
