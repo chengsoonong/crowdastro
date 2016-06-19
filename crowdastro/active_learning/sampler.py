@@ -32,14 +32,15 @@ class Sampler(object):
         """Finds index of the unlabelled point to sample."""
         raise NotImplementedError()
 
-    def add_label(self, index, label):
+    def add_label(self, index, label, retrain=True):
         """Adds a label from an oracle.
 
         index: Index of data point to label.
         label: Label from the oracle.
         """
         self.labels[index] = label
-        self.retrain()
+        if retrain:
+            self.retrain()
 
     def train(self):
         """Trains the classifier."""

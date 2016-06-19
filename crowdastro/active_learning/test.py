@@ -14,8 +14,8 @@ import sklearn.datasets
 import sklearn.cross_validation
 import sklearn.linear_model
 
-from .uncertainty_sampling import ConfidenceUncertaintySampler
-from .random_sampling import RandomSampler
+from .uncertainty_sampler import ConfidenceUncertaintySampler
+from .random_sampler import RandomSampler
 from .qbc_sampler import QBCSampler
 
 
