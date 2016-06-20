@@ -24,12 +24,12 @@ with open(CONFIG_PATH) as config_file:
 config['data_sources']['atlas_catalogue'] = os.path.normpath(
         os.path.join(SCRIPT_PATH, '..',
                      config['data_sources']['atlas_catalogue']))
-config['data_sources']['cdfs_fits'] = os.path.normpath(
-        os.path.join(SCRIPT_PATH, '..',
-                     config['data_sources']['cdfs_fits']))
 config['data_sources']['swire_catalogue'] = os.path.normpath(
         os.path.join(SCRIPT_PATH, '..',
                      config['data_sources']['swire_catalogue']))
+config['data_sources']['atlas_image'] = os.path.normpath(
+        os.path.join(SCRIPT_PATH, '..',
+                     config['data_sources']['atlas_image']))
 
 # Generate some helper configuration info.
 config['surveys']['atlas']['click_to_fits_x'] = (

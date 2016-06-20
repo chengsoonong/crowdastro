@@ -1,9 +1,10 @@
 {
     "data_sources": {
         "atlas_catalogue": "data/ATLASDR3_cmpcat_23July2015.dat",
-        "cdfs_fits": "data/cdfs",
+        "atlas_image": "data/CDFSmosaic_allch_8March2015.fits",
         "radio_galaxy_zoo_db": "radio",
         "rgz_to_atlas": "data/RGZ-ATLAS-Bookkeeping.csv",
+        "cdfs_fits": "data/cdfs",
         "swire_catalogue": "data/SWIRE3_CDFS_cat_IRAC24_21Dec05.tbl"
     },
 
@@ -14,17 +15,19 @@
 
     "surveys": {
         "atlas": {
-            "fits_width": 201,
-            "fits_height": 201,
-            "fits_width_large": 501,
-            "fits_height_large": 501,
+            "fits_width": 200,
+            "fits_height": 200,
+            "fits_width_large": 500,
+            "fits_height_large": 500,
             "web_width": 500,
             "web_height": 500,
             "click_width": 424,
             "click_height": 424,
             "distance_cutoff": 0.02,
             "scale_width": 2.1144278606965172,
-            "scale_height": 2.1144278606965172
+            "scale_height": 2.1144278606965172,
+            "mosaic_scale_x": 0.4,
+            "mosaic_scale_y": 0.4
         },
         "swire": {
             "distance_cutoff": 0.00083,

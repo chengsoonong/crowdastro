@@ -8,21 +8,29 @@ The Australian National University
 import argparse
 import csv
 import logging
+import warnings
 
+import astropy.io.fits
+import astropy.utils.exceptions
 import astropy.wcs
 import h5py
 import numpy
+import scipy.spatial.distance
 import sklearn.neighbors
 
 from . import rgz_data as data
 from .config import config
 from .exceptions import CatalogueError
 
-VERSION = '0.3.0'  # Data version, not module version!
+VERSION = '0.4.0'  # Data version, not module version!
 MAX_RADIO_SIGNATURE_LENGTH = 50  # max number of components * individual
                                  # component signature size.
-ARCMIN = 1 / 60
-
+MAX_NAME_LENGTH = 50  # b
+MAX_ZOONIVERSE_ID_LENGTH = 20  # b
+PATCH_RADIUS = 70  # px
+ARCMIN = 1 / 60  # deg
+CANDIDATE_RADIUS = ARCMIN  # deg
+FITS_CONVENTION = 1
 
 def prep_h5(f_h5):
     """Creates hierarchy in HDF5 file."""
@@ -31,23 +39,14 @@ def prep_h5(f_h5):
     f_h5.attrs['version'] = VERSION
 
 
-def prep_csv(f_csv):
-    """Writes headers of CSV."""
-    writer = csv.writer(f_csv)
-    writer.writerow(['index', 'survey', 'field', 'zooniverse_id', 'name',
-                     'header'])
-
-
-def import_atlas(f_h5, f_csv, test=False):
+def import_atlas(f_h5, test=False):
     """Imports the ATLAS dataset into crowdastro, as well as associated SWIRE.
 
     f_h5: An HDF5 file.
-    f_csv: A CSV file.
     test: Flag to run on only 10 subjects. Default False.
     """
     # Fetch groups from HDF5.
     cdfs = f_h5['/atlas/cdfs']
-    swire_cdfs = f_h5['/swire/cdfs']
 
     # First pass, I'll find coords, names, and Zooniverse IDs, as well as how
     # many data points there are.
@@ -61,6 +60,8 @@ def import_atlas(f_h5, f_csv, test=False):
     # https://github.com/chengsoonong/crowdastro/issues/63
     # Fortunately, @jbanfield has already done this, so we can just load
     # that CSV and match the names.
+    # TODO(MatthewJA): This matches the ATLAS component ID, but maybe we should\
+    # be using the name instead.
     rgz_to_atlas = {}
     with open(config['data_sources']['rgz_to_atlas']) as f:
         reader = csv.DictReader(f)
@@ -97,60 +98,44 @@ def import_atlas(f_h5, f_csv, test=False):
     names.sort(key=names_to_zooniverse_ids.get)
     zooniverse_ids.sort()
 
-    # Store coords in HDF5.
-    coords = numpy.array(coords)
-    coords_ds = cdfs.create_dataset('positions', data=coords)
+    # Begin to store the data. We will have two tables: one for numeric data,
+    # and one for strings. We will have to preallocate the numeric table so that
+    # we aren't storing huge amounts of image data in memory.
 
-    # Second pass, I'll fetch the images.
-    # Allocate space in the HDF5 file.
-    dim_2x2 = (n_cdfs, config['surveys']['atlas']['fits_height'],
-               config['surveys']['atlas']['fits_width'])
-    dim_5x5 = (n_cdfs, config['surveys']['atlas']['fits_height_large'],
-               config['surveys']['atlas']['fits_width_large'])
-    cdfs_radios_2x2 = cdfs.create_dataset('images_2x2', dim_2x2)
-    cdfs_radios_5x5 = cdfs.create_dataset('images_5x5', dim_5x5)
-    cdfs_infrareds_2x2 = swire_cdfs.create_dataset('images_2x2', dim_2x2)
-    cdfs_infrareds_5x5 = swire_cdfs.create_dataset('images_5x5', dim_5x5)
+    # Strings.
+    dtype = [('zooniverse_id', '<S{}'.format(MAX_ZOONIVERSE_ID_LENGTH)),
+             ('name', '<S{}'.format(MAX_NAME_LENGTH))]
+    string_data = numpy.array(list(zip(zooniverse_ids, names)), dtype=dtype)
+    cdfs.create_dataset('string', data=string_data, dtype=dtype)
 
-    headers = []
+    # Numeric.
+    image_size = (config['surveys']['atlas']['fits_width'] *
+                    config['surveys']['atlas']['fits_height'])
+    # RA, DEC, radio, (distance to SWIRE object added later)
+    dim = (n_cdfs, 1 + 1 + image_size)
+    numeric = cdfs.create_dataset('_numeric', shape=dim, dtype='float32')
 
-    for index, zooniverse_id in enumerate(zooniverse_ids):
-        subject = data.get_subject(zooniverse_id)
-        radio_2x2 = data.get_radio(subject, size='2x2')
-        cdfs_radios_2x2[index] = radio_2x2
-        radio_5x5 = data.get_radio(subject, size='5x5')
-        cdfs_radios_5x5[index] = radio_5x5
-        infrared_2x2 = data.get_ir(subject, size='2x2')
-        cdfs_infrareds_2x2[index] = infrared_2x2
-        infrared_5x5 = data.get_ir(subject, size='5x5')
-        cdfs_infrareds_5x5[index] = infrared_5x5
+    # Load image patches and store numeric data.
+    with astropy.io.fits.open(config['data_sources']['atlas_image'],
+                              ignore_blank=True) as atlas_image:
+        wcs = astropy.wcs.WCS(atlas_image[0].header).dropaxis(3).dropaxis(2)
+        pix_coords = wcs.all_world2pix(coords, FITS_CONVENTION)
+        assert pix_coords.shape[1] == 2
+        logging.debug('Fetching %d ATLAS images.', len(pix_coords))
+        for index, (x, y) in enumerate(pix_coords):
+            radio = atlas_image[0].data[0, 0,  # stokes, freq
+                    int(y) - config['surveys']['atlas']['fits_height'] // 2 :
+                    int(y) + config['surveys']['atlas']['fits_height'] // 2 ,
+                    int(x) - config['surveys']['atlas']['fits_width'] // 2 :
+                    int(x) + config['surveys']['atlas']['fits_width'] // 2 ]
+            numeric[index, 0] = coords[index][0]
+            numeric[index, 1] = coords[index][1]
+            numeric[index, 2 : 2 + image_size] = radio.reshape(-1)
 
-        # TODO(MatthewJA): Remove dependency on FITS images.
-        radio_5x5_fits = data.get_radio_fits(subject, size='5x5')
-        header = radio_5x5_fits.header.tostring()
-        headers.append(header)
+    logging.debug('ATLAS imported.')
 
-    # Store Zooniverse IDs, names, and headers in CSV.
-    writer = csv.writer(f_csv)
-    for index, (zooniverse_id, name, header) in enumerate(
-            zip(zooniverse_ids, names, headers)):
-        writer.writerow([index, 'atlas', 'cdfs', zooniverse_id, name, header])
-
-    # Finally, partition training/testing/validation data sets.
-    n_data = len(zooniverse_ids)
-    indices = numpy.arange(n_data, dtype='int')
-    numpy.random.shuffle(indices)
-
-    test_max = int(config['test_size'] * n_data)
-    n_training = int((1 - config['test_size']) * n_data)
-    validation_max = int(config['validation_size'] * n_training)
-    testing_indices = indices[:test_max]
-    validation_indices = indices[test_max:validation_max]
-    training_indices = indices[validation_max:]
-
-    cdfs.create_dataset('testing_indices', data=testing_indices)
-    cdfs.create_dataset('validation_indices', data=validation_indices)
-    cdfs.create_dataset('training_indices', data=training_indices)
+    # TODO(MatthewJA): Partition into training/testing sets, ideally using
+    # expert or gold standard classifications.
 
 
 def remove_nulls(n):
@@ -161,16 +146,17 @@ def remove_nulls(n):
     return n
 
 
-def import_swire(f_h5, f_csv):
+def import_swire(f_h5):
     """Imports the SWIRE dataset into crowdastro.
 
     f_h5: An HDF5 file.
-    f_csv: A CSV file.
     """
     names = []
     rows = []
+    logging.debug('Reading SWIRE catalogue.')
     with open(config['data_sources']['swire_catalogue']) as f_tbl:
-        # This isn't a valid ASCII table, so Astropy can't handle it.
+        # This isn't a valid ASCII table, so Astropy can't handle it. This means
+        # we have to parse it manually.
         for _ in range(5):  # Skip the first five lines.
             next(f_tbl)
 
@@ -194,61 +180,81 @@ def import_swire(f_h5, f_csv):
             flux_ap2_80 = float(remove_nulls(row['flux_ap2_80']))
             flux_ap2_24 = float(remove_nulls(row['flux_ap2_24']))
             stell_36 = float(remove_nulls(row['stell_36']))
-            # Extra -1 is so we can store ATLAS subject indices later.
-            # Extra 0s are so we can store the train/test/validation set.
+            # Extra -1 is so we can store nearest distance later.
             rows.append((ra, dec, flux_ap2_36, flux_ap2_45, flux_ap2_58,
-                         flux_ap2_80, flux_ap2_24, stell_36, -1, 0, 0, 0))
+                         flux_ap2_80, flux_ap2_24, stell_36, -1))
             names.append(name)
+
+    logging.debug('Found %d SWIRE objects.', len(names))
 
     # Sort by name.
     rows_to_names = dict(zip(rows, names))
     rows.sort(key=rows_to_names.get)
     names.sort()
 
-    # Find SWIRE objects that are within range of an ATLAS subject, and assign
-    # them to an ATLAS subject and a corresponding train/test/validation index.
-    # Only commit SWIRE objects within range.
+    names = numpy.array(names, dtype='<S{}'.format(MAX_NAME_LENGTH))
     rows = numpy.array(rows)
-    positions = rows[:, :2]
-    swire_tree = sklearn.neighbors.KDTree(positions, metric='chebyshev')
-    seen = set()  # SWIRE objects we've already seen (to avoid reassignments).
-    atlas_train = set(f_h5['/atlas/cdfs/training_indices'])
-    atlas_test = set(f_h5['/atlas/cdfs/testing_indices'])
-    atlas_valid = set(f_h5['/atlas/cdfs/validation_indices'])
-    for index, atlas_pos in enumerate(f_h5['/atlas/cdfs/positions']):
-        neighbours = swire_tree.query_radius([atlas_pos], ARCMIN)[0]
-        for neighbour in neighbours:
-            if neighbour in seen:
-                continue
 
-            seen.add(neighbour)
-            rows[neighbour, 8] = index
-            if index in atlas_train:
-                rows[neighbour, 9] = 1
-            elif index in atlas_valid:
-                rows[neighbour, 10] = 1
-            elif index in atlas_test:
-                rows[neighbour, 11] = 1
+    # Filter on distance - only include image data for SWIRE objects within a
+    # given radius of an ATLAS object. Otherwise, there's way too much data to
+    # store.
+    swire_positions = rows[:, :2]
+    atlas_positions = f_h5['/atlas/cdfs/_numeric'][:, :2]
+    logging.debug('Computing SWIRE k-d tree.')
+    swire_tree = sklearn.neighbors.KDTree(swire_positions, metric='euclidean')
+    indices = numpy.concatenate(
+            swire_tree.query_radius(atlas_positions, CANDIDATE_RADIUS))
+    indices = numpy.unique(indices)
 
-    write_names = []
-    write_rows = []
-    for index, name in enumerate(names):
-        if index in seen:
-            write_names.append(name)
-            row = rows[index]
-            write_rows.append(row)
-    write_rows = numpy.array(write_rows)
+    logging.debug('Found %d SWIRE objects near ATLAS objects.', len(indices))
 
-    assert len(write_rows) == len(write_names)
-    logging.debug('Found %d SWIRE objects near an ATLAS subject.', len(rows))
+    names = names[indices]
+    rows = rows[indices]
+    swire_positions = swire_positions[indices]
 
-    # Write names to CSV.
-    writer = csv.writer(f_csv)
-    for index, name in enumerate(write_names):
-        writer.writerow([index, 'swire', '', '', name, ''])
+    # Get distances.
+    logging.debug('Finding ATLAS-SWIRE object distances.')
+    distances = scipy.spatial.distance.cdist(atlas_positions, swire_positions,
+                                             'euclidean')
+    assert distances.shape[0] == atlas_positions.shape[0]
+    assert distances.shape[1] == swire_positions.shape[0]
+    logging.debug('Done finding distances.')
 
     # Write numeric data to HDF5.
-    f_h5['/swire/cdfs'].create_dataset('catalogue', data=write_rows)
+    rows[:, 8] = distances.min(axis=0)
+    atlas_numeric = f_h5['/atlas/cdfs/_numeric']
+    f_h5['/atlas/cdfs'].create_dataset('numeric', dtype='float32',
+            shape=(atlas_numeric.shape[0],
+                   atlas_numeric.shape[1] + len(indices)))
+    f_h5['/atlas/cdfs/numeric'][:, :atlas_numeric.shape[1]] = atlas_numeric
+    f_h5['/atlas/cdfs/numeric'][:, atlas_numeric.shape[1]:] = distances
+
+    del f_h5['/atlas/cdfs/_numeric']
+
+    image_size = (PATCH_RADIUS * 2) ** 2
+    dim = (rows.shape[0], rows.shape[1] + image_size)
+    numeric = f_h5['/swire/cdfs'].create_dataset('numeric', shape=dim,
+                                                 dtype='float32')
+    numeric[:, :rows.shape[1]] = rows
+    f_h5['/swire/cdfs'].create_dataset('string', data=names)
+
+    # Load and store radio images.
+    logging.debug('Importing radio patches.')
+    with astropy.io.fits.open(config['data_sources']['atlas_image'],
+                              ignore_blank=True) as atlas_image:
+        wcs = astropy.wcs.WCS(atlas_image[0].header).dropaxis(3).dropaxis(2)
+        pix_coords = wcs.all_world2pix(swire_positions, FITS_CONVENTION)
+        assert pix_coords.shape[1] == 2
+        assert pix_coords.shape[0] == len(indices)
+        logging.debug('Fetching %d ATLAS patches.', len(indices))
+
+        for index, (x, y) in enumerate(pix_coords):
+            radio = atlas_image[0].data[0, 0,  # stokes, freq
+                    int(y) - PATCH_RADIUS :
+                    int(y) + PATCH_RADIUS ,
+                    int(x) - PATCH_RADIUS :
+                    int(x) + PATCH_RADIUS ]
+            numeric[index, -image_size:] = radio.reshape(-1)
 
 
 def contains(bbox, point):
@@ -266,20 +272,22 @@ bbox_cache_ = {}  # Should help speed up ATLAS membership checking.
 
 
 def make_radio_combination_signature(radio_annotation, wcs, atlas_positions,
-                                     zooniverse_id=None):
+                                     subject, pix_offset):
     """Generates a unique signature for a radio annotation.
 
     radio_annotation: 'radio' dictionary from a classification.
-    wcs: World coordinate system associated with this classification. Generate
-        this using astropy.wcs.WCS(fits_header).
-    atlas_positions: [[x, y]] NumPy array.
-    zooniverse_id: Zooniverse ID (for logging). Optional.
+    wcs: World coordinate system associated with the ATLAS image.
+    atlas_positions: [[RA, DEC]] NumPy array.
+    subject: RGZ subject dict.
+    pix_offset: (x, y) pixel position of this radio subject on the ATLAS image.
     -> Something immutable
     """
     # TODO(MatthewJA): This only works on ATLAS. Generalise.
     # My choice of immutable object will be stringified crowdastro ATLAS
     # indices.
+    zooniverse_id = subject['zooniverse_id']
     atlas_ids = []
+    x_offset, y_offset = pix_offset
     for c in radio_annotation.values():
         # Note that the x scale is not the same as the IR scale, but the scale
         # factor is included in the annotation, so I have multiplied this out
@@ -301,6 +309,10 @@ def make_radio_combination_signature(radio_annotation, wcs, atlas_positions,
         # the click-to-fits ratio.
         scale_width *= config['surveys']['atlas']['click_to_fits_x']
         scale_height *= config['surveys']['atlas']['click_to_fits_y']
+        # ...and by the mosaic ratio. There's probably double-up here, but this
+        # makes more sense.
+        scale_width *= config['surveys']['atlas']['mosaic_scale_x']
+        scale_height *= config['surveys']['atlas']['mosaic_scale_y']
 
         # Get the bounding box of the radio source in pixels.
         # Format: [xs, ys]
@@ -318,7 +330,8 @@ def make_radio_combination_signature(radio_annotation, wcs, atlas_positions,
         assert bbox[1][0] < bbox[1][1]
 
         # Convert the bounding box into RA/DEC.
-        bbox = wcs.wcs_pix2world(bbox[0], bbox[1], 1)
+        bbox = wcs.all_pix2world(bbox[0] + x_offset, bbox[1] + y_offset,
+                                 FITS_CONVENTION)
 
         # The bbox is backwards along the x-axis for some reason.
         bbox[0] = bbox[0][::-1]
@@ -342,20 +355,13 @@ def make_radio_combination_signature(radio_annotation, wcs, atlas_positions,
             indices = numpy.where(within)[0]
 
             if len(indices) == 0:
-                if zooniverse_id:
-                    logging.debug('Skipping radio source not in catalogue for '
-                                  '%s', zooniverse_id)
-                else:
-                    logging.debug('Skipping radio source not in catalogue.')
+                logging.debug('Skipping radio source not in catalogue for '
+                              '%s', zooniverse_id)
                 continue
             else:
                 if len(indices) > 1:
-                    if zooniverse_id:
-                        logging.debug('Found multiple (%d) ATLAS matches '
-                                      'for %s', len(indices), zooniverse_id)
-                    else:
-                        logging.debug('Found multiple (%d) ATLAS matches',
-                                      len(indices))
+                    logging.debug('Found multiple (%d) ATLAS matches '
+                                  'for %s', len(indices), zooniverse_id)
 
                 index = indices[0]
 
@@ -371,20 +377,20 @@ def make_radio_combination_signature(radio_annotation, wcs, atlas_positions,
     return ';'.join(atlas_ids)
 
 
-def parse_classification(classification, subject, atlas_positions):
+def parse_classification(classification, subject, atlas_positions, wcs,
+                         pix_offset):
     """Converts a raw RGZ classification into a classification dict.
 
     Scales all positions and flips y axis of clicks.
 
     classification: RGZ classification dict.
     subject: Associated RGZ subject dict.
-    atlas_positions: [[x, y]] NumPy array.
+    atlas_positions: [[RA, DEC]] NumPy array.
+    wcs: World coordinate system of the ATLAS image.
+    pix_offset: (x, y) pixel position of this radio subject on the ATLAS image.
     -> dict mapping radio signature to corresponding IR host pixel location
     """
     result = {}
-
-    fits = data.get_radio_fits(subject)
-    wcs = astropy.wcs.WCS(fits.header)
 
     n_invalid = 0
 
@@ -400,7 +406,7 @@ def parse_classification(classification, subject, atlas_positions):
         try:
             radio_signature = make_radio_combination_signature(
                     annotation['radio'], wcs, atlas_positions,
-                    zooniverse_id=subject['zooniverse_id'])
+                    subject, pix_offset)
         except CatalogueError:
             # Ignore invalid annotations.
             n_invalid += 1
@@ -430,6 +436,10 @@ def parse_classification(classification, subject, atlas_positions):
             # Flip the y axis to match other data conventions.
             ir_y = config['surveys']['atlas']['fits_height'] - ir_y
 
+            # Rescale to match the mosaic WCS.
+            ir_x *= config['surveys']['atlas']['mosaic_scale_x']
+            ir_y *= config['surveys']['atlas']['mosaic_scale_y']
+
             # Convert the location into RA/DEC.
             (ir_x,), (ir_y,) = wcs.wcs_pix2world([ir_x], [ir_y], 1)
 
@@ -444,33 +454,40 @@ def parse_classification(classification, subject, atlas_positions):
     return result
 
 
-def import_classifications(f_h5, f_csv):
+def import_classifications(f_h5, test=False):
     """Imports Radio Galaxy Zoo classifications into crowdastro.
 
     f_h5: An HDF5 file.
-    f_csv: A CSV file.
+    test: Flag to run on only 10 subjects. Default False.
     """
     # TODO(MatthewJA): This only works for ATLAS/CDFS. Generalise.
-    reader = csv.DictReader(f_csv)
-
-    atlas_positions = f_h5['/atlas/cdfs/positions']
+    atlas_positions = f_h5['/atlas/cdfs/numeric'][:, :2]
+    atlas_ids = f_h5['/atlas/cdfs/string']['zooniverse_id']
     classification_positions = []
     classification_combinations = []
-    for obj_index, obj in enumerate(reader):
-        if obj['survey'] != 'atlas':
-            continue
 
-        assert obj['field'] == 'cdfs'
+    with astropy.io.fits.open(config['data_sources']['atlas_image'],
+                              ignore_blank=True) as atlas_image:
+        wcs = astropy.wcs.WCS(atlas_image[0].header).dropaxis(3).dropaxis(2)
 
-        subject = data.get_subject(obj['zooniverse_id'])
+    for obj_index, atlas_id in enumerate(atlas_ids):
+        subject = data.get_subject(atlas_id.decode('ascii'))
+        assert subject['zooniverse_id'] == atlas_ids[obj_index].decode('ascii')
         classifications = data.get_subject_classifications(subject)
+        offset, = wcs.all_world2pix([subject['coords']], FITS_CONVENTION)
+        # The coords are of the middle of the subject.
+        offset[0] -= (config['surveys']['atlas']['fits_width'] *
+                      config['surveys']['atlas']['mosaic_scale_x'] // 2)
+        offset[1] -= (config['surveys']['atlas']['fits_height'] *
+                      config['surveys']['atlas']['mosaic_scale_y'] // 2)
+
         for c_index, classification in enumerate(classifications):
             classification = parse_classification(classification, subject,
-                                                  atlas_positions)
+                                                  atlas_positions, wcs, offset)
             full_radio = '|'.join(classification.keys())
             for radio, location in classification.items():
-                pos_row = (int(obj['index']), location[0], location[1])
-                com_row = (int(obj['index']), full_radio, radio)
+                pos_row = (obj_index, location[0], location[1])
+                com_row = (obj_index, full_radio, radio)
                 # A little redundancy here with the index, but we can assert
                 # that they are the same later to check integrity.
                 classification_positions.append(pos_row)
@@ -498,23 +515,24 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--h5', default='crowdastro.h5',
                         help='HDF5 output file')
-    parser.add_argument('--csv', default='crowdastro.csv',
-                        help='CSV output file')
     parser.add_argument('--test', action='store_true', default=False,
                         help='Run with a small number of subjects',)
     parser.add_argument('-v', '--verbose', default=False, action='store_true')
     args = parser.parse_args()
 
+    logging.captureWarnings(True)
+
     if args.verbose:
         logging.root.setLevel(logging.DEBUG)
+    else:
+        warnings.simplefilter('ignore',
+                category=astropy.utils.exceptions.AstropyWarning)
+        warnings.simplefilter('ignore',
+                category=astropy.utils.exceptions.AstropyUserWarning)
+        warnings.simplefilter('ignore', UserWarning)
 
     with h5py.File(args.h5, 'w') as f_h5:
-        with open(args.csv, 'w') as f_csv:
-            prep_h5(f_h5)
-            prep_csv(f_csv)
-            import_atlas(f_h5, f_csv, test=args.test)
-            import_swire(f_h5, f_csv)
-
-        with open(args.csv, 'r') as f_csv:
-            # Classifications shouldn't modify the CSV.
-            import_classifications(f_h5, f_csv)
+        prep_h5(f_h5)
+        import_atlas(f_h5, test=args.test)
+        import_swire(f_h5)
+        import_classifications(f_h5)
