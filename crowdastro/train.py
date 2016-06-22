@@ -91,7 +91,7 @@ def train(training_h5, classifier_out_path, astro_transformer_out_path,
     sklearn.externals.joblib.dump(astro_transformer, astro_transformer_out_path)
     sklearn.externals.joblib.dump(image_transformer, image_transformer_out_path)
 
-    return classifier
+    return classifier, astro_transformer, image_transformer
 
 
 if __name__ == '__main__':
