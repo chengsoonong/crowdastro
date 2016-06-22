@@ -5,7 +5,7 @@ import matplotlib.colors
 import matplotlib.pyplot
 import numpy
 
-from . import data
+from . import rgz_data as data
 from .config import config
 
 def image(im, contrast=0.05):

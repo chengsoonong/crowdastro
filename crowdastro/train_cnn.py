@@ -18,6 +18,7 @@ from .config import config
 
 PATCH_RADIUS = config['patch_radius']
 PATCH_DIAMETER = PATCH_RADIUS * 2
+N_ASTRO = 7
 
 
 def train(training_h5, model_json, weights_path, epochs, batch_size):
@@ -32,15 +33,15 @@ def train(training_h5, model_json, weights_path, epochs, batch_size):
     model = keras.models.model_from_json(model_json.read())
     model.compile(loss='binary_crossentropy', optimizer='adadelta')
 
-    training_inputs = training_h5['raw_patches'].value
-    training_outputs = training_h5['labels'].value
+    train_set = training_h5['is_swire_train'].value
+
+    training_inputs = training_h5['features'].value[train_set, N_ASTRO:]
+    training_inputs = training_inputs.reshape(
+            (-1, 1, PATCH_DIAMETER, PATCH_DIAMETER))
+    training_outputs = training_h5['labels'].value[train_set]
     assert training_inputs.shape[0] == training_outputs.shape[0]
 
-    sets = training_h5['sets']
-    training_indices = sets[:, 0].nonzero()[0]
-    training_inputs = training_inputs[training_indices]
-    training_outputs = training_outputs[training_indices]
-
+    # Downsample for class balance.
     zero_indices = (training_outputs == 0).nonzero()[0]
     one_indices = (training_outputs == 1).nonzero()[0]
     subset_zero_indices = numpy.random.choice(zero_indices,
@@ -51,10 +52,6 @@ def train(training_h5, model_json, weights_path, epochs, batch_size):
     training_inputs = training_inputs[all_indices]
     training_outputs = training_outputs[all_indices]
     assert (training_outputs == 1).sum() == (training_outputs == 0).sum()
-
-    training_inputs = training_inputs.reshape((
-            training_inputs.shape[0], 1, training_inputs.shape[1],
-            training_inputs.shape[2]))
 
     model.fit(training_inputs, training_outputs, batch_size=batch_size,
               nb_epoch=epochs)

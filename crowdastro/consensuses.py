@@ -128,20 +128,23 @@ def kde(points):
     return (x_peak, y_peak), True
 
 
-def find_consensuses(f_h5, f_csv):
+def find_consensuses(f_h5):
     """Find Radio Galaxy Zoo crowd consensuses.
 
     f_h5: crowdastro HDF5 file.
-    f_csv: crowdastro CSV file.
     """
     if 'consensus_objects' in f_h5['/atlas/cdfs/']:
         del f_h5['/atlas/cdfs/consensus_objects']
 
     class_positions = f_h5['/atlas/cdfs/classification_positions']
     class_combinations = f_h5['/atlas/cdfs/classification_combinations']
+    assert len(class_positions) == len(class_combinations)
+
+    logging.debug('Finding consensuses for %d classifications.',
+                  len(class_combinations))
 
     # Pre-build the SWIRE tree.
-    swire_coords = f_h5['/swire/cdfs/catalogue'][:, :2]
+    swire_coords = f_h5['/swire/cdfs/numeric'][:, :2]
     swire_tree = sklearn.neighbors.KDTree(swire_coords)
 
     cons_positions = []
@@ -198,6 +201,7 @@ def find_consensuses(f_h5, f_csv):
             (x, y), success = pg_means(locations)
 
             if numpy.isnan(x) or numpy.isnan(y):
+                logging.debug('Skipping NaN PG-means output.')
                 continue
 
             # Match the (x, y) position to a SWIRE object.
@@ -207,6 +211,9 @@ def find_consensuses(f_h5, f_csv):
             # Since SWIRE data is sorted, we can deal directly with indices.
             cons_positions.append((i, ind[0][0], success))
             cons_combinations.append((i, radio_signature, percentage_consensus))
+
+    logging.debug('Found %d consensuses (before duplicate removal).',
+                  len(cons_positions))
 
     # Remove duplicates. For training data, I don't really care if radio
     # combinations overlap (though I need to care if I generate a catalogue!) so
@@ -237,6 +244,8 @@ def find_consensuses(f_h5, f_csv):
             cons_objects[swire_i] = (atlas_i, success, percentage)
             continue
 
+    logging.debug('Found %d consensuses.', int(len(cons_objects)))
+
     cons_objects = numpy.array([(atlas_i, swire_i, success, percentage)
             for swire_i, (atlas_i, success, percentage)
             in sorted(cons_objects.items())])
@@ -251,10 +260,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--h5', default='crowdastro.h5',
                         help='HDF5 IO file')
-    parser.add_argument('--csv', default='crowdastro.csv',
-                        help='CSV input file')
+    parser.add_argument('-v', '--verbose', default=False, action='store_true')
     args = parser.parse_args()
 
+    if args.verbose:
+        logging.root.setLevel(logging.DEBUG)
+
     with h5py.File(args.h5, 'r+') as f_h5:
-        with open(args.csv, 'r') as f_csv:
-            find_consensuses(f_h5, f_csv)
+        assert f_h5.attrs['version'] == '0.4.0'
+        find_consensuses(f_h5)

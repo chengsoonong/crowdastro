@@ -17,20 +17,18 @@ import sklearn.linear_model
 import sklearn.pipeline
 import sklearn.preprocessing
 import sklearn.svm
-import sknn.mlp
-import unbalanced_dataset.over_sampling.random_over_sampler as ros
 
 from .config import config
 
 PATCH_RADIUS = config['patch_radius']
 PATCH_DIAMETER = PATCH_RADIUS * 2
+N_ASTRO = 7
 
-def train(inputs_h5, training_h5, classifier_out_path,
-          astro_transformer_out_path, image_transformer_out_path,
-          classifier='lr', use_astro=True, use_cnn=True, n_jobs=-1):
+def train(training_h5, classifier_out_path, astro_transformer_out_path,
+          image_transformer_out_path, classifier='lr', use_astro=True,
+          use_cnn=True, n_jobs=-1):
     """Trains logistic regression.
 
-    inputs_h5: Inputs HDF5 file.
     training_h5: Training HDF5 file.
     classifier_out_path: Output classifier path.
     astro_transformer_out_path: Output astro transformer path.
@@ -44,18 +42,20 @@ def train(inputs_h5, training_h5, classifier_out_path,
     if not any([use_astro, use_cnn]):
         raise ValueError('Must have features.')
 
-    training_indices = (training_h5['sets'][:, 0] == 1).nonzero()[0]
-    outputs = training_h5['labels'].value
+    train_indices = training_h5['is_swire_train'].value
+    outputs = training_h5['labels'].value[train_indices]
+    n = len(outputs)
 
-    astro_inputs = numpy.minimum(training_h5['astro'].value, 1500)
-    image_inputs = training_h5['cnn_outputs'].value
+    astro_inputs = numpy.minimum(
+            training_h5['features'][train_indices, :N_ASTRO], 1500)
+    image_inputs = training_h5['features'].value[train_indices, N_ASTRO:]
 
     astro_transformer = sklearn.pipeline.Pipeline([
             ('normalise', sklearn.preprocessing.Normalizer()),
             ('scale', sklearn.preprocessing.StandardScaler()),
     ])
     image_transformer = sklearn.pipeline.Pipeline([
-            ('normalise', sklearn.preprocessing.Normalizer())
+            ('normalise', sklearn.preprocessing.Normalizer()),
     ])
 
     features = []
@@ -65,26 +65,12 @@ def train(inputs_h5, training_h5, classifier_out_path,
         features.append(image_transformer.fit_transform(image_inputs))
     inputs = numpy.hstack(features)
 
-    inputs = inputs[training_indices]
-    outputs = outputs[training_indices]
-
     if classifier == 'lr':
         classifier = sklearn.linear_model.LogisticRegression(
                 class_weight='balanced', n_jobs=n_jobs)
     elif classifier == 'rf':
         classifier = sklearn.ensemble.RandomForestClassifier(
                 class_weight='balanced', n_jobs=n_jobs)
-    elif classifier == 'nn':
-        classifier = sknn.mlp.Classifier(
-                layers=[sknn.mlp.Layer('Sigmoid', units=inputs.shape[1] // 2),
-                        sknn.mlp.Layer('Softmax')],
-                # Match sklearn parameters. They're default for sklearn, but
-                # not for sknn.
-                n_iter=100,
-                regularize='L2')
-        sampler = ros.RandomOverSampler()
-        sampler.fit(inputs, outputs)
-        inputs, outputs = sampler.transform(inputs, outputs)
     elif classifier == 'svm':
         classifier = sklearn.svm.SVC(class_weight='balanced', probability=True)
     elif classifier == 'klr':
@@ -110,8 +96,6 @@ def train(inputs_h5, training_h5, classifier_out_path,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--inputs', default='crowdastro.h5',
-                        help='HDF5 input data file')
     parser.add_argument('--training', default='training.h5',
                         help='HDF5 training data file')
     parser.add_argument('--c_out', default='classifier.pkl',
@@ -134,7 +118,6 @@ if __name__ == '__main__':
     logging.root.setLevel(logging.DEBUG)
 
     with h5py.File(args.training, 'r') as training_h5:
-        with h5py.File(args.inputs, 'r') as inputs_h5:
-            train(inputs_h5, training_h5, args.c_out, args.at_out, args.it_out,
-                  classifier=args.classifier, use_astro=args.no_astro,
-                  use_cnn=args.no_cnn)
+        train(training_h5, args.c_out, args.at_out, args.it_out,
+              classifier=args.classifier, use_astro=args.no_astro,
+              use_cnn=args.no_cnn)

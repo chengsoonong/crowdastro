@@ -15,8 +15,9 @@ import numpy
 
 from .config import config
 
-PATCH_RADIUS = config['patch_radius']
-ARCMIN = 1 / 60
+PATCH_RADIUS = config['patch_radius']  # px
+ARCMIN = 1 / 60  # deg
+N_STATIC = 7  # Number of static (non-image) features.
 
 
 def generate(training_h5, cnn_model_json, cnn_weights_path):
@@ -34,21 +35,29 @@ def generate(training_h5, cnn_model_json, cnn_weights_path):
     get_convolutional_features = (lambda p:
             get_convolutional_features_([p])[0].reshape((p.shape[0], -1)))
 
-    images = training_h5['raw_patches'].value
-    images = images.reshape((images.shape[0], 1, images.shape[1],
-                             images.shape[2]))
-
-    if 'cnn_outputs' in training_h5:
-        del training_h5['cnn_outputs']
+    images = training_h5['features'][:, N_STATIC:].reshape(
+            (-1, 1, PATCH_RADIUS * 2, PATCH_RADIUS * 2))
 
     test_out = get_convolutional_features(images[:1, :, :, :])
-    out = training_h5.create_dataset('cnn_outputs', dtype=float,
-                                     shape=(len(images), test_out.shape[1]))
+
+    if '_features' in training_h5:
+        del training_h5['_features']
+
+    out = training_h5.create_dataset('_features', dtype=float,
+            shape=(len(images), N_STATIC + test_out.shape[1]))
+
+    # Copy the static features across. We'll fill in the rest with the CNN.
+    out[:, :N_STATIC] = training_h5['features'][:, :N_STATIC]
 
     batch_size = 1000
     for i in range(0, len(images), batch_size):
         batch = images[i : i + batch_size]
-        out[i : i + batch_size] = get_convolutional_features(batch)
+        out[i : i + batch_size, N_STATIC:] = get_convolutional_features(batch)
+
+    # Clean up - delete the original features and rename our new features.
+    del training_h5['features']
+    training_h5['features'] = training_h5['_features']
+    del training_h5['_features']
 
 
 if __name__ == '__main__':

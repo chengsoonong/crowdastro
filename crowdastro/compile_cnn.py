@@ -43,17 +43,17 @@ if __name__ == '__main__':
     parser.add_argument('--out_path', help='path to output model JSON',
                         default='model.json')
     parser.add_argument('--n_filters', help='number of convolutional filters',
-                        default=32)
+                        default=32, type=int)
     parser.add_argument('--conv_size', help='size of convolutional filters',
-                        default=10)
+                        default=4, type=int)
     parser.add_argument('--pool_size', help='size of max pool',
-                        default=5)
+                        default=2, type=int)
     parser.add_argument('--dropout', help='dropout percentage',
-                        default=0.25)
+                        default=0.25, type=float)
     parser.add_argument('--hidden_layer_size', help='hidden layer size',
-                        default=64)
+                        default=64, type=int)
     parser.add_argument('--patch_size', help='size of image patches',
-                        default=80)
+                        default=32, type=int)
     args = parser.parse_args()
 
     main(args.out_path, args.n_filters, args.conv_size, args.pool_size,

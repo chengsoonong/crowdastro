@@ -27,7 +27,7 @@ MAX_RADIO_SIGNATURE_LENGTH = 50  # max number of components * individual
                                  # component signature size.
 MAX_NAME_LENGTH = 50  # b
 MAX_ZOONIVERSE_ID_LENGTH = 20  # b
-PATCH_RADIUS = 70  # px
+PATCH_RADIUS = config['patch_radius']  # px
 ARCMIN = 1 / 60  # deg
 CANDIDATE_RADIUS = ARCMIN  # deg
 FITS_CONVENTION = 1
@@ -286,6 +286,9 @@ def make_radio_combination_signature(radio_annotation, wcs, atlas_positions,
     # My choice of immutable object will be stringified crowdastro ATLAS
     # indices.
     zooniverse_id = subject['zooniverse_id']
+    subject_fits = data.get_radio_fits(subject)
+    subject_wcs = astropy.wcs.WCS(subject_fits.header)
+
     atlas_ids = []
     x_offset, y_offset = pix_offset
     for c in radio_annotation.values():
@@ -309,11 +312,22 @@ def make_radio_combination_signature(radio_annotation, wcs, atlas_positions,
         # the click-to-fits ratio.
         scale_width *= config['surveys']['atlas']['click_to_fits_x']
         scale_height *= config['surveys']['atlas']['click_to_fits_y']
+
+        subject_bbox = [
+            [
+                float(c['xmin']) * scale_width,
+                float(c['xmax']) * scale_width,
+            ],
+            [
+                float(c['ymin']) * scale_height,
+                float(c['ymax']) * scale_height,
+            ],
+        ]
+
         # ...and by the mosaic ratio. There's probably double-up here, but this
         # makes more sense.
         scale_width *= config['surveys']['atlas']['mosaic_scale_x']
         scale_height *= config['surveys']['atlas']['mosaic_scale_y']
-
         # Get the bounding box of the radio source in pixels.
         # Format: [xs, ys]
         bbox = [
@@ -332,6 +346,9 @@ def make_radio_combination_signature(radio_annotation, wcs, atlas_positions,
         # Convert the bounding box into RA/DEC.
         bbox = wcs.all_pix2world(bbox[0] + x_offset, bbox[1] + y_offset,
                                  FITS_CONVENTION)
+        subject_bbox = subject_wcs.all_pix2world(subject_bbox[0],
+                subject_bbox[1], FITS_CONVENTION)
+        # TODO(MatthewJA): Remove (or disable) this sanity check.
 
         # The bbox is backwards along the x-axis for some reason.
         bbox[0] = bbox[0][::-1]
@@ -439,6 +456,10 @@ def parse_classification(classification, subject, atlas_positions, wcs,
             # Rescale to match the mosaic WCS.
             ir_x *= config['surveys']['atlas']['mosaic_scale_x']
             ir_y *= config['surveys']['atlas']['mosaic_scale_y']
+
+            # Move to the reference location of the radio subject.
+            ir_x += pix_offset[0]
+            ir_y += pix_offset[1]
 
             # Convert the location into RA/DEC.
             (ir_x,), (ir_y,) = wcs.wcs_pix2world([ir_x], [ir_y], 1)

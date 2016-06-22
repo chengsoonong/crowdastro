@@ -111,7 +111,7 @@ rgz_dir = None  # Set after argument parsing.
 
 def consensus(
         zid,
-        make_radio_combination_signature,
+        make_radio_combination_signature=None,
         experts_only=False,
         excluded=[],
         no_anonymous=False,
