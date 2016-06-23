@@ -24,10 +24,10 @@
     \begin{figure}[!ht]
         \centering
         \begin{subfigure}{0.3\textwidth}
-            \includegraphics[width=\linewidth]{images/ARG000180p_ir.jpg}
+            \includegraphics[width=\linewidth]{../images/ARG000180p_ir.jpg}
         \end{subfigure}\quad
         \begin{subfigure}{0.3\textwidth}
-            \includegraphics[width=\linewidth]{images/ARG000180p_radio.jpg}
+            \includegraphics[width=\linewidth]{../images/ARG000180p_radio.jpg}
         \end{subfigure}
     \end{figure}
 
@@ -45,16 +45,16 @@
 
     \begin{figure}[!ht]
         \centering
-        \includegraphics[width=0.3\linewidth]{images/ARG000180p_ir_potential_hosts.jpg}
+        \includegraphics[width=0.3\linewidth]{../images/ARG000180p_ir_potential_hosts.jpg}
     \end{figure}
 
     For each potential radio source location, we want to find some set of features that represents the location in some meaningful way. The way I'm going about this is to extract features from the \emph{radio} image --- it seems that the IR image itself doesn't contain much information besides the locations, though it's possible we could explicitly re-add information like brightness or spread as features later. For each location in the IR image, we sample a region of the radio image centred on the location.
 
     \begin{figure}[!ht]
         \centering
-        \includegraphics[width=0.15\linewidth]{images/radio_neighbourhood_1.png}\quad
-        \includegraphics[width=0.15\linewidth]{images/radio_neighbourhood_2.png}\quad
-        \includegraphics[width=0.15\linewidth]{images/radio_neighbourhood_3.png}
+        \includegraphics[width=0.15\linewidth]{../images/radio_neighbourhood_1.png}\quad
+        \includegraphics[width=0.15\linewidth]{../images/radio_neighbourhood_2.png}\quad
+        \includegraphics[width=0.15\linewidth]{../images/radio_neighbourhood_3.png}
     \end{figure}
 
     We then run each radio image sample through an automatically-determined function to extract features. This gives us some features that represent each location.

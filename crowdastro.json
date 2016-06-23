@@ -5,7 +5,8 @@
         "radio_galaxy_zoo_db": "radio",
         "rgz_to_atlas": "data/RGZ-ATLAS-Bookkeeping.csv",
         "cdfs_fits": "data/cdfs",
-        "swire_catalogue": "data/SWIRE3_CDFS_cat_IRAC24_21Dec05.tbl"
+        "swire_catalogue": "data/SWIRE3_CDFS_cat_IRAC24_21Dec05.tbl",
+        "wise_catalogue": "data/wise_allwise.wise_allwise_p3as_psd4511.tbl"
     },
 
     "mongo": {
@@ -30,9 +31,10 @@
             "mosaic_scale_y": 0.4
         },
         "swire": {
-            "distance_cutoff": 0.00083,
-            "stellarity_cutoff": 0.90,
-            "flux_cutoff": 1000.0
+            "n_features": 5
+        },
+        "wise": {
+            "n_features": 4
         }
     },
 
