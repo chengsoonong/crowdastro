@@ -74,7 +74,13 @@ def train(training_h5, classifier_out_path, astro_transformer_out_path,
     elif classifier == 'svm':
         classifier = sklearn.svm.SVC(class_weight='balanced', probability=True)
     elif classifier == 'klr':
-        gamma = 9.3046119711918889e-05
+        # A bit of a hack to reduce the size of the data so we can guess a gamma
+        # value. Otherwise we run out of memory!
+        # TODO(MatthewJA): This will break for bigger data sets.
+        input_sample, _ = sklearn.cross_validation.train_test_split(
+                inputs, train_size=0.2, stratify=outputs)
+        dists = sklearn.metrics.pairwise_distances(input_sample, n_jobs=n_jobs)
+        gamma = 1 / numpy.percentile(dists ** 2, 75)
         sampler = sklearn.kernel_approximation.RBFSampler(gamma=gamma,
                 n_components=1000)
         lr = sklearn.linear_model.LogisticRegression(
@@ -105,7 +111,7 @@ if __name__ == '__main__':
     parser.add_argument('--it_out', default='image_transformer.pkl',
                         help='image_transformer output file')
     parser.add_argument('--classifier',
-                        choices={'lr', 'rf', 'nn', 'svm', 'klr'},
+                        choices={'lr', 'rf', 'svm', 'klr'},
                         default='lr', help='which classifier to train')
     parser.add_argument('--no_astro', action='store_false', default=True,
                         help='ignore astro features')
