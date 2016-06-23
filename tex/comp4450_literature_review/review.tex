@@ -1,0 +1,135 @@
+%!TeX program=xelatex
+\documentclass[a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[margin=1.2in]{geometry}
+\usepackage{algorithm2e}
+\usepackage{hyperref}
+
+\usepackage{fontspec}
+\setmainfont{Palatino Linotype}
+
+\begin{document}
+    \title{Active Learning Literature Survey}
+    \author{Matthew Alger \\ \emph{The Australian National University}}
+    \date{March 18, 2016}
+    \maketitle
+
+    \begin{abstract}
+        Active learning is a form of semi-supervised learning where the learning agent can request that an expert label additional, unlabelled data points, chosen by the agent. In this survey, we summarise the key concepts and methods in the field of active learning, including the three main forms of active learning (query synthesis, stream-based sampling, and pool-based sampling), some key approaches (uncertainty sampling and committee-based sampling), and further questions.
+    \end{abstract}
+
+    \section{Overview}
+        % What is active learning?
+        In supervised learning, there is a set of data points $X$ and a set of associated labels $T$. The goal is to learn a map from $X$ to $T$; this map can then be used to label unlabelled data points. In real-life situations, is often the case that unlabelled data such as text samples\cite{lewis94,mccallum98}, images\cite{loy11,lintott08}, or even abstract entities like hypotheses\cite{king04} and sentiment\cite{kranjc15,smailovic14}, are easy to obtain en masse. Labelling these data, however, may be expensive, time-consuming, or intractable, possibly requiring humans to manually assign labels or even conduct physical experiments. Active learning, also called active sampling\cite{plutowski94} or query learning\cite{settles09,seung92}, allows a learning agent to select specific, unlabelled examples to be labelled by some external source called the oracle. In this way, the agent is effectively choosing its own training set\cite{settles09}. The general idea is that the agent should choose examples that are as informative as possible\cite{mccallum98} and we can thus avoid labelling redundant examples\cite{engelson99}. By using such approaches, we can massively reduce the amount of labelled data required to train learning agents\cite{lewis94,king04}. This results in cheaper machine learning where label cost is a limiting factor, or even in tractable machine learning where the dataset is simply too large and varied to be adequately labelled.
+
+        % DONE?: Why is this useful?
+        % ``Learning is more often a transfer than a discovery.''\cite{whitehead91}\\
+
+        Formally, we want to learn a map from some set of data points $X$ to some set of labels $T$. We have a set of training examples $\{(x_i, t_i)\ |\ i = 1, \dots, m\}$ where $x_i \in X$ and $t_i \in T$. The learning agent can choose $\tilde x \in X$ to be labelled by the oracle, resulting in a label $\tilde t$. $(\tilde x, \tilde t)$ is then added to the training set and the process repeats\cite{cohn96}. The active learning question, then, is ``which $\tilde x$ do we choose next?''. Approaches include (but are not limited to):
+        \begin{itemize}
+            \item Choosing $\tilde x$ where labels are unknown (e.g. reinforcement learning, where labels are actions)\cite{whitehead91}
+            \item Choosing $\tilde x$ with the least accurate or most uncertain predicted labels\cite{mackay92,thrun92,lewis94}
+            \item Choosing $\tilde x$ where we lack data (e.g. when we have a known distribution)\cite{atlas90}
+            \item Choosing $\tilde x$ where multiple classifiers maximally disagree on the label\cite{seung92}
+            \item Choosing $\tilde x$ where we have previously found useful information\cite{storck95}
+            \item Choosing $\tilde x$ with low likelihood according to a model\cite{loy11}
+        \end{itemize}
+
+    \section{Forms of Active Learning}
+
+        There are currently three main forms of active learning: query synthesis, stream-based sampling, and pool-based sampling\cite{settles09,guyon11}.
+
+        \subsection{Query Synthesis}
+
+            In query synthesis, the learning agent generates samples \emph{de novo}, i.e., the agent can generate arbitrary values for $\tilde x$, regardless of the underlying distribution of data points\cite{settles09,guyon11}. An example of this is shown in \cite{baum92}. Here, Baum \& Lang train an agent on a dataset of images of handwritten digits, but the samples shown to the human oracle may be \emph{any} images of the same size. Query synthesis is often not a useful approach; samples $\tilde x$ may have no real meaning and the oracle may thus have difficulty in labelling them\cite{baum92,engelson99}. However, it can be used successfully, particularly when all samples can be labelled. An example of this is \cite{king04}, where King et al. generate scientific hypotheses --- in this case, a growth medium and a yeast mutant --- and test them by automatically performing real biological experiments, representing the oracle. The oracle returns labels of whether the yeast mutant thrived in the medium\cite{settles09}. By generating the hypotheses with an active learning approach, they reduced experimental cost 100-fold from random experiment selection and 3-fold from cheapest experiment selection\cite{king04}.
+
+        \subsection{Stream-based Sampling}
+
+            In stream-based sampling (often called selective sampling\cite{settles09}), unlabelled samples are continuously made available, and the learning agent must choose whether or not to present each sample to the oracle. This is particularly useful in situations that use sensor data that aren't easily stored\cite{guyon11}, where the data are time-sensitive and the model must be continuously updated\cite{smailovic14,kranjc15}, where the data must be classified in real-time\cite{loy11}, or where the data may contain unpredictable and unusual events\cite{loy11}. The benefit of this method over query synthesis is that all possible queries will have some semantic meaning, as they follow the real, underlying distribution of data points\cite{settles09}. An example of this approach is \cite{loy11}, where Loy et al. attempt to detect unusual events in surveillance footage. Due to the large amount of data, presence of unusual events, and requirements of a real-time solution, they use stream-based active learning to train a learning agent, resulting in out-performance of existing supervised and unsupervised strategies with minimal supervision\cite{loy11}.
+
+        \subsection{Pool-based Sampling}
+
+            In pool-based sampling, the learning agent has some large amount of static unlabelled data (a ``pool'') available to it, and can select any element in the pool to present to the oracle. This form of active learning is most appropriate where it is free or very cheap to obtain a large amount of unlabelled data at once, though labelling it may be expensive or intractable. Since large amounts of unlabelled data are highly available in fields such as text processing\cite{lewis94}, astronomy\cite{pelleg04,richards12,lintott08,marshall15}, and image retrieval\cite{tong01}, pool-based sampling is commonly applied to current real-world situations\cite{guyon11,settles09}. The benefit of this approach over the stream-based approach is that the pool of unlabelled examples better represents the real data distribution than a stream\cite{mccallum98}, and we have freedom to intelligently choose the most informative example out of all possible examples each and every time we query the oracle. An example of this approach is \cite{richards12}, where Richards et al. apply a pool-based active learning approach to classifying astronomical databases, using a combination of expert classifications and crowdsourcing as the oracle. The active learning approach resulted in a dramatic improvement in classification over off-the-shelf classification methods.
+
+    \section{Key Approaches}
+
+        % misclassified instances - 16, 17
+        There are a number of approaches to choosing which example to present to the oracle. Their specific implementation depends on the form of active learning being used. Here, we ignore query synthesis and focus on the more common stream- and pool-based sampling.
+
+        \subsection{Uncertainty Sampling}
+
+            A common approach to choosing $\tilde x$ is called uncertainty sampling, first introduced by Lewis \& Gale\cite{lewis94}. Intuitively, in uncertainty sampling the learning agent presents examples to the oracle based on how uncertain the agent is of their true label. The key requirement for uncertainty sampling is thus that the learning agent can predict the uncertainty of labels. All probabilistic classifiers, fuzzy classifiers, nearest-neighbour classifiers, and neural network classifiers fulfil this requirement automatically\cite{lewis94}. Other forms of classifier can also be used if an uncertainty can be computed; this may come from statistical approaches or even from combining non-probabilistic and probabilistic classifiers\cite{lewis94b}. Label uncertainty can either be used directly, i.e. the learning agent selects $\tilde x = x$ where $x$ is the example with the least certain label\cite{lewis94}, or the uncertainties can be combined in some way resulting in another form of uncertainty.
+
+            Other forms of uncertainty sampling include margin sampling and entropy sampling. In margin sampling, the agent selects the example with the lowest difference (``margin'') between the uncertainties of the most likely and second-most likely labels. Intuitively, a smaller margin represents a more difficult classification task\cite{scheffer01}. In entropy sampling, the sample with the highest entropy is chosen\cite{settles09}.
+
+            The implementation of uncertainty sampling depends on whether the agent is being trained with a stream- or pool-based approach. In a very simple pool-based approach, the agent initialises and trains some classifier on any pre-labelled training examples, then uses this classifier to classify all unlabelled data points. It then selects the data point or data points with the most uncertain labels, and presents these data points to the oracle, incorporating the oracle's labels into the training set. The classifier is then retrained, and the process repeats\cite{lewis94}. A simple stream-based approach would be similar, but the oracle would be queried whenever the uncertainty surpasses some threshold value\cite{loy11,settles09}.
+
+        \subsection{Committee-based Sampling}
+
+            Another common approach is committee-based sampling (often called query-by-committee), first introduced by Seung et al.\cite{seung92}. A ``committee'' is a set of learning agents sampled from a distribution of possible learning agents under the labelled dataset\cite{mccallum98}. In the pool-based approach, each unlabelled example is labelled by the committee. The committee may disagree on the labels of some examples. The example for which the committee disagrees the most is presented to the oracle to label\cite{mccallum98}. In the stream-based approach, each example is labelled by the committee as it is received, and the example is presented with a probability based on the disagreement\cite{dagan95} or if the disagreement surpasses some threshold\cite{seung92}.
+
+            Disagreement can be measured in a number of ways. Some examples include:
+            \begin{itemize}
+                \item Direct measurement (i.e. count how many committee members disagree)\cite{seung92}
+                \item Vote entropy, where committee members ``vote'' for their classification and the entropy of the resulting distribution is measured\cite{dagan95,mccallum98}
+                \item Kullback--Leibler divergence, where committee members generate a class distribution and the Kullback--Leibler divergence between each distribution and the mean of all distributions is averaged for each member\cite{mccallum98}
+            \end{itemize}
+
+            The committee-based approach effectively approximates the information content of each example if it were to be labelled by the oracle\cite{seung92}. In some situations, committee-based sampling can result in an exponential reduction in the number of required labelled examples when compared with sampling examples at random\cite{freund97}.
+
+        \subsection{Other methods}
+
+            Other approaches include the expected model change and information density approaches. The expected model change approach attempts to choose the example which would maximally change the learning agent's data model if its label was known\cite{settles09}. For a model trained with gradient-based optimisation, this can be estimated as the labelling that would maximally change the gradient of the objective function\cite{settles08b}. The information density approach estimates the information content of each example through another method (e.g. uncertainty sampling or committee-based sampling), then weights this based on how similar each example is to other examples. This results in an ``information density''; the learning agent then presents an example with high information density\cite{settles08b}.
+            % \begin{itemize}
+            %     \item Briefly summarise some other methods
+            %     \item Don't go into detail here because this is a super brief survey
+            % \end{itemize}
+
+        % In stream-based sampling, the decision of whether or not to present a sample to the oracle is generally based on some quantity such as the level of disagreement between multiple classifiers\cite{engelson99}, whether the data point falls into a region with uncertain labelling\cite{cohn94}, or whether the sample is likely under the learner's model\cite{loy11}. The learning agent may then present the sample if the quantity surpasses some threshold\cite{loy11,settles09}.
+
+        % TODO: Actual analysis of complexity (i.e. this can result in exponential reduction in data cost for some scenarios)
+
+    \section{Open Questions}
+        % Identify open questions in the area.
+        The central open question in active learning is whether or not active learning is \emph{practically} useful. There are many theoretical results suggesting that active learning works well under some assumptions, but these assumptions don't tend to hold up in real situations. These assumptions are generally on the oracle and include\cite{donmez08,settles11}:
+        \begin{itemize}
+            \item There is only one oracle
+            \item The oracle provides accurate labels
+            \item The oracle \emph{always} provides labels
+            \item Each example can be labelled for a fixed cost
+        \end{itemize}
+        Recently, the first two assumptions have broken down significantly with the rise of crowdsourcing and citizen science. Crowdsourcing in this context is when a problem is presented to a large number of people, who each contribute some part of the solution. This may be explicit (e.g. Amazon's Mechanical Turk) or implicit (e.g. online interactions like product ratings and clicking on items)\cite{yan11}. Citizen science is the application of crowdsourcing to scientific problems, where problems are presented to large numbers of non-experts. Examples include the Galaxy Zoo project\cite{lintott08}, the Radio Galaxy Zoo project\cite{banfield15}, and Snapshot Serengeti\cite{swanson15}, all of which use a web interface to allow volunteers to label large amounts of data. With crowdsourcing, there are (very) many oracles --- for example, the Galaxy Zoo project has had over over 100000 volunteers label data\cite{lintott08}. With citizen science, volunteers (and thus oracles) are generally not experts, and their labels may be inaccurate. The other two assumptions --- that the oracle always provides labels and that obtaining each label has a fixed cost --- simply may not apply in real situations\cite{donmez08,settles11}. Some of these broken assumptions have been addressed by restating the active learning problem as an optimisation problem over cost\cite{donmez08}.
+
+        The problem of inaccurate oracles is known as ``label noise'', and is an existing problem in supervised machine learning, with a number of methods proposed to counteract it\cite{frenay14}. These methods include directly accounting for noise in models\cite{natarajan13}, and requesting labels for the same example multiple times by combining uncertainty in the estimated label with the uncertainty in the oracle's label\cite{sheng08,lin16}. Since active learning focuses on applications where obtaining labels is expensive, requesting multiple labels is potentially costly, and selecting which examples the learning agent should request multiple times is a similar question to the original question of which examples should be labelled to begin with. Additionally, some examples may be ambiguous anyway, in which case these examples would appear beneficial to re-request labels for, but re-requesting labels would have limited or no benefit\cite{settles11}.
+
+        The problem of multiple oracles is mainly addressed in the context of crowdsourcing. One way to ``solve'' this problem is to ignore it, selecting some number of examples to query and spreading them amongst all oracles. A more targeted approach is to learn which oracles to query for each example that needs labelling, noting that in crowdsourcing, label noise is compounded with the multi-oracle problem\cite{yan11}. Another approach is to request labels from oracles in the context of a cost optimisation problem, which has the additional benefit of accounting for both noisy oracles and variable cost oracles\cite{donmez08}.
+
+        Another question is whether active learning actually reduces learning cost. While active learning does reduce the number of labelled examples required, it is possible that there is a correlation between information content of querying the oracle and cost of querying the oracle, if the cost of each label is not fixed\cite{settles11}. Some experiments have noted a decrease in cost, such as the Robot Scientist experiment by King et al.\cite{king04} --- though in this experiment, query synthesis was used rather than the more common pool- or stream-based sampling methods, and the cost of each labelling was known in advance to the learning agent. Additionally, there are a number of ways that labels could have varying costs. For example, some labels may inherently cost more to obtain, and in a multi-oracle context some oracles may be more expensive to query\cite{settles11}.
+
+        Finally, there is the question of whether there is a benefit in being able to ask the oracle for information other than just labels. Some examples include feature-based queries, where the oracle constrains models by specifying domain features rather than (or in addition to) labelling examples\cite{settles11,raghavan06}, and multi-instance learning, where the oracle can label examples with different levels of granularity\cite{settles08}.
+
+        % \begin{itemize}
+        %     \item How do we handle inaccurate oracles? Note relevance to crowdsourcing and citizen science, where the assumption of an expert oracle is broken. When should we *re*label? If relabelling isn't always helpful (maybe the data point itself is just bad), then how do we tell when to stop relabelling?
+        %     \item Is active learning practical for reducing cost?
+        %     \item What if different labels have different costs? What if we don't know the costs, or if the costs aren't fixed? Is uncertainty correlated with cost\cite{settles11}?
+        %     \item How do we incorporate batch learning? Batches are described as a ``computational convenience''\cite{mccallum98} but there are settings where labelling is very slow but we can do many at once (e.g. biology\cite{settles2011}). Selecting the top $b$ queries might not work, since these could all be quite similar.
+        %     \item Is it practical to use non-membership queries? Would this be useful?
+        %     \item Could we query about features of examples rather than whole examples?
+        % \end{itemize}
+        % \begin{itemize}
+        %     \item Get any papers in 2014, 2015, 2016 and read their discussion sections
+        %     \item Pick out any questions
+        %     \item Check if those are answered in the literature that cites them (Scholar)
+        %     \item gg
+        %     \item try and bundle in what people are currently working on and hence subsume the subsequent section
+        % \end{itemize}
+
+    % \section{Communities Working on Topic}
+        % Talk about where this is being applied.
+
+\bibliographystyle{unsrt}
+\bibliography{papers}
+
+\end{document}
