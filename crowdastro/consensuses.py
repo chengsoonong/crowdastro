@@ -128,10 +128,11 @@ def kde(points):
     return (x_peak, y_peak), True
 
 
-def find_consensuses(f_h5):
+def find_consensuses(f_h5, ir_survey):
     """Find Radio Galaxy Zoo crowd consensuses.
 
     f_h5: crowdastro HDF5 file.
+    ir_survey: SWIRE or WISE.
     """
     if 'consensus_objects' in f_h5['/atlas/cdfs/']:
         del f_h5['/atlas/cdfs/consensus_objects']
@@ -143,9 +144,9 @@ def find_consensuses(f_h5):
     logging.debug('Finding consensuses for %d classifications.',
                   len(class_combinations))
 
-    # Pre-build the SWIRE tree.
-    swire_coords = f_h5['/swire/cdfs/numeric'][:, :2]
-    swire_tree = sklearn.neighbors.KDTree(swire_coords)
+    # Pre-build the IR tree.
+    ir_coords = f_h5['/{}/cdfs/numeric'.format(ir_survey)][:, :2]
+    ir_tree = sklearn.neighbors.KDTree(ir_coords)
 
     cons_positions = []
     cons_combinations = []
@@ -204,11 +205,11 @@ def find_consensuses(f_h5):
                 logging.debug('Skipping NaN PG-means output.')
                 continue
 
-            # Match the (x, y) position to a SWIRE object.
-            dist, ind = swire_tree.query([(x, y)])
+            # Match the (x, y) position to an IR object.
+            dist, ind = ir_tree.query([(x, y)])
 
             # TODO(MatthewJA): Cut-off based on distance.
-            # Since SWIRE data is sorted, we can deal directly with indices.
+            # Since IR data is sorted, we can deal directly with indices.
             cons_positions.append((i, ind[0][0], success))
             cons_combinations.append((i, radio_signature, percentage_consensus))
 
@@ -219,35 +220,35 @@ def find_consensuses(f_h5):
     # combinations overlap (though I need to care if I generate a catalogue!) so
     # just take duplicated locations and pick the one with the highest radio
     # consensus that has success.
-    cons_objects = {}  # Maps SWIRE index to (ATLAS index, success,
-                       #                      percentage_consensus)
-    for (atlas_i, swire_i, success), (atlas_j, radio, percentage) in zip(
+    cons_objects = {}  # Maps IR index to (ATLAS index, success,
+                       #                   percentage_consensus)
+    for (atlas_i, ir_i, success), (atlas_j, radio, percentage) in zip(
             cons_positions, cons_combinations):
         assert atlas_i == atlas_j
 
-        if swire_i not in cons_objects:
-            cons_objects[swire_i] = (atlas_i, success, percentage)
+        if ir_i not in cons_objects:
+            cons_objects[ir_i] = (atlas_i, success, percentage)
             continue
 
-        if cons_objects[swire_i][1] and not success:
+        if cons_objects[ir_i][1] and not success:
             # Preference successful KDE/PG-means.
             continue
 
-        if not cons_objects[swire_i][1] and success:
+        if not cons_objects[ir_i][1] and success:
             # Preference successful KDE/PG-means.
-            cons_objects[swire_i] = (atlas_i, success, percentage)
+            cons_objects[ir_i] = (atlas_i, success, percentage)
             continue
 
         # If we get this far, we have the same success state. Choose based on
         # radio consensus.
-        if percentage > cons_objects[swire_i][2]:
-            cons_objects[swire_i] = (atlas_i, success, percentage)
+        if percentage > cons_objects[ir_i][2]:
+            cons_objects[ir_i] = (atlas_i, success, percentage)
             continue
 
     logging.debug('Found %d consensuses.', int(len(cons_objects)))
 
-    cons_objects = numpy.array([(atlas_i, swire_i, success, percentage)
-            for swire_i, (atlas_i, success, percentage)
+    cons_objects = numpy.array([(atlas_i, ir_i, success, percentage)
+            for ir_i, (atlas_i, success, percentage)
             in sorted(cons_objects.items())])
 
     # Write rows to file.
@@ -267,5 +268,6 @@ if __name__ == '__main__':
         logging.root.setLevel(logging.DEBUG)
 
     with h5py.File(args.h5, 'r+') as f_h5:
-        assert f_h5.attrs['version'] == '0.4.0'
-        find_consensuses(f_h5)
+        assert f_h5.attrs['version'] == '0.5.0'
+        ir_survey = f_h5.attrs['ir_survey']
+        find_consensuses(f_h5, ir_survey)

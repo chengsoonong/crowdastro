@@ -21,7 +21,6 @@ ARCMIN = 1 / 60
 FITS_HEIGHT = config['surveys']['atlas']['fits_height']
 FITS_WIDTH = config['surveys']['atlas']['fits_height']
 IMAGE_SIZE = FITS_HEIGHT * FITS_WIDTH
-N_ASTRO = 7
 
 
 def test(inputs_h5, training_h5, classifier_path, astro_transformer_path,
@@ -40,6 +39,9 @@ def test(inputs_h5, training_h5, classifier_path, astro_transformer_path,
     astro_transformer = sklearn.externals.joblib.load(astro_transformer_path)
     image_transformer = sklearn.externals.joblib.load(image_transformer_path)
 
+    assert training_h5.attrs['ir_survey'] == inputs_h5.attrs['ir_survey']
+    n_static = 6 if training_h5.attrs['ir_survey'] == 'swire' else 5
+
     test_indices = training_h5['is_atlas_test'].value
     numeric_subjects = inputs_h5['/atlas/cdfs/numeric'][test_indices, :]
 
@@ -48,9 +50,9 @@ def test(inputs_h5, training_h5, classifier_path, astro_transformer_path,
     for subject in numeric_subjects:
         swire = subject[2 + IMAGE_SIZE:]
         nearby = swire < ARCMIN
-        astro_inputs = numpy.minimum(training_h5['features'][nearby, :N_ASTRO],
+        astro_inputs = numpy.minimum(training_h5['features'][nearby, :n_static],
                                      1500)
-        image_inputs = training_h5['features'][nearby, N_ASTRO:]
+        image_inputs = training_h5['features'][nearby, n_static:]
 
         features = []
         if use_astro:

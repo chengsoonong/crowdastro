@@ -35,20 +35,26 @@ def generate(f_h5, out_f_h5):
     f_h5: crowdastro input HDF5 file.
     out_f_h5: Training data output HDF5 file.
     """
-    swire = f_h5['/swire/cdfs/numeric']
-    fluxes = swire[:, 2:7]
-    stellarities = swire[:, 7]
-    distances = swire[:, 8].reshape((-1, 1))
-    images = swire[:, 8:]
-    coords = swire[:, :2]
+    if f_h5.attrs['ir_survey'] == 'swire':
+        swire = f_h5['/swire/cdfs/numeric']
+        fluxes = swire[:, 2:7]
+        distances = swire[:, 8].reshape((-1, 1))
+        images = swire[:, 8:]
+        coords = swire[:, :2]
+    elif f_h5.attrs['ir_survey'] == 'wise':
+        wise = f_h5['/wise/cdfs/numeric']
+        fluxes = wise[:, 2:6]
+        distances = wise[:, 7].reshape((-1, 1))
+        images = wise[:, 7:]
+        coords = wise[:, :2]
+
 
     # We now need to find the labels for each.
     truths = set(f_h5['/atlas/cdfs/consensus_objects'][:, 1])
-    labels = numpy.array([o in truths for o in range(len(swire))])
+    labels = numpy.array([o in truths for o in range(len(fluxes))])
 
     assert len(labels) == len(fluxes)
-    assert len(fluxes) == len(stellarities)
-    assert len(stellarities) == len(distances)
+    assert len(fluxes) == len(distances)
     assert len(distances) == len(images)
 
     features = numpy.hstack([fluxes, distances, images])
@@ -59,12 +65,13 @@ def generate(f_h5, out_f_h5):
     out_f_h5.create_dataset('labels', data=labels)
     out_f_h5.create_dataset('features', data=features)
     out_f_h5.create_dataset('positions', data=coords)
+    out_f_h5.attrs['ir_survey'] = f_h5.attrs['ir_survey']
 
     # We want to ensure our training set is never in our testing set, so
     # 1. assign all ATLAS objects to a train or test set,
-    # 2. if a SWIRE object is nearby a testing ATLAS object, assign it to a test
+    # 2. if a IR object is nearby a testing ATLAS object, assign it to a test
     #    set, and
-    # 3. assign all other SWIRE objects to a train set.
+    # 3. assign all other IR objects to a train set.
     n_atlas = f_h5['/atlas/cdfs/numeric'].shape[0]
     indices = numpy.arange(n_atlas)
     numpy.random.shuffle(indices)
@@ -80,21 +87,21 @@ def generate(f_h5, out_f_h5):
     is_atlas_test[atlas_test_indices] = 1
     is_atlas_train[atlas_train_indices] = 1
 
-    n_swire = len(fluxes)
-    is_swire_train = numpy.ones((n_swire))
-    is_swire_test = numpy.zeros((n_swire))
+    n_ir = len(fluxes)
+    is_ir_train = numpy.ones((n_ir))
+    is_ir_test = numpy.zeros((n_ir))
 
     for atlas_index in atlas_test_indices:
-        swire = f_h5['/atlas/cdfs/numeric'][atlas_index, n_astro + IMAGE_SIZE:]
-        nearby = (swire < ARCMIN).nonzero()[0]
-        for swire_index in nearby:
-            is_swire_test[swire_index] = 1
-            is_swire_train[swire_index] = 0
+        ir = f_h5['/atlas/cdfs/numeric'][atlas_index, n_astro + IMAGE_SIZE:]
+        nearby = (ir < ARCMIN).nonzero()[0]
+        for ir_index in nearby:
+            is_ir_test[ir_index] = 1
+            is_ir_train[ir_index] = 0
 
     out_f_h5.create_dataset('is_atlas_train', data=is_atlas_train.astype(bool))
     out_f_h5.create_dataset('is_atlas_test', data=is_atlas_test.astype(bool))
-    out_f_h5.create_dataset('is_swire_train', data=is_swire_train.astype(bool))
-    out_f_h5.create_dataset('is_swire_test', data=is_swire_test.astype(bool))
+    out_f_h5.create_dataset('is_ir_train', data=is_ir_train.astype(bool))
+    out_f_h5.create_dataset('is_ir_test', data=is_ir_test.astype(bool))
 
 
 if __name__ == '__main__':

@@ -17,7 +17,6 @@ from .config import config
 
 PATCH_RADIUS = config['patch_radius']  # px
 ARCMIN = 1 / 60  # deg
-N_STATIC = 7  # Number of static (non-image) features.
 
 
 def generate(training_h5, cnn_model_json, cnn_weights_path):
@@ -27,6 +26,7 @@ def generate(training_h5, cnn_model_json, cnn_weights_path):
     cnn_model_path: JSON model file.
     cnn_weights_path: Path to CNN weights HDF5 file.
     """
+    n_static = 6 if training_h5.attrs['ir_survey'] == 'swire' else 5
     cnn = keras.models.model_from_json(cnn_model_json.read())
     cnn.load_weights(cnn_weights_path)
     cnn.compile(loss='binary_crossentropy', optimizer='adadelta')
@@ -35,7 +35,7 @@ def generate(training_h5, cnn_model_json, cnn_weights_path):
     get_convolutional_features = (lambda p:
             get_convolutional_features_([p])[0].reshape((p.shape[0], -1)))
 
-    images = training_h5['features'][:, N_STATIC:].reshape(
+    images = training_h5['features'][:, n_static:].reshape(
             (-1, 1, PATCH_RADIUS * 2, PATCH_RADIUS * 2))
 
     test_out = get_convolutional_features(images[:1, :, :, :])
@@ -44,15 +44,15 @@ def generate(training_h5, cnn_model_json, cnn_weights_path):
         del training_h5['_features']
 
     out = training_h5.create_dataset('_features', dtype=float,
-            shape=(len(images), N_STATIC + test_out.shape[1]))
+            shape=(len(images), n_static + test_out.shape[1]))
 
     # Copy the static features across. We'll fill in the rest with the CNN.
-    out[:, :N_STATIC] = training_h5['features'][:, :N_STATIC]
+    out[:, :n_static] = training_h5['features'][:, :n_static]
 
     batch_size = 1000
     for i in range(0, len(images), batch_size):
         batch = images[i : i + batch_size]
-        out[i : i + batch_size, N_STATIC:] = get_convolutional_features(batch)
+        out[i : i + batch_size, n_static:] = get_convolutional_features(batch)
 
     # Clean up - delete the original features and rename our new features.
     del training_h5['features']

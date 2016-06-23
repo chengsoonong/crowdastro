@@ -22,7 +22,7 @@ from . import rgz_data as data
 from .config import config
 from .exceptions import CatalogueError
 
-VERSION = '0.4.0'  # Data version, not module version!
+VERSION = '0.5.0'  # Data version, not module version!
 MAX_RADIO_SIGNATURE_LENGTH = 50  # max number of components * individual
                                  # component signature size.
 MAX_NAME_LENGTH = 50  # b
@@ -32,11 +32,12 @@ ARCMIN = 1 / 60  # deg
 CANDIDATE_RADIUS = ARCMIN  # deg
 FITS_CONVENTION = 1
 
-def prep_h5(f_h5):
+def prep_h5(f_h5, ir_survey):
     """Creates hierarchy in HDF5 file."""
-    cdfs = f_h5.create_group('/atlas/cdfs')
-    swire_cdfs = f_h5.create_group('/swire/cdfs')
+    f_h5.create_group('/atlas/cdfs')
+    f_h5.create_group('/{}/cdfs'.format(ir_survey))
     f_h5.attrs['version'] = VERSION
+    f_h5.attrs['ir_survey'] = ir_survey
 
 
 def import_atlas(f_h5, test=False):
@@ -244,6 +245,114 @@ def import_swire(f_h5):
                               ignore_blank=True) as atlas_image:
         wcs = astropy.wcs.WCS(atlas_image[0].header).dropaxis(3).dropaxis(2)
         pix_coords = wcs.all_world2pix(swire_positions, FITS_CONVENTION)
+        assert pix_coords.shape[1] == 2
+        assert pix_coords.shape[0] == len(indices)
+        logging.debug('Fetching %d ATLAS patches.', len(indices))
+
+        for index, (x, y) in enumerate(pix_coords):
+            radio = atlas_image[0].data[0, 0,  # stokes, freq
+                    int(y) - PATCH_RADIUS :
+                    int(y) + PATCH_RADIUS ,
+                    int(x) - PATCH_RADIUS :
+                    int(x) + PATCH_RADIUS ]
+            numeric[index, -image_size:] = radio.reshape(-1)
+
+
+def import_wise(f_h5):
+    """Imports the WISE dataset into crowdastro.
+
+    f_h5: An HDF5 file.
+    """
+    names = []
+    rows = []
+    logging.debug('Reading WISE catalogue.')
+    with open(config['data_sources']['wise_catalogue']) as f_tbl:
+        # This isn't a valid ASCII table, so Astropy can't handle it. This means
+        # we have to parse it manually.
+        for _ in range(105):  # Skip the first 105 lines.
+            next(f_tbl)
+
+        # Get the column names.
+        columns = [c.strip() for c in next(f_tbl).strip().split('|')][1:-1]
+        assert len(columns) == 45
+
+        for _ in range(3):  # Skip the next three lines.
+            next(f_tbl)
+
+        for row in f_tbl:
+            row = row.strip().split()
+            assert len(row) == 45
+            row = dict(zip(columns, row))
+            name = row['designation']
+            ra = float(row['ra'])
+            dec = float(row['dec'])
+            w1mpro = float(remove_nulls(row['w1mpro']))
+            w2mpro = float(remove_nulls(row['w2mpro']))
+            w3mpro = float(remove_nulls(row['w3mpro']))
+            w4mpro = float(remove_nulls(row['w4mpro']))
+            # Extra -1 is so we can store nearest distance later.
+            rows.append((ra, dec, w1mpro, w2mpro, w3mpro, w4mpro, -1))
+            names.append(name)
+
+    logging.debug('Found %d WISE objects.', len(names))
+
+    # Sort by name.
+    rows_to_names = dict(zip(rows, names))
+    rows.sort(key=rows_to_names.get)
+    names.sort()
+
+    names = numpy.array(names, dtype='<S{}'.format(MAX_NAME_LENGTH))
+    rows = numpy.array(rows)
+
+    # Filter on distance - only include image data for WISE objects within a
+    # given radius of an ATLAS object. Otherwise, there's way too much data to
+    # store.
+    wise_positions = rows[:, :2]
+    atlas_positions = f_h5['/atlas/cdfs/_numeric'][:, :2]
+    logging.debug('Computing WISE k-d tree.')
+    wise_tree = sklearn.neighbors.KDTree(wise_positions, metric='euclidean')
+    indices = numpy.concatenate(
+            wise_tree.query_radius(atlas_positions, CANDIDATE_RADIUS))
+    indices = numpy.unique(indices)
+
+    logging.debug('Found %d WISE objects near ATLAS objects.', len(indices))
+
+    names = names[indices]
+    rows = rows[indices]
+    wise_positions = wise_positions[indices]
+
+    # Get distances.
+    logging.debug('Finding ATLAS-WISE object distances.')
+    distances = scipy.spatial.distance.cdist(atlas_positions, wise_positions,
+                                             'euclidean')
+    assert distances.shape[0] == atlas_positions.shape[0]
+    assert distances.shape[1] == wise_positions.shape[0]
+    logging.debug('Done finding distances.')
+
+    # Write numeric data to HDF5.
+    rows[:, 6] = distances.min(axis=0)
+    atlas_numeric = f_h5['/atlas/cdfs/_numeric']
+    f_h5['/atlas/cdfs'].create_dataset('numeric', dtype='float32',
+            shape=(atlas_numeric.shape[0],
+                   atlas_numeric.shape[1] + len(indices)))
+    f_h5['/atlas/cdfs/numeric'][:, :atlas_numeric.shape[1]] = atlas_numeric
+    f_h5['/atlas/cdfs/numeric'][:, atlas_numeric.shape[1]:] = distances
+
+    del f_h5['/atlas/cdfs/_numeric']
+
+    image_size = (PATCH_RADIUS * 2) ** 2
+    dim = (rows.shape[0], rows.shape[1] + image_size)
+    numeric = f_h5['/wise/cdfs'].create_dataset('numeric', shape=dim,
+                                                 dtype='float32')
+    numeric[:, :rows.shape[1]] = rows
+    f_h5['/wise/cdfs'].create_dataset('string', data=names)
+
+    # Load and store radio images.
+    logging.debug('Importing radio patches.')
+    with astropy.io.fits.open(config['data_sources']['atlas_image'],
+                              ignore_blank=True) as atlas_image:
+        wcs = astropy.wcs.WCS(atlas_image[0].header).dropaxis(3).dropaxis(2)
+        pix_coords = wcs.all_world2pix(wise_positions, FITS_CONVENTION)
         assert pix_coords.shape[1] == 2
         assert pix_coords.shape[0] == len(indices)
         logging.debug('Fetching %d ATLAS patches.', len(indices))
@@ -539,6 +648,8 @@ if __name__ == '__main__':
     parser.add_argument('--test', action='store_true', default=False,
                         help='Run with a small number of subjects',)
     parser.add_argument('-v', '--verbose', default=False, action='store_true')
+    parser.add_argument('--ir', choices={'swire', 'wise'},
+                        default='swire', help='which infrared survey to use')
     args = parser.parse_args()
 
     logging.captureWarnings(True)
@@ -553,7 +664,10 @@ if __name__ == '__main__':
         warnings.simplefilter('ignore', UserWarning)
 
     with h5py.File(args.h5, 'w') as f_h5:
-        prep_h5(f_h5)
+        prep_h5(f_h5, args.ir)
         import_atlas(f_h5, test=args.test)
-        import_swire(f_h5)
+        if args.ir == 'swire':
+            import_swire(f_h5)
+        elif args.ir == 'wise':
+            import_wise(f_h5)
         import_classifications(f_h5)

@@ -22,7 +22,6 @@ from .config import config
 
 PATCH_RADIUS = config['patch_radius']
 PATCH_DIAMETER = PATCH_RADIUS * 2
-N_ASTRO = 7
 
 def train(training_h5, classifier_out_path, astro_transformer_out_path,
           image_transformer_out_path, classifier='lr', use_astro=True,
@@ -41,14 +40,15 @@ def train(training_h5, classifier_out_path, astro_transformer_out_path,
     """
     if not any([use_astro, use_cnn]):
         raise ValueError('Must have features.')
+    n_static = 6 if training_h5.attrs['ir_survey'] == 'swire' else 5
 
-    train_indices = training_h5['is_swire_train'].value
+    train_indices = training_h5['is_ir_train'].value
     outputs = training_h5['labels'].value[train_indices]
     n = len(outputs)
 
     astro_inputs = numpy.minimum(
-            training_h5['features'][train_indices, :N_ASTRO], 1500)
-    image_inputs = training_h5['features'].value[train_indices, N_ASTRO:]
+            training_h5['features'][train_indices, :n_static], 1500)
+    image_inputs = training_h5['features'].value[train_indices, n_static:]
 
     astro_transformer = sklearn.pipeline.Pipeline([
             ('normalise', sklearn.preprocessing.Normalizer()),

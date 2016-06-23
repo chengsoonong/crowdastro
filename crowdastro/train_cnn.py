@@ -18,7 +18,6 @@ from .config import config
 
 PATCH_RADIUS = config['patch_radius']
 PATCH_DIAMETER = PATCH_RADIUS * 2
-N_ASTRO = 7
 
 
 def train(training_h5, model_json, weights_path, epochs, batch_size):
@@ -33,9 +32,14 @@ def train(training_h5, model_json, weights_path, epochs, batch_size):
     model = keras.models.model_from_json(model_json.read())
     model.compile(loss='binary_crossentropy', optimizer='adadelta')
 
-    train_set = training_h5['is_swire_train'].value
+    train_set = training_h5['is_ir_train'].value
+    ir_survey = training_h5.attrs['ir_survey']
 
-    training_inputs = training_h5['features'].value[train_set, N_ASTRO:]
+    if ir_survey == 'swire':
+        training_inputs = training_h5['features'].value[train_set, 6:]
+    elif ir_survey == 'wise':
+        training_inputs = training_h5['features'].value[train_set, 5:]
+
     training_inputs = training_inputs.reshape(
             (-1, 1, PATCH_DIAMETER, PATCH_DIAMETER))
     training_outputs = training_h5['labels'].value[train_set]
