@@ -1,0 +1,221 @@
+%%
+%% anuthesis.sty Copyright (C) 1996, 1997 Steve Blackburn
+%%
+%% Department of Computer Science, Australian National University
+%%
+%% \RCS $RCSfile: anuthesis.sty,v $
+%% \RCS $Revision: 1.1 $
+%% \RCS $Date: 1997/01/02 00:12:43 $
+%%
+%% This style is for the production of theses in compliance with the
+%% ANU PhD thesis guidelines.  In addition to complying with ANU
+%% guidelines, the style seeks to produce an attractive document.  The
+%% page style is based on the Cambridge University Press style.
+%%
+%% The style takes the following options:
+%%       cm - Typeset in Computer Modern     
+%%   lucida -    "    "  Lucida
+%% palatino -    "    "  Palatino
+%%    times -    "    "  Times
+%%
+%% By default, Computer Modern is used.
+%%
+\NeedsTeXFormat{LaTeX2e}[1995/12/01] \ProvidesPackage{anuthesis}
+[2005/04/04 v0.2 ANU Thesis Style (SB/RW)]
+%%
+%% Declare options
+%%
+\DeclareOption{cm}{\def\thesisfont{cm}}
+\DeclareOption{lucida}{\def\thesisfont{lucida}}
+\DeclareOption{palatino}{\def\thesisfont{palatino}}
+\DeclareOption{times}{\def\thesisfont{times}}
+\DeclareOption{draft}{\def\thesisqualifier{DRAFT}}
+\DeclareOption{exam}{\def\thesisqualifier{CURRENTLY UNDER EXAMINATION}}
+\DeclareOption{final}{\def\thesisqualifier{}}
+%%
+%% Default to computer modern
+%%
+\ExecuteOptions{cm,final}
+%%
+%% Check for non-default options
+%%
+\ProcessOptions
+%%
+%% Set up things for each of the different font options.
+%%
+\RequirePackage{ifthen}
+\ifthenelse{\equal{\thesisfont}{cm}}{\RequirePackage{latexsym}\def\aboutthesis{\footnotesize Typeset in Computer Modern by \TeX\ and \LaTeXe{}.}}{}
+\ifthenelse{\equal{\thesisfont}{lucida}}{\RequirePackage[nolucidascale]{lucbr}\renewcommand{\ttdefault}{hlct}\def\aboutthesis{\footnotesize Typeset in Lucida by \TeX\ and \LaTeXe{}.}}{}
+\ifthenelse{\equal{\thesisfont}{palatino}}{\RequirePackage{mathpple}\RequirePackage{palatino}\def\aboutthesis{\footnotesize Typeset in Palatino by \TeX\ and \LaTeXe{}.}}{}
+\ifthenelse{\equal{\thesisfont}{times}}{\RequirePackage{mathptmx}\RequirePackage{times}\def\aboutthesis{\footnotesize Typeset in Times by \TeX\ and \LaTeXe{}.}}{}
+%%
+%% Use English (Australian) style dates
+%%
+\def\today{\number\day\space\ifcase\month\or
+January\or February\or March\or April\or May\or June\or
+July\or August\or September\or October\or November\or December\fi
+\space\number\year}
+\def\thismonth{\ifcase\month\or January\or February\or March\or
+  April\or May\or June\or July\or August\or September\or October\or
+  November\or December\fi \space\number\year}
+%%
+%% This avoids a known clash with chemsym over the use of \S (otherwise
+%% defined as the section symbol).
+%%
+\let\Ss=\S
+%%
+%% Macros for including author and date
+%%
+\def\thesisauthor{\makeatletter\@author\makeatother}
+\def\submitdate{\makeatletter\@date\makeatother}
+%%
+%% Marginpars
+%%
+\def\marginlabel#1{\mbox{}\marginpar{\raggedright\hspace{0pt}#1}}
+\reversemarginpar
+\marginparwidth 25mm
+%%
+%% Get section commands right.
+%%
+\renewcommand\section{\@startsection {section}{1}{\z@}%
+                                   {-3.5ex \@plus -1ex \@minus -.2ex}%
+                                   {2.3ex \@plus.2ex}%
+                                   {\normalfont\Large\bfseries}}
+\renewcommand\subsection{\@startsection{subsection}{2}{\z@}%
+                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+                                     {1.5ex \@plus .2ex}%
+                                     {\normalfont\large\bfseries}}
+\renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}%
+                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+                                     {1.5ex \@plus .2ex}%
+                                   {\normalfont\normalsize\bfseries}}
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+                                    {3.25ex \@plus1ex \@minus.2ex}%
+                                    {-1em}%
+                                    {\normalfont\normalsize\bfseries}}
+\renewcommand\subparagraph{\@startsection{subparagraph}{5}{\parindent}%
+                                       {3.25ex \@plus1ex \@minus .2ex}%
+                                       {-1em}%
+                                    {\normalfont\normalsize\bfseries}}
+%%
+%% Use Sans in chapter titles in toc
+%%
+\renewcommand*\l@chapter[2]{%
+  \ifnum \c@tocdepth >\m@ne
+    \addpenalty{-\@highpenalty}%
+    \vskip 1.0em \@plus\p@
+    \setlength\@tempdima{1.5em}%
+    \begingroup
+      \parindent \z@ \rightskip \@pnumwidth
+      \parfillskip -\@pnumwidth
+      \leavevmode \bfseries
+      \advance\leftskip\@tempdima
+      \hskip -\leftskip
+      #1\nobreak\hfil \nobreak\hb@xt@\@pnumwidth{\hss #2}\par
+      \penalty\@highpenalty
+    \endgroup
+  \fi}
+%%
+%% Get things set up for thesis qualifier (e.g. 'DRAFT' & 'UNDER EXAM')
+%%
+\def\tqfoot{{\small{\bfseries \thesisqualifier}}}
+\newlength{\tqfootlen}\settowidth{\tqfootlen}{\tqfoot}
+
+%%
+%% Fix page style to do page numbers properly
+%%
+\def\dopagenum#1{\rm\bfseries#1}
+\def\ps@plain{\let\@mkboth\@gobbletwo
+     \let\@oddhead\@empty\def\@oddfoot{\hspace{\tqfootlen}\reset@font\hfil\dopagenum\thepage\hfil\tqfoot}\let\@evenhead\@empty\let\@evenfoot\@oddfoot}
+
+%%
+%% Fix up captions (Entire captions small, "Figure X" in bold)
+%%
+\def\@makecaption#1#2{%
+  \vskip\abovecaptionskip
+  \sbox\@tempboxa{{\small{\bfseries #1}: #2}}%
+  \ifdim \wd\@tempboxa >\hsize
+    {\small{\bfseries #1:} #2}\par
+  \else
+    \global \@minipagefalse
+    \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
+  \fi
+  \vskip\belowcaptionskip}
+%%
+%% Get all the spacing right
+%%
+% line spacing
+\RequirePackage{setspace}
+\setstretch{1.045}
+% horizontal stuff - page width 210mm
+\textwidth 144.6mm      
+\oddsidemargin 14.6mm   % 40 - 25.4
+\evensidemargin 0mm     % 
+% vertical stuff - page height 297mm
+\topmargin -3mm         % 
+\headheight 5mm         % header box - space for 1 line
+\headsep 7mm            %
+\textheight 220mm       % 
+
+%%
+%% Page style -- modified from Cambridge University Press style
+%%
+
+%%
+%% Chapter headings (in original case)
+%%
+\def\ps@headings{\let\@mkboth\markboth\def\@oddfoot{\hfil\tqfoot\hfil}\def\@evenfoot{\hfil\tqfoot\hfil}\def
+  \@evenhead{\vbox{\hbox to \textwidth{\rlap{\dopagenum\thepage}\hfil \sl
+        \leftmark\hfil}\vskip 16pt\hrule height1pt}}\def
+  \@oddhead{\vbox{\hbox to \textwidth{\hfil\sl\rightmark\hfil\llap{%
+        \dopagenum\thepage}}\vskip 16pt\hrule height1pt}}\def
+  \chaptermark##1{\markboth {{\ifnum \c@secnumdepth
+>\m@ne
+\fi ##1}}{}}\def\sectionmark##1{\markright
+{{\ifnum \c@secnumdepth >\z@
+{\upshape\Ss\thesection} \ \ \fi ##1}}}}
+\def\@rulehead#1{\hrule height1pt \vskip 14pt \Huge \bf 
+   #1 \vskip 14pt\hrule height1pt}
+\def\@makechapterhead#1{ { \parindent 0pt 
+ \ifnum \c@secnumdepth >\m@ne \raggedleft\large\bf \@chapapp{} \thechapter \par 
+ \vskip 20pt \fi \raggedright \@rulehead{#1} \par 
+ \nobreak \vskip 80pt } }
+
+\def\@makeschapterhead#1{ { \parindent 0pt \raggedright 
+ \@rulehead{#1} \par \nobreak \vskip 40pt } }
+\def\thebibliography#1{\chapter*{Bibliography\@mkboth
+ {Bibliography}{Bibliography}} \addcontentsline{toc}{chapter}{Bibliography}
+ \list {\@biblabel{\arabic{enumi}}}{\settowidth\labelwidth{\@biblabel{#1}}
+ \leftmargin\labelwidth
+ \advance\leftmargin\labelsep
+ \usecounter{enumi}}
+ \def\newblock{\hskip .11em plus .33em minus -.07em}
+ \sloppy
+ \sfcode`\.=1000\relax}
+\let\endthebibliography=\endlist
+\def\theindex{\@restonecoltrue\if@twocolumn\@restonecolfalse\fi
+\columnseprule \z@
+\columnsep 35pt\twocolumn[\@makeschapterhead{Index}]
+ \@mkboth{Index}{Index}\thispagestyle{plain}
+ \addcontentsline{toc}{chapter}{Index}
+ \parindent\z@
+ \parskip\z@ plus .3pt\relax\let\item\@idxitem}
+\def\@idxitem{\par\hangindent 40pt}
+\def\subitem{\par\hangindent 40pt \hspace*{20pt}}
+\def\subsubitem{\par\hangindent 40pt \hspace*{30pt}}
+\def\endtheindex{\if@restonecol\onecolumn\else\clearpage\fi}
+%The headings are Contents not CONTENTS
+\def\tableofcontents{\@restonecolfalse\if@twocolumn\@restonecoltrue\onecolumn
+ \fi\chapter*{Contents\@mkboth{Contents}{Contents}}
+ \@starttoc{toc}\if@restonecol\twocolumn\fi}
+\def\l@part#1#2{\addpenalty{-\@highpenalty}
+ \addvspace{2.25em plus 1pt} \begingroup
+ \@tempdima 3em \parindent \z@ \rightskip \@pnumwidth \parfillskip
+-\@pnumwidth 
+ {\large \bf \leavevmode #1\hfil \hbox to\@pnumwidth{\hss #2}}\par
+ \nobreak \endgroup}
+\headheight 30pt \headsep 20pt 
+\ps@headings  %to override previous
+%% 
+%% End of file `anuthesis.sty'.
+%%

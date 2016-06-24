@@ -1,0 +1,46 @@
+%% 
+%% This is file `mathppl.sty', derived from mathptm.sty <1996/02/05> 
+%% 
+%% \RCS $RCSfile: mathppl.sty,v $
+%% \RCS $Revision: 1.2 $
+%% \RCS $Date: 1997/01/02 00:14:07 $
+%%
+%% 
+\def\fileversion{5.1}
+\def\filedate{1995/08/07}
+\def\docdate {1995/03/12}
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{mathppl}[\filedate{} Times + math package from fontinst]
+\def\rmdefault{ppl}
+\DeclareSymbolFont{operators}   {OT1}{ptmcm}{m}{n}
+\DeclareSymbolFont{letters}     {OML}{ptmcm}{m}{it}
+\DeclareSymbolFont{symbols}     {OMS}{pzccm}{m}{n}
+\DeclareSymbolFont{largesymbols}{OMX}{psycm}{m}{n}
+\DeclareSymbolFont{bold}        {OT1}{ppl}{bx}{n}
+\DeclareSymbolFont{italic}      {OT1}{ppl}{m}{it}
+\@ifundefined{mathbf}{}{\DeclareMathAlphabet{\mathbf}{OT1}{ppl}{bx}{n}}
+\@ifundefined{mathit}{}{\DeclareMathAlphabet{\mathit}{OT1}{ppl}{m}{it}}
+\DeclareMathAlphabet{\mathrm}{OT1}{ppl}{m}{n}
+\DeclareMathSymbol{\omicron}{0}{operators}{`\o}
+\thinmuskip=2mu
+\medmuskip=2.5mu plus 1mu minus 1mu
+\thickmuskip=4mu plus 1.5mu minus 1mu
+\def\boldmath{%
+   \@warning{there is no bold Symbol font}%
+   \global\let\boldmath=\relax
+}
+\DeclareMathSizes{5}{5}{5}{5}
+\DeclareMathSizes{6}{6}{5}{5}
+\DeclareMathSizes{7}{7}{5}{5}
+\DeclareMathSizes{8}{8}{6}{5}
+\DeclareMathSizes{9}{9}{7}{5}
+\DeclareMathSizes{10}{10}{7.4}{6}
+\DeclareMathSizes{10.95}{10.95}{8}{6}
+\DeclareMathSizes{12}{12}{9}{7}
+\DeclareMathSizes{14.4}{14.4}{10.95}{8}
+\DeclareMathSizes{17.28}{17.28}{12}{10}
+\DeclareMathSizes{20.74}{20.74}{14.4}{12}
+\DeclareMathSizes{24.88}{24.88}{17.28}{14.4}
+\endinput
+%% 
+%% End of file `mathppl.sty'.

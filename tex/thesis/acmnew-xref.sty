@@ -1,0 +1,273 @@
+%%
+%% acmnew-xref.sty
+%%
+%% This file gives citations and bibliography in the style of ACM
+%% Transactions.  It is based on esub2acm, the SGML generating style for ACM
+%% submissions.
+%%
+% Bibliographic cite forms needed:
+%
+%  \cite{key}
+%    which produces citations with full author list and year.
+%    eg. [Brown 1978; Jarke, Turner, Stohl, et al. 1985]
+%  \citeA{key}
+%    which produces citations with only the full author list.
+%    eg. [Brown; Jarke, Turner and Stohl]
+%  \citeN{key}
+%    which produces citations with the full author list and year, but
+%    can be used as nouns in a sentence; no brackets appear around
+%    the author names, but only around the year.
+%      eg. Shneiderman [1978] states that......
+%    \citeN should only be used for a single citation.
+%  \shortcite{key}
+%    which produces citations with abbreviated author list and year.
+%  \shortciteA{key}
+%    which produces only the abbreviated author list.
+%  \shortciteN{key}
+%    which produces the abbreviated author list and year, with only the
+%    year in brackets. Use with only one citation.
+%  \citeyear{key}
+%    which produces the year information only, within brackets.
+%
+% Abbreviated author lists use the ``et al.'' construct.
+%
+
+\let\@xrefdiagnose\typeout
+\DeclareOption{silent}{\let\@xrefdiagnose\@gobble}
+\DeclareOption{diagnose}{\let\@xrefdiagnose\typeout}
+\ProcessOptions
+\typeout{Using author/year ACM bibliography style}
+\newcommand\bibyear[2]{%
+    \unskip\quad\ignorespaces#1\unskip
+    \if#2..\quad \else \quad#2 \fi
+}
+\newcommand{\bibemph}[1]{{\em#1}}
+\newcommand{\bibemphic}[1]{{\em#1\/}}
+\newcommand{\bibsc}[1]{{\sc#1}}
+\def\@normalcite{%
+    \def\@cite##1##2{[##1\if@tempswa , ##2\fi]}%
+}
+\def\@citeNB{%
+    \def\@cite##1##2{##1\if@tempswa , ##2\fi}%
+}
+\def\@citeRB{%
+    \def\@cite##1##2{##1\if@tempswa , ##2\fi]}%
+}
+\def\start@cite#1#2{%
+    \edef\citeauthoryear##1##2##3{%
+        ###1%
+        \ifnum#2=\z@ \else\ ###2\fi
+    }%
+    \ifnum#1=\thr@@
+        \let\@@cite\@citeyear
+    \else
+        \let\@@cite\@citenormal
+    \fi
+    \@ifstar{\@citeNB\@@cite}{\@normalcite\@@cite}%
+}
+\def\cite{\start@cite23}
+\def\citeNP{\cite*}
+\def\citeA{\start@cite10}
+\def\citeANP{\citeA*}
+\def\shortcite{\start@cite23}
+\def\shortciteNP{\shortcite*}
+\def\shortciteA{\start@cite20}
+\def\shortciteANP{\shortciteA*}
+\def\citeyear{\start@cite30}
+\def\citeyearNP{\citeyear*}
+\def\citeN{%
+    \@citeRB
+    \def\citeauthoryear##1##2##3{##1\ [##3%
+        \def\reserved@a{##1}%
+        \def\citeauthoryear####1####2####3{%
+            \def\reserved@b{####1}%
+            \ifx\reserved@a\reserved@b
+                ####3%
+            \else
+                \errmessage{Package acmart Error: author mismatch
+                         in \string\citeN^^J^^J%
+                    See the acmart package documentation for explanation}%
+            \fi
+        }%
+    }%
+    \@ifstar\@citeyear\@citeyear
+}
+\def\shortciteN{%
+    \@citeRB
+    \def\citeauthoryear##1##2##3{##2\ [##3%
+        \def\reserved@a{##2}%
+        \def\citeauthoryear####1####2####3{%
+          \def\reserved@b{####2}%
+            \ifx\reserved@a\reserved@b
+                ####3%
+            \else
+                \errmessage{Package acmart Error: author mismatch
+                         in \string\shortciteN^^J^^J%
+                    See the acmart package documentation for explanation}%
+            \fi
+        }%
+    }%
+    \@ifstar\@citeyear\@citeyear
+}
+\def\@citenormal{%
+    \@ifnextchar [{\@tempswatrue\@citex;}
+                  {\@tempswafalse\@citex;[]}%
+}
+\def\@citeyear{%
+    \@ifnextchar [{\@tempswatrue\@citex,}%
+                  {\@tempswafalse\@citex,[]}%
+}
+\def\@citex#1[#2]#3{%
+    \let\@citea\@empty
+    \@cite{%
+        \@for\@citeb:=#3\do{%
+            \@citea
+            \def\@citea{#1 }%
+            \edef\@citeb{\expandafter\@iden\@citeb}%
+            \if@filesw
+                \immediate\write\@auxout{\string\citation{\@citeb}}%
+            \fi
+            \@ifundefined{b@\@citeb}{%
+                {\bf ?}%
+                \@warning{%
+                    Citation `\@citeb' on page \thepage\space undefined%
+                }%
+            }%
+            {\csname b@\@citeb\endcsname}%
+        }%
+    }{#2}%
+}
+\let\@biblabel\@gobble
+\newdimen\bibindent
+\bibindent=1.5em
+\@ifundefined{chapter}{%
+  \def\thebibliography#1{% We're using sections
+    \section*{Bibliography\@mkboth{Bibliography}{Bibliography}}%
+    \list{[\arabic{enumi}]}{% 
+      \settowidth\labelwidth{[#1]}%
+      \leftmargin\labelwidth
+      \advance\leftmargin\labelsep
+      \itemindent -\bibindent
+      \listparindent \itemindent
+      \parsep \z@
+      \usecounter{enumi}%
+      }%
+    \let\newblock\@empty
+    \sloppy
+    \sfcode`\.=1000\relax}}{%
+  \def\thebibliography#1{%  We're using chapters
+    \chapter*{Bibliography\@mkboth{Bibliography}{Bibliography}}
+    \addcontentsline{toc}{chapter}{Bibliography}
+    \list{[\arabic{enumi}]}{%
+      \settowidth\labelwidth{[#1]}%
+      \leftmargin\labelwidth
+      \advance\leftmargin\labelsep
+      \itemindent -\bibindent
+      \listparindent \itemindent
+      \parsep \z@
+      \usecounter{enumi}%
+      }%
+    \let\newblock\@empty
+    \sloppy
+    \sfcode`\.=1000\relax}}
+% \endinput
+%%
+%%
+%% The following allows us to have xrefs...
+%%
+%%
+\let\prev@cite=\cite
+\def\cite{\@ifnextchar[{\@pgcitetrue[\prev@cite]}{\@pgcitefalse[\prev@cite]}}
+\let\prev@citeN=\citeN
+\def\citeN{\@ifnextchar[{\@pgcitetrue[\prev@citeN]}{\@pgcitefalse[\prev@citeN]}}
+\let\prev@citeNP=\citeNP
+\def\citeNP{\@ifnextchar[{\@pgcitetrue[\prev@citeNP]}{\@pgcitefalse[\prev@citeNP]}}
+\let\prev@citeA=\citeA
+\def\citeA{\@ifnextchar[{\@pgcitetrue[\prev@citeA]}{\@pgcitefalse[\prev@citeA]}}
+\let\prev@citeANP=\citeANP
+\def\citeANP{\@ifnextchar[{\@pgcitetrue[\prev@citeANP]}{\@pgcitefalse[\prev@citeANP]}}
+\let\prev@citeyear=\citeyear
+\def\citeyear{\@ifnextchar[{\@pgcitetrue[\prev@citeyear]}{\@pgcitefalse[\prev@citeyear]}}
+\let\prev@citeyearNP=\citeyearNP
+\def\citeyearNP{\@ifnextchar[{\@pgcitetrue[\prev@citeyearNP]}{\@pgcitefalse[\prev@citeyearNP]}}
+\let\prev@scite=\shortcite
+\def\shortcite{\@ifnextchar[{\@pgcitetrue[\prev@scite]}{\@pgcitefalse[\prev@scite]}}
+\let\prev@sciteN=\shortciteN
+\def\shortciteN{\@ifnextchar[{\@pgcitetrue[\prev@sciteN]}{\@pgcitefalse[\prev@sciteN]}}
+\let\prev@sciteNP=\shortciteNP
+\def\shortciteNP{\@ifnextchar[{\@pgcitetrue[\prev@sciteNP]}{\@pgcitefalse[\prev@sciteNP]}}
+\let\prev@sciteA=\shortciteA
+\def\shortciteA{\@ifnextchar[{\@pgcitetrue[\prev@sciteA]}{\@pgcitefalse[\prev@sciteA]}}
+\let\prev@sciteANP=\shortciteANP
+\def\shortciteANP{\@ifnextchar[{\@pgcitetrue[\prev@sciteANP]}{\@pgcitefalse[\prev@sciteANP]}}
+
+\def\@pgcitetrue[#1][#2]#3{%
+  \@for\pagecitekey:=#3\do{\@delaycite{\pagecitekey}}%
+  #1[#2]{#3}}
+
+\def\@pgcitefalse[#1]#2{%
+  \@for\pagecitekey:=#2\do{\@delaycite{\pagecitekey}}%
+  #1{#2}}
+
+% Kish Shen's hack from \label code to get page numbers right
+\def\@delaycite#1{\@bsphack\if@filesw {\let\thepage\relax
+   \def\protect{\noexpand\noexpand\noexpand}%
+   \xdef\@gtempa{\write\@auxout{\string
+   \pagecite{#1}{\thepage}}}}\@gtempa
+   \if@nobreak \ifvmode\nobreak\fi\fi\fi\@esphack}
+
+% ----------------------------------------------------------------------
+% Define the pagelist for each bibkey. 
+%
+% Defs and labels:
+%
+% \def\c@<BibTeX key>    List of pages on which <key> is cited
+% \def\n@<BibTeX key>    Last page on which <key> was cited
+
+\def\namexdef#1{\expandafter\xdef\csname #1\endcsname}
+
+% pagecite{<KEY>}{<PAGE>} =
+%  ifundefined c@<KEY>
+%     c@<KEY> := <PAGE>
+%  else
+%     if n@<KEY> := <PAGE>
+%        c@<KEY> := c@<KEY> , <PAGE>
+%  n@<KEY> := <PAGE>
+%
+\def\pagecite#1#2{
+  \@ifundefined{c@#1}{
+    \namexdef{c@#1}{#2}
+  }{
+    \namexdef{tp}{#2}
+    \namexdef{tn}{\@nameuse{n@#1}}
+    \ifx\tp\tn\else
+      \namexdef{c@#1}{\@nameuse{c@#1}, #2}
+    \fi
+  }
+  \namexdef{n@#1}{#2}    
+% \typeout{Pagecite `#1' at page #2 (\@nameuse{c@#1}) }
+}
+
+% ----------------------------------------------------------------------
+% Define what \citepages{<BibTeX key>} does when it is planted by the
+% BibTeX style after the reference for key.
+
+\def\citepages#1{
+  \@ifundefined{c@#1}{%
+    \typeout{Bib-XRef Warning: No page list for reference `#1'.}
+  }{%
+    \newblock                            % newline if "open" format used
+    \namexdef{tn}{\@nameuse{n@#1}}
+    \namexdef{tc}{\@nameuse{c@#1}}
+    {\ifx\tn\tc
+%     \typeout{Reference `#1'\space cited on page \@nameuse{c@#1}}%
+      \small (p.\,%
+    \else
+%     \typeout{Reference `#1'\space cited on pages \@nameuse{c@#1}}%
+      \small (pp.\,%
+     \fi%
+     \@nameuse{c@#1})%
+    }
+  }
+}
+\endinput

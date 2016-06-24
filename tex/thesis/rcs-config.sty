@@ -1,0 +1,57 @@
+% My RCS configuration
+
+% \RCS $RCSfile: rcs-config.sty,v $
+% \RCS $Revision: 1.1 $
+% \RCS $Date: 1995/10/10 02:11:57 $
+
+% Need this for the conditional below.
+\RequirePackage{ifthen}
+% Need this if we do the diagonal marginpar.
+%\RequirePackage{graphicx}
+
+\def\StripCommaV#1,v{#1}
+
+% Generate a boring tabular with the info.  But this interferes with
+% the text.  What to do with it?
+%\def\ShowRCSInfo{%
+%\begin{tabular}{ll}
+%File     & \expandafter\StripCommaV\RCSRCSfile \\
+%Revision & \RCSRevision \\
+%Date     & \RCSDate \\
+%Time     & \RCSTime
+%\end{tabular}%
+%}
+
+% This version generates a description displayed vertically in the
+% margin.  This has the advantage of not disturbing the text (in
+% general).
+%\def\ShowRCSInfo{%
+%\marginpar{\rotatebox{-90}{%
+%{\tt\expandafter\StripCommaV\RCSRCSfile}/\RCSRevision/\RCSDate/\LocalTime%
+%}}}
+
+\def\GetHour#1:#2:#3#4{#1}
+\def\GetMinutesSeconds#1:#2:#3#4{#2:#3#4}
+\newcounter{UTCHour}
+\def\LocalTime{\setcounter{UTCHour}{\expandafter\GetHour\RCSTime}%
+% Use 10 for normal time; 11 to get daylight saving time!
+\addtocounter{UTCHour}{10}%
+\ifthenelse{\value{UTCHour} > 23}{\addtocounter{UTCHour}{-12}}{}%
+\arabic{UTCHour}:\expandafter\GetMinutesSeconds\RCSTime}
+
+
+% Just display the info very small in the margin.  Again, no
+% disturbance to the text.
+\ifthesisdraft
+\def\ShowRCSInfo{%
+\marginlabel{\raggedright\tiny
+{\tt\expandafter\StripCommaV\RCSRCSfile} \\
+\RCSRevision \\
+\RCSDate \\
+\LocalTime%
+}}
+\else
+\def\ShowRCSInfo{}
+\fi
+
+%\def\ShowRCSInfo{}

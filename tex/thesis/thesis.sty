@@ -1,0 +1,174 @@
+%%
+%% This file includes all personal style options, macros, etc.
+%%
+%% \RCS $RCSfile$
+%% \RCS $Revision$
+%% \RCS $Date$
+
+%%
+%% Minor style details
+%%
+\renewcommand{\@biblabel}[1]{#1.}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{4}
+
+%%
+%% Acronyms
+%%
+
+%% Define an acronym macro that will print the long form of the acronym
+%% first time, and the short form on subsequent occasions.
+\RequirePackage{xspace}
+\def\defacro#1#2#3{%
+% \def#1{#2\hspace{0cm} (#3)\def#1{#2\xspace}\xspace}} %  AA (An Acronym)
+\def#1{#3\hspace{0cm} (#2)\def#1{#2\xspace}\xspace}} %  An Acronym (AA)
+
+%% For acronyms that occur in equations
+\def\mathac#1{\ensuremath{\mathrm{#1}}}
+
+\defacro\aaph{AAPH}{2,2$^{\prime}$-azobis(2-ami\-dino\-prop\-ane)
+  dihydrochloride}
+\defacro\asa{5-ASA}{5-aminosalicylic acid}
+\defacro\bdh{BDH}{British Drug House}
+\defacro\bsa{BSA}{bovine serum albumin}
+\defacro\bso{BSO}{buthionine sulfoximine}
+\defacro\cd{CD}{Crohn's disease}
+\defacro\dss{DSS}{\emph{dextran sulfate sodium}}
+\defacro\dhb{DHB}{dihydroxybenzoate}
+\defacro\dname{\textsc{d}-NAME}{nitro-\textsc{d}-arginine methyl ester}
+\defacro\dnp{DNP}{Dinitrophenyl}
+\defacro\dnph{DNPH}{dinitrophenylhydrazine}
+\defacro\dtnb{DTNB}{5,5$^{\prime}$-dithiobis(2-nitrobenzoic acid)}
+\defacro\ec{EC}{electrochemical}
+\defacro\esr{ESR}{electron spin resonance spectroscopy}
+\defacro\fmlp{fMLP}{\emph{formylmethionyl-leucyl-phenylalanine}}
+\defacro\gapdh{GAPDH}{glyceraldehyde-3-phosphate dehydrogenase}
+\defacro\gsh{GSH}{glutathione}
+\defacro\gssg{GSSG}{glutathione disulfide}
+\defacro\hbss{HBSS}{Hank's balanced salt solution}
+\defacro\hplc{HPLC}{high performance liquid chromatography}
+\defacro\iam{[$^{14}$C]-IAM}{[$^{14}$C]-iodoacetamide}
+\defacro\ibd{IBD}{Inflammatory bowel disease}
+\defacro\lps{LPS}{Lipopolysaccharide}
+\defacro\lname{\textsc{l}-NAME}{nitro-\textsc{l}-arginine methyl ester}
+\defacro\mco{MCO}{metal-catalysed oxidation}
+\defacro\mpo{MPO}{myeloperoxidase}
+\defacro\nos{NOS}{nitric oxide synthases}
+\defacro\pbs{PBS}{phosphate-buffered saline}
+\defacro\pgps{PG-PS}{\emph{Peptidoglycan-polysaccharide}}
+\defacro\pmsf{PMSF}{phenylmethylsulfonyl fluoride}
+\defacro\sds{SDS}{sodium dodecyl sulfate}
+\defacro\sdspage{SDS-PAGE}{SDS polyacrylamide gel electrophoresis}
+\defacro\sod{SOD}{superoxide dismutase}
+\defacro\tbs{TBS}{tris-buffered saline}
+\defacro\tca{TCA}{trichloroacetic acid}
+\defacro\tnb{TNB}{5-thio-2-nitrobenzoic acid}
+\defacro\tnbs{TNBS}{\emph{2,4,6-Trinitrobenzene sulfonic acid}}
+\defacro\uc{UC}{ulcerative colitis}
+
+%% Acronyms which don't need to be spelt out.
+\def\fadh{FADH\xspace}
+\def\dna{DNA\xspace}
+\def\rons{RONS\xspace}
+
+%% Acronyms for text and Equations.
+\def\atp{\mathac{ATP}\xspace}
+\def\GSH{\mathac{GSH}\xspace}
+\def\GSSG{\mathac{GSSG}\xspace}
+\def\nad{\mathac{NAD^+}\xspace}
+\def\nadh{\mathac{NADH}\xspace}
+\def\nadp{\mathac{NADP^+}\xspace}
+\def\nadph{\mathac{NADPH}\xspace}
+
+%% Radicals for equations and text
+%%   radical dot after - blah\hspace*{-.16em}\raisebox{1.15ex}{\Large .}
+%%   radical dot before - \raisebox{1.15ex}{\Large .}\hspace*{-.06em}blah
+
+%% Acronyms with chemical formulae
+\def\HPO{\H_2\O_2}
+\defacro\hpo{\HPO}{hydrogen peroxide}
+\defacro\hto{\H_2\O}{water}
+\def\HOCL{\H\O\Cl}
+\defacro\hocl{\HOCL}{hypochlorous acid}
+\def\OH{\raisebox{1.15ex}{\Large .}\hspace*{-.06em}\O\H}
+\defacro\oh{\OH}{hydroxyl radical}
+\def\ONOO{\O\N\O\O^-}
+\defacro\onoo{\ONOO}{peroxynitrite}
+\def\NO{\raisebox{1.15ex}{\Large .}\hspace*{-.06em}\N\O}
+\defacro\no{\NO}{nitric oxide}
+\def\NOO{\raisebox{1.15ex}{\Large .}\hspace*{-.06em}\N\O_2}
+\defacro\noo{\NOO}{nitrogen dioxide}
+\def\NOOM{\N\O_2^-}
+\defacro\noom{\NOOM}{nitrite}
+\def\NOOO{\N\O_3^-}
+\defacro\nooo{\NOOO}{nitrate}
+\def\SO{\O_2\hspace*{-.45em}\raisebox{1.15ex}{\Large .}\raisebox{.77ex}{-}}
+\defacro\so{\SO}{superoxide}
+\def\goesto{\yi=0 \pw=300 \pht=0 \cto{}{}{1}}
+
+%% Acronyms that are already defined -- we redefine them here with a
+%% different name ("a" infront of the name), so that they can be used
+%% in the abstract and again in the main body, each time having the
+%% long form first time.
+\defacro\ahocl{\HOCL}{hypochlorous acid}
+\defacro\aoh{\OH}{hydroxyl radical}
+\defacro\ano{\NO}{nitric oxide}
+\defacro\alname{\textsc{l}-NAME}{nitro-\textsc{l}-arginine methyl ester}
+
+%%
+%% Other misc. macros...
+%%
+
+%% Degree symbol
+\def\deg{$^\circ$}
+
+%% Equilibrium
+\def\myeq{\yi=0 \pw=300 \pht=0 \equil{}{}{1}}
+
+%% Gravity g
+\def\grav{$\times g$\xspace}
+
+%% P value
+\def\pval#1{\textsl{P} $<$ #1}
+
+%% n for mean value
+\def\num#1{\textsl{n}=#1}
+
+%%
+%% Abbreviations of complex chemtex structures.
+%%
+
+%% Double bond
+\def\mydb{\hspace{-.35ex}\dbond{7}{12}}
+
+%% Salicylate structure
+\def\ssal{\sixring{\O\H}{Q}{Q}{Q}{Q}{\C\O\O\H}{D}{D}{D}}
+
+%% Aminosalicylate structure
+\def\samsal{\sixring{\O\H}{Q}{Q}{\H_2\N}{Q}{\C\O\O\H}{D}{D}{D}}
+
+%% 5-Aminosalicylate structure
+\def\sfamsal{\sixring{Q}{Q}{\N}{Q}{\C\O\O\H}{\O\H}{D}{D}{D}}
+%% and rotated...
+\def\sfamsalr{\sixringr{Q}{Q}{\N}{Q}{\C\O\O\H}{\O\H}{D}{D}{D}}
+
+%% Sulfapyridine structure
+\def\ssfpy{\pyridiner{Q}{Q}{Q}{Q}{\N}{\N\H\S\O_2}{D}{D}{D}\put(580,0){\sixringr{Q}{Q}{}{Q}{Q}{\N}{D}{D}{D}}}
+
+%% Ubiquinol structure
+\def\subiq{\sixringb{\C\H_3}{(\C\H_2\C\H\hspace{3.59em}\C\H)_{10}\H}{Q}{\H_3\C\O}{\H_3\C\O}{Q}{\O}{\O}{9}\put(654,-100){\cbranch{\C\H_3}{S}{}{D}{\C}{S}{}{}{}}}
+
+%% 2,3 Dihydroxybenzoate structure
+\def\sdhbt{\sixring{\O\H}{\O\H}{Q}{Q}{Q}{\C\O\O\H}{D}{D}{D}}
+
+%% 2,5 Dihydroxybenzoate structure
+\def\sdhbf{\sixring{\O\H}{Q}{Q}{\H\O}{Q}{\C\O\O\H}{D}{D}{D}}
+
+%% Catechol structure
+\def\scat{\sixring{\O\H}{Q}{Q}{Q}{Q}{\O\H}{D}{D}{D}}
+
+%% Carbonyl structure
+\def\scarb{\cleft{\R_1}{S}{\C}{S}{\R_2}{D}{\O}}
+
+%% DNP structure
+\def\sdnp{\sixringr{Q}{Q}{}{\O_2\N}{Q}{\N\O_2}{D}{D}{D}}

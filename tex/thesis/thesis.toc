@@ -1,0 +1,13 @@
+\contentsline {chapter}{Acknowledgements}{vii}{chapter*.1}
+\contentsline {chapter}{Abstract}{ix}{chapter*.2}
+\contentsline {chapter}{\numberline {1}An Introduction to My Thesis}{1}{chapter.1}
+\contentsline {section}{\numberline {1.1}The Basis for this Work}{1}{section.1.1}
+\contentsline {subsection}{\numberline {1.1.1}A Theoretical Framework}{1}{subsection.1.1.1}
+\contentsline {chapter}{\numberline {2}something about the radio sky}{3}{chapter.2}
+\contentsline {chapter}{\numberline {3}something about machine learning}{5}{chapter.3}
+\contentsline {chapter}{\numberline {4}Conclusion}{7}{chapter.4}
+\contentsline {section}{\numberline {4.1}Why this is a Very Clever Thesis}{7}{section.4.1}
+\contentsline {chapter}{\numberline {A}Some Other Stuff}{9}{appendix.A}
+\contentsline {section}{\numberline {A.1}Why I Did It}{9}{section.A.1}
+\contentsline {chapter}{\numberline {B}More Stuff}{11}{appendix.B}
+\contentsline {chapter}{Index}{13}{appendix.B}
