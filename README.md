@@ -23,17 +23,13 @@ Process the consensuses:
 python3 -m crowdastro.consensuses
 ```
 
-Generate the (non-image) training data:
+Generate the training data:
 
 ```bash
 python3 -m crowdastro.generate_training_data
 ```
 
-Generate the (raw) image training data:
-
-```bash
-python3 -m crowdastro.generate_image_patches
-```
+The training data contains `features` and `labels`. Note that image features have not been processed &mdash; these are raw pixels.
 
 Generate a model:
 
@@ -51,6 +47,14 @@ Generate the CNN outputs:
 
 ```bash
 python3 -m crowdastro.generate_cnn_outputs
+```
+
+Note that this mutates the `features` dataset, replacing image features with the CNN outputs.
+
+Repack the H5 file:
+
+```bash
+python3 crowdastro.repack_h5 training.h5
 ```
 
 Train a logistic regression classifier:
