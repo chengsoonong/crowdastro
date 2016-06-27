@@ -38,8 +38,9 @@ class QBCSampler(Sampler):
 
     def train(self):
         """Train a new committee."""
-        self.classifiers = [self.Classifier(**self.classifier_params)
-                            for _ in range(self.n_classifiers)]
+        self.classifiers = [self.Classifier(random_state=i,
+                                            **self.classifier_params)
+                            for i in range(self.n_classifiers)]
         for c in self.classifiers:
             c.fit(self.pool[~self.labels.mask], self.labels[~self.labels.mask])
 
