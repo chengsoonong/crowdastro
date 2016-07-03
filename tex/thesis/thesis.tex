@@ -1,3 +1,4 @@
+%!TeX program=xelatex
 %%
 %% Template thesis.tex
 %%
@@ -9,6 +10,8 @@
 \usepackage{acmnew-xref}
 \usepackage{xcolor}
 \usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
 
 % hyperref setup taken from Aladair Tran's thesis:
 % github.com/chengsoonong/mclass-sky
@@ -71,14 +74,44 @@
 \mainmatter
 
 %% Introduction
-\input intro
+% \input intro
 
 %% Chapters
-\input{1_radio_sky}
-\input{2_ml}
+% I'll chapterise this later.
+% \input{1_radio_sky}
+% \input{2_ml}
+
+\section{Cross-identification}
+\label{sec:cross-identification}
+
+    Each radio object has some associated infrared object called the host galaxy. The cross-identification task is to find the host galaxy given the radio object.
+    
+    This can be formalised as follows. Consider a set $\mathcal X$ of candidate host galaxies, and a radio object $r$ that we want to assign a host galaxy. Let $y : \mathcal X \to \{0, 1\}$ represent whether a given $x \in \mathcal X$ is the host galaxy associated with $r$. If we assume that a radio object has exactly one associated host galaxy, then there exists exactly one $x \in \mathcal X$ such that $y(x) = 1$, and for all other $x \in \mathcal X$, $y(x) = 0$. The cross-identification task then amounts to modelling $p(y(x) = 1 \mid x, r)$. Once this distribution is modelled, the host galaxy associated with $r$ is given by
+    \begin{equation}
+        \label{eq:cross-identification}
+        \mbox{host}(r) = \underset{x}{\mbox{argmax}}\ p(y(x) = 1 \mid x, r).
+    \end{equation}
+
+    Ideally, $\mathcal X$ is the set of all galaxies. This is clearly intractable and unknowable, so as an approximation we use a catalogue of infrared objects near the radio object of interest, taken from a survey such as SWIRE or WISE. We also make the assumption that the host galaxy is within $1'$ of the radio object --- while this doesn't hold in general, systems larger than $1'$ are rare and require human insight to discover\cite{banfield16}.
+
+    For modelling the distribution, I have chosen to use logistic regression, i.e.
+    \begin{equation}
+        \label{eq:logistic-regression-cross-identification}
+        p(y(x) = 1 \mid x, r) = \vec w \cdot \vec \phi(x, r)
+    \end{equation}
+    where $\vec \phi$ is a feature space mapping dependent on a galaxy and a radio object. The features should represent the galaxy in some way, so I have chosen the following feature space:
+    \begin{equation}
+        \label{eq:galaxy-features}
+        \vec \phi(x, r) = \begin{pmatrix}
+            \vec{\mbox{flux}}(x)\\
+            \mbox{dist}(x, r)\\
+            \vec{\mbox{cnn}}(\mbox{radio}(x))
+        \end{pmatrix}
+    \end{equation}
+    $\vec{\mbox{flux}}(x)$ is a vector of infrared flux measurements of $x$, which can be obtained from the infrared survey catalogue. $\mbox{dist}(x, r)$ is the Euclidean distance across the sky between the centre of the $x$ and the centre of $r$. $\vec{\mbox{cnn}}(m)$ is the output of the convolutional neural network on input image $m$, and $\mbox{radio}(x)$ is a $0.8' \times 0.8'$ image of the radio sky centred on $x$.
 
 %% Conclusion
-\input conclusion
+% \input conclusion
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Here begins the end matter
