@@ -86,6 +86,38 @@ def pg_means(points, significance=0.01, projections=24):
         k += 1
 
 
+def lowest_bic_gmm(points, min_k=1, max_k=5):
+    """Find a consensus location by fitting a GMM with lowest BIC.
+
+    points: Array of points with dimension (N, 2).
+    min_k: Minimum number of components.
+    max_k: Maximum number of components.
+    -> (x, y), boolean of whether the fit succeeded
+    """
+    min_bic = float('inf')
+    min_gmm = None
+    for k in range(min_k, max_k):
+        gmm = sklearn.mixture.GMM(n_components=k, covariance_type='full')
+        try:
+            gmm.fit(points)
+        except ValueError:
+            break
+        bic = gmm.bic(points)
+        if bic < min_bic:
+            min_bic = bic
+            min_gmm = gmm
+    
+    if not min_gmm:
+        return points.mean(axis=0), False
+    
+    if sum(w == max(min_gmm.weights_) for w in min_gmm.weights_) > 1:
+        success = False
+    else:
+        success = True
+    
+    return min_gmm.means_[min_gmm.weights_.argmax()], success
+
+
 def kde(points):
     """Find a consensus location with the KDE algorithm.
 
@@ -199,7 +231,7 @@ def find_consensuses(f_h5, ir_survey):
                     locations.append((x, y))
             locations = numpy.array(locations)
             locations = locations[~numpy.all(numpy.isnan(locations), axis=1)]
-            (x, y), success = pg_means(locations)
+            (x, y), success = lowest_bic_gmm(locations)
 
             if numpy.isnan(x) or numpy.isnan(y):
                 logging.debug('Skipping NaN PG-means output.')
@@ -259,7 +291,7 @@ def find_consensuses(f_h5, ir_survey):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--h5', default='crowdastro.h5',
+    parser.add_argument('--h5', default='data/crowdastro.h5',
                         help='HDF5 IO file')
     parser.add_argument('-v', '--verbose', default=False, action='store_true')
     args = parser.parse_args()

@@ -643,7 +643,7 @@ def import_classifications(f_h5, test=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--h5', default='crowdastro.h5',
+    parser.add_argument('--h5', default='data/crowdastro.h5',
                         help='HDF5 output file')
     parser.add_argument('--test', action='store_true', default=False,
                         help='Run with a small number of subjects',)
