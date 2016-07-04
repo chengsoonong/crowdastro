@@ -57,16 +57,16 @@ Repack the H5 file:
 python3 crowdastro.repack_h5 training.h5
 ```
 
-Train a logistic regression classifier:
+Train a classifier:
 
 ```bash
-python3 -m crowdastro.train_lr
+python3 -m crowdastro.train --classifier lr
 ```
 
-Test the logistic regression classifier against subjects:
+Test the classifier against subjects:
 
 ```bash
-python3 -m crowdastro.test_lr
+python3 -m crowdastro.test
 ```
 
 ## Generating the Radio Galaxy Zoo catalogue
