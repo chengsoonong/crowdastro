@@ -41,7 +41,7 @@ def main(out_path, n_filters, conv_size, pool_size, dropout, hidden_layer_size,
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--out_path', help='path to output model JSON',
-                        default='model.json')
+                        default='data/model.json')
     parser.add_argument('--n_filters', help='number of convolutional filters',
                         default=32, type=int)
     parser.add_argument('--conv_size', help='size of convolutional filters',

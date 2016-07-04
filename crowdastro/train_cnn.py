@@ -64,11 +64,11 @@ def train(training_h5, model_json, weights_path, epochs, batch_size):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--h5', default='training.h5',
+    parser.add_argument('--h5', default='data/training.h5',
                         help='HDF5 training data file')
-    parser.add_argument('--model', default='model.json',
+    parser.add_argument('--model', default='data/model.json',
                         help='JSON model file')
-    parser.add_argument('--output', default='weights.h5',
+    parser.add_argument('--output', default='data/weights.h5',
                         help='HDF5 file for output weights')
     parser.add_argument('--epochs', default=10,
                         help='number of epochs to train for')

@@ -102,13 +102,13 @@ def train(training_h5, classifier_out_path, astro_transformer_out_path,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--training', default='training.h5',
+    parser.add_argument('--training', default='data/training.h5',
                         help='HDF5 training data file')
-    parser.add_argument('--c_out', default='classifier.pkl',
+    parser.add_argument('--c_out', default='data/classifier.pkl',
                         help='classifier output file')
-    parser.add_argument('--at_out', default='astro_transformer.pkl',
+    parser.add_argument('--at_out', default='data/astro_transformer.pkl',
                         help='astro_transformer output file')
-    parser.add_argument('--it_out', default='image_transformer.pkl',
+    parser.add_argument('--it_out', default='data/image_transformer.pkl',
                         help='image_transformer output file')
     parser.add_argument('--classifier',
                         choices={'lr', 'rf', 'svm', 'klr'},

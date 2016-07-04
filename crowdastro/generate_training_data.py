@@ -39,13 +39,13 @@ def generate(f_h5, out_f_h5):
         swire = f_h5['/swire/cdfs/numeric']
         fluxes = swire[:, 2:7]
         distances = swire[:, 8].reshape((-1, 1))
-        images = swire[:, 8:]
+        images = swire[:, 9:]
         coords = swire[:, :2]
     elif f_h5.attrs['ir_survey'] == 'wise':
         wise = f_h5['/wise/cdfs/numeric']
         fluxes = wise[:, 2:6]
         distances = wise[:, 7].reshape((-1, 1))
-        images = wise[:, 7:]
+        images = wise[:, 8:]
         coords = wise[:, :2]
 
 
@@ -58,8 +58,17 @@ def generate(f_h5, out_f_h5):
     assert len(distances) == len(images)
 
     features = numpy.hstack([fluxes, distances, images])
-
     n_astro = features.shape[1] - images.shape[1]
+
+    if f_h5.attrs['ir_survey'] == 'swire':
+        assert fluxes.shape[1] == 5
+        assert features.shape[1] == 6 + (config['patch_radius'] * 2) ** 2
+        assert n_astro == 6
+    elif f_h5.attrs['ir_survey'] == 'wise':
+        assert fluxes.shape[1] == 4
+        assert features.shape[1] == 5 + (config['patch_radius'] * 2) ** 2
+        assert n_astro == 5
+
 
     # Save to HDF5.
     out_f_h5.create_dataset('labels', data=labels)
@@ -106,13 +115,13 @@ def generate(f_h5, out_f_h5):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', default='crowdastro.h5',
+    parser.add_argument('-i', default='data/crowdastro.h5',
                         help='HDF5 input file')
-    parser.add_argument('-o', default='training.h5',
+    parser.add_argument('-o', default='data/training.h5',
                         help='HDF5 output file')
     args = parser.parse_args()
 
     with h5py.File(args.i, 'r') as f_h5:
-        assert f_h5.attrs['version'] == '0.4.0'
+        assert f_h5.attrs['version'] == '0.5.0'
         with h5py.File(args.o, 'w') as out_f_h5:
             generate(f_h5, out_f_h5)

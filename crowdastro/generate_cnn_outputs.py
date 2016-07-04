@@ -62,11 +62,11 @@ def generate(training_h5, cnn_model_json, cnn_weights_path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--training', default='training.h5',
+    parser.add_argument('--training', default='data/training.h5',
                         help='HDF5 training file')
-    parser.add_argument('--model', default='model.json',
+    parser.add_argument('--model', default='data/model.json',
                         help='JSON CNN model')
-    parser.add_argument('--weights', default='weights.h5',
+    parser.add_argument('--weights', default='data/weights.h5',
                         help='HDF5 CNN weights')
     args = parser.parse_args()
 

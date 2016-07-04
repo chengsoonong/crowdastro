@@ -71,15 +71,17 @@ def test(inputs_h5, training_h5, classifier_path, astro_transformer_path,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--inputs', default='crowdastro.h5',
+    parser.add_argument('--inputs', default='data/crowdastro.h5',
                         help='HDF5 crowdastro data file')
-    parser.add_argument('--training', default='training.h5',
+    parser.add_argument('--training', default='data/training.h5',
                         help='HDF5 training data file')
-    parser.add_argument('--classifier', default='classifier.pkl',
+    parser.add_argument('--classifier', default='data/classifier.pkl',
                         help='classifier file')
-    parser.add_argument('--astro_transformer', default='astro_transformer.pkl',
+    parser.add_argument('--astro_transformer',
+                        default='data/astro_transformer.pkl',
                         help='astro transformer file')
-    parser.add_argument('--image_transformer', default='image_transformer.pkl',
+    parser.add_argument('--image_transformer',
+                        default='data/image_transformer.pkl',
                         help='image transformer file')
     parser.add_argument('--no_astro', action='store_false', default=True,
                         help='ignore astro features')
@@ -89,7 +91,7 @@ if __name__ == '__main__':
 
     with h5py.File(args.training, 'r') as training_h5:
         with h5py.File(args.inputs, 'r') as inputs_h5:
-            assert inputs_h5.attrs['version'] == '0.4.0'
+            assert inputs_h5.attrs['version'] == '0.5.0'
             test(inputs_h5, training_h5, args.classifier,
                  args.astro_transformer, args.image_transformer,
                  use_astro=args.no_astro, use_cnn=args.no_cnn)
