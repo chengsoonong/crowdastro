@@ -1,11 +1,8 @@
 # crowdastro
-Machine learning using crowd sourced data in astronomy.
 
-For setup details, see the documentation [here](docs/setup.md), in particular start
-[mongodb](https://www.mongodb.com/).
-```bash
-mongod --config /usr/local/etc/mongod.conf --fork
-```
+This project aims to develop a machine learned method for cross-identifying radio objects and their host galaxies, using crowdsourced labels from the [Radio Galaxy Zoo](http://radio.galaxyzoo.org).
+
+For setup details, see the documentation [here](docs/setup.md).
 
 For a brief description of each notebook, see the documentation [here](docs/notebooks.md).
 
