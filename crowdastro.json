@@ -2,9 +2,10 @@
     "data_sources": {
         "atlas_catalogue": "data/ATLASDR3_cmpcat_23July2015.dat",
         "atlas_image": "data/CDFSmosaic_allch_8March2015.fits",
+        "cdfs_fits": "data/cdfs",
+        "norris_coords": "data/norris_2006_atlas_classifications_ra_dec_only.dat",
         "radio_galaxy_zoo_db": "radio",
         "rgz_to_atlas": "data/RGZ-ATLAS-Bookkeeping.csv",
-        "cdfs_fits": "data/cdfs",
         "swire_catalogue": "data/SWIRE3_CDFS_cat_IRAC24_21Dec05.tbl",
         "wise_catalogue": "data/wise_allwise.wise_allwise_p3as_psd4511.tbl"
     },
@@ -31,10 +32,12 @@
             "mosaic_scale_y": 0.4
         },
         "swire": {
-            "n_features": 5
+            "n_features": 5,
+            "distance_cutoff": 0.05
         },
         "wise": {
-            "n_features": 4
+            "n_features": 4,
+            "distance_cutoff": 0.05
         }
     },
 
