@@ -31,6 +31,7 @@ You need the following five data files:
 - sanitized_radio_2016-03-01.tar.gz
 - RGZ-ATLAS-Bookkeeping.csv
 - [SWIRE3_CDFS_cat_IRAC24_21Dec05.tbl.gz](http://swire.ipac.caltech.edu/swire/astronomers/data/SWIRE3_CDFS_cat_IRAC24_21Dec05.tbl.gz) or an AllWISE catalogue covering the CDFS field
+- norris_2006_atlas_classifications_ra_dec_only.dat (pipe-separated RA/DEC from Norris et al. (2006) Table 6)
 
 These files are currently not easily available. For access, email the [Radio Galaxy Zoo team](https://github.com/zooniverse/Radio-Galaxy-Zoo).
 
