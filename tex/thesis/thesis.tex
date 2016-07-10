@@ -81,7 +81,14 @@
 % \input{1_radio_sky}
 % \input{2_ml}
 
-\chapter{Chapter Name Here}
+\chapter{Imagine There's No Chapters}
+
+\section{Radio Galaxy Zoo Consensus Labels}
+\label{sec:consensuses}
+    
+    Radio Galaxy Zoo volunteers are first asked to select combinations of radio objects that correspond to one radio source, and are then asked to select the location of the corresponding host galaxy \cite{banfield15}. Each radio subject is labelled by multiple volunteers. These labels are then collated as follows. First, the most common combination of radio objects is selected, and all labels that have a different combination are discarded. This radio combination is called the consensus radio combination. Then, the density of host location labels is estimated using Gaussian kernel density estimation (KDE), and the highest density location is selected. This is called the consensus host location. The consensus host location is then matched to the nearest infrared object.
+
+    Repeated volunteer labelling helps to reduce noise in the labels. This is necessary as the volunteers are not experts, and may incorrectly label the subject. The hope is that the majority of volunteers will correctly label subjects, which seems to be the case for radio subjects where more than 75\% of volunteers agree \cite{banfield15}. The number of times a radio subject is shown to different volunteers is called the redundancy. The redundancy is 5 if the subject is a compact source, and 20 for all other sources. These numbers were chosen based on the redundancy levels of the original Galaxy Zoo project [Banfield, personal communication] \todo{Is this how to cite personal communication? Alternatively, is this written down somewhere?}. Since labels with radio combinations that disagree with the consensus are discarded, the redundancy is usually lower in practice when finding the host location.
 
 \section{Cross-identification}
 \label{sec:cross-identification}
