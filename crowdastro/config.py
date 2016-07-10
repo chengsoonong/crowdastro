@@ -30,6 +30,9 @@ config['data_sources']['swire_catalogue'] = os.path.normpath(
 config['data_sources']['atlas_image'] = os.path.normpath(
         os.path.join(SCRIPT_PATH, '..',
                      config['data_sources']['atlas_image']))
+config['data_sources']['norris_coords'] = os.path.normpath(
+        os.path.join(SCRIPT_PATH, '..',
+                     config['data_sources']['norris_coords']))
 
 # Generate some helper configuration info.
 config['surveys']['atlas']['click_to_fits_x'] = (
