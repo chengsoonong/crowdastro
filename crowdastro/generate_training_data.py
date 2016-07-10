@@ -38,14 +38,14 @@ def generate(f_h5, out_f_h5):
     if f_h5.attrs['ir_survey'] == 'swire':
         swire = f_h5['/swire/cdfs/numeric']
         fluxes = swire[:, 2:7]
-        distances = swire[:, 8].reshape((-1, 1))
-        images = swire[:, 9:]
+        distances = swire[:, 7].reshape((-1, 1))
+        images = swire[:, 8:]
         coords = swire[:, :2]
     elif f_h5.attrs['ir_survey'] == 'wise':
         wise = f_h5['/wise/cdfs/numeric']
         fluxes = wise[:, 2:6]
-        distances = wise[:, 7].reshape((-1, 1))
-        images = wise[:, 8:]
+        distances = wise[:, 6].reshape((-1, 1))
+        images = wise[:, 7:]
         coords = wise[:, :2]
 
 
