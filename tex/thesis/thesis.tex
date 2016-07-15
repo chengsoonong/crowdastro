@@ -126,6 +126,15 @@
     \end{equation}
     $\vec{\mbox{flux}}(x)$ is a vector of infrared flux measurements of $x$, which can be obtained from the infrared survey catalogue. $\mbox{dist}(x, r)$ is the Euclidean distance across the sky between the centre of the $x$ and the centre of $r$. $\vec{\mbox{cnn}}(m)$ is the output of the convolutional neural network on input image $m$, and $\mbox{radio}(x)$ is a $0.8' \times 0.8'$ image of the radio sky centred on $x$.
 
+\section{Training Data}
+\label{sec:training-data}
+  
+  The Crowdastro dataset is a set of training data for the binary classification problem described in Section \ref{sec:cross-identification}. The dataset contains features and labels for all objects detected in the WISE infrared survey. The prediction task is to predict the label of an object given its features.
+
+  The features are not scaled and have not undergone any feature extraction process. They are the raw fluxes, distances, and radio images described in Section \ref{sec:cross-identification}.
+
+  The labels are based on the consensus locations from the Radio Galaxy Zoo, matched to the nearest WISE object. WISE objects matched to a consensus location have the label $1$, and all other objects have the label $0$. Consensuses are found as described in Section \ref{sec:consensuses}, with consensus location decided by fitting a Gaussian mixture model. The number of Gaussians is found by a grid search minimising the Baysian information criterion.
+
 %% Conclusion
 \input conclusion
 
