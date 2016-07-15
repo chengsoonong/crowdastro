@@ -12,6 +12,7 @@
 \usepackage{hyperref}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{natbib}
 
 % hyperref setup taken from Aladair Tran's thesis:
 % github.com/chengsoonong/mclass-sky
@@ -83,6 +84,19 @@
 
 \chapter{Imagine There's No Chapters}
 
+\section{Papers Read}
+\label{sec:papers}
+  
+  \begin{itemize}
+    \item \citet{banfield15}
+    \item \citet{yan10}
+    \item \citet{yan11}
+    \item \citet{dasgupta11}
+    \item \citet{mozafari12} (re-reading in progress)
+    \item \citet{fan15} (probably need to re-read)
+    \item \citet{freund97} (need to re-read)
+  \end{itemize}
+
 \section{The Radio Galaxy Zoo}
 \label{sec:rgz}
 
@@ -144,6 +158,8 @@
 \input appendix
 
 \backmatter
+
+\todo{Verify that I didn't break anything by using natbib.}
 
 \bibliographystyle{acmnew-xref}
 \bibliography{../papers}
