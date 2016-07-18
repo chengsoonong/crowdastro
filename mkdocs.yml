@@ -5,4 +5,5 @@ pages:
   - Pipeline: pipeline.md
   - Notebooks: notebooks.md
   - ATLAS Data: datasets/atlas.md
+  - Crowdastro Dataset: dataset.md
 theme: readthedocs
