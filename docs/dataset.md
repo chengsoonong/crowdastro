@@ -7,3 +7,5 @@ The features are not scaled and have not undergone any feature extraction proces
 The labels are based on the consensus locations from the Radio Galaxy Zoo, matched to the nearest WISE object. WISE objects matched to a consensus location have the label 1, and all other objects have the label 0. Consensuses are found by collating volunteer clicks from the Radio Galaxy Zoo and fitting a Gaussian mixture model. The mean of the Gaussian with the highest total membership is the consensus location. The number of Gaussians is found by a grid search minimising the Baysian information criterion.
 
 The dataset file is an HDF5 file containing two tables named "features" and "labels". Each row of the features table is the features representing one object. The ith element of the labels table is the label corresponding to the ith row of the features table.
+
+This publication makes use of data products from the Wide-field Infrared Survey Explorer, which is a joint project of the University of California, Los Angeles, and the Jet Propulsion Laboratory/California Institute of Technology, funded by the National Aeronautics and Space Administration.
