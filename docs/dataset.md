@@ -8,4 +8,10 @@ The labels are based on the consensus locations from the Radio Galaxy Zoo, match
 
 The dataset file is an HDF5 file containing two tables named "features" and "labels". Each row of the features table is the features representing one object. The ith element of the labels table is the label corresponding to the ith row of the features table.
 
-This publication makes use of data products from the Wide-field Infrared Survey Explorer, which is a joint project of the University of California, Los Angeles, and the Jet Propulsion Laboratory/California Institute of Technology, funded by the National Aeronautics and Space Administration.
+Code to generate the dataset is [on GitHub](https://github.com/chengsoonong/crowdastro).
+
+This dataset makes use of data products from the Wide-field Infrared Survey Explorer, which is a joint project of the University of California, Los Angeles, and the Jet Propulsion Laboratory/California Institute of Technology, funded by the National Aeronautics and Space Administration.
+
+This dataset includes data from the Australia Telescope Compact Array. Australia Telescope Compact Array is part of the Australia Telescope, which is funded by the Commonwealth of Australia for operation as a National Facility managed by CSIRO.
+
+This dataset includes data from the Radio Galaxy Zoo. The Radio Galaxy Zoo data has been made possible by the participation of more then 10,000 volunteers in the Radio Galaxy Zoo project. Their contributions are individually acknowledged at http://rgzauthors.galaxyzoo.org.
