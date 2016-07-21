@@ -35,7 +35,7 @@ You need the following six data files:
 
 These files are currently not easily available. For access, email the [Radio Galaxy Zoo team](https://github.com/zooniverse/Radio-Galaxy-Zoo).
 
-The following steps assume the files are in the `data` subdiresctory. If this isn't the case, modify paths in `setup_data.sh`, `mongo_load_json.sh`, and `crowdastro.json`.
+The following steps assume the files are in the project root. If this isn't the case, modify paths in `setup_data.sh`, `mongo_load_json.sh`, and `crowdastro.json`.
 
 From the project root, run setup_data.sh. If this doesn't work, extract sanitized_radio_2016-03-01.tar.gz, SWIRE3_CDFS_cat_IRAC24_21Dec05.tbl.gz, and ATLASDR3_cmpcat_23July2015.dat.gz to data/, and cdfs_11JAN2014_2x2_5x5.tgz to data/cdfs. Copy RGZ-ATLAS-Bookkeeping.csv and any other files to data/. These paths can all be modified in crowdastro.json in the root directory.
 
