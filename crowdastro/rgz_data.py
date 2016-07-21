@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """Utilities for interacting with the Radio Galaxy Zoo database.
 
 Matthew Alger
