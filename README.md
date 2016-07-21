@@ -6,6 +6,10 @@ For setup details, see the documentation [here](docs/setup.md).
 
 For a brief description of each notebook, see the documentation [here](docs/notebooks.md).
 
+The cross-identification dataset is available [on Zenodo](http://dx.doi.org/10.5281/zenodo.58316).
+
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.58316.svg)](http://dx.doi.org/10.5281/zenodo.58316)
+
 ## Running the pipeline
 
 Import data sources:
