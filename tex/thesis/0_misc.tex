@@ -29,16 +29,16 @@
     (AGN). \todo{I'm having some trouble finding information on AGNs,
     especially on their definitions. Find something concrete.} Large radio
     surveys such as Faint Images of the Radio Sky at Twenty-Centimeters (FIRST)
-    \cite{white97, becker95} and the Australian Telescope Large Area Survey
-    (ATLAS) \cite{franzen15} have found many sources of radio emissions, and
-    these sources are dominated by AGNs \cite{banfield15}.
+    \citep{white97, becker95} and the Australian Telescope Large Area Survey
+    (ATLAS) \citep{franzen15} have found many sources of radio emissions, and
+    these sources are dominated by AGNs \citep{banfield15}.
 
 \section{Radio Galaxy Zoo Consensus Labels}
 \label{sec:consensuses}
     
     Radio Galaxy Zoo volunteers are first asked to select combinations of radio
     objects that correspond to one radio source, and are then asked to select
-    the location of the corresponding host galaxy \cite{banfield15}. Each radio
+    the location of the corresponding host galaxy \citep{banfield15}. Each radio
     subject is labelled by multiple volunteers. These labels are then collated
     as follows. First, the most common combination of radio objects is
     selected, and all labels that have a different combination are discarded.
@@ -53,7 +53,7 @@
     the cluster containing the most locations is taken to represent the
     consensus; the consensus location is then the mean of the cluster. This is
     faster and more robust than using KDE, but requires $k$ to be known. $k$
-    can be estimated using an algorithm such as PG-means \cite{hamerly07} or by
+    can be estimated using an algorithm such as PG-means \citep{hamerly07} or by
     choosing $k$ to minimise some information criterion \todo{cite:sklearn}.
     The consensus labels for the data associated with this thesis were found in
     this way, fitting a Gaussian mixture model to the host locations with the
@@ -63,7 +63,7 @@
     necessary as the volunteers are not experts, and may incorrectly label the
     subject. The hope is that the majority of volunteers will correctly label
     subjects, which seems to be the case for radio subjects where more than
-    75\% of volunteers agree \cite{banfield15}. The number of times a radio
+    75\% of volunteers agree \citep{banfield15}. The number of times a radio
     subject is shown to different volunteers is called the redundancy. The
     redundancy is 5 if the subject is a compact source, and 20 for all other
     sources. These numbers were chosen based on the redundancy levels of the
@@ -87,28 +87,6 @@
     galaxy. The cross-identification task is to find the host galaxy given the
     radio object.
     
-    This can be formalised as follows. Consider a set $\mathcal X$ of candidate
-    host galaxies, and a radio object $r$ that we want to assign a host galaxy.
-    Let $y : \mathcal X \to \{0, 1\}$ represent whether a given $x \in \mathcal
-    X$ is the host galaxy associated with $r$. If we assume that a radio object
-    has exactly one associated host galaxy, then there exists exactly one $x
-    \in \mathcal X$ such that $y(x) = 1$, and for all other $x \in \mathcal X$,
-    $y(x) = 0$. The cross-identification task then amounts to modelling $p(y(x)
-    = 1 \mid x, r)$. Once this distribution is modelled, the host galaxy
-    associated with $r$ is given by
-    \begin{equation}
-        \label{eq:cross-identification}
-        \mbox{host}(r) = \underset{x}{\mbox{argmax}}\ p(y(x) = 1 \mid x, r).
-    \end{equation}
-
-    Ideally, $\mathcal X$ is the set of all galaxies. This is clearly
-    intractable and unknowable, so as an approximation we use a catalogue of
-    infrared objects near the radio object of interest, taken from a survey
-    such as SWIRE or WISE. We also make the assumption that the host galaxy is
-    within $1'$ of the radio object --- while this doesn't hold in general,
-    systems larger than $1'$ are rare and require human insight to
-    discover\cite{banfield16}.
-
     For modelling the distribution, I have chosen to use logistic regression,
     i.e.
     \begin{equation}
