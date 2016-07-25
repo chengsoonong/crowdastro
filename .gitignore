@@ -83,3 +83,6 @@ site/*
 *.csv
 *.json
 *.h5
+
+# Mac OS X
+*.DS_Store
