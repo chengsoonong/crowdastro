@@ -1,8 +1,6 @@
 %!TeX program=xelatex
-%%
-%% Template thesis.tex
-%%
 \documentclass[11pt]{book}
+
 \usepackage[palatino]{anuthesis}
 \usepackage{graphicx}
 \usepackage{thesis}
@@ -13,6 +11,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{natbib}
+\usepackage{wrapfig}
 
 % hyperref setup taken from Aladair Tran's thesis:
 % github.com/chengsoonong/mclass-sky
@@ -25,7 +24,8 @@
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Preamble
+%% Preamble.
+
 \title{Thesis Title Here}
 \author{Matthew Alger}
 \date{\today}
@@ -36,126 +36,64 @@
 \begin{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Title page
+%% Title page.
+
 \pagestyle{empty}
 \thispagestyle{empty}
-\input titlepage
+\input{titlepage}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Here begin the preliminaries
-\input frontmatter
+%% Preliminaries.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Dedication (optional)
+\input{frontmatter}
+
+% Dedication.
+
 \cleardoublepage
 \pagestyle{empty}
-\input dedication
+\input{dedication}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Acknowledgements (optional!)
+% Acknowledgements.
+
 \cleardoublepage
 \pagestyle{empty}
-\input ack
+\input{ack}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Abstract
+%% Abstract.
+
 \cleardoublepage
 \pagestyle{headings}
-\input abstract
+\input{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Table of contents
+%% Table of contents.
+
 \cleardoublepage
 \pagestyle{headings}
 \markboth{Contents}{Contents}
 \tableofcontents
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Here begins the main text
+%% Main text.
+
 \mainmatter
 
-%% Introduction
-% \input intro
-
 %% Chapters
-% I'll chapterise this later.
-% \input{1_radio_sky}
-% \input{2_ml}
-
-\chapter{Imagine There's No Chapters}
-
-\section{Papers Read}
-\label{sec:papers}
-  
-  \begin{itemize}
-    \item \citet{banfield15}
-    \item \citet{yan10}
-    \item \citet{yan11}
-    \item \citet{dasgupta11}
-    \item \citet{mozafari12} (re-reading in progress)
-    \item \citet{fan15} (probably need to re-read)
-    \item \citet{freund97} (need to re-read)
-  \end{itemize}
-
-\section{The Radio Galaxy Zoo}
-\label{sec:rgz}
-
-    Many galaxies contain a supermassive black hole in their centre. These black holes draw in surrounding matter, and may produce jets of matter as they do. These jets emit radio waves \todo{Or X-rays, I think, which are then redshifted to radio. Confirm and rewrite.} which can then be detected by radio telescopes. As black holes cannot be observed directly, this is the only way to identify black holes in distant galaxies. A radio-loud black hole in the centre of a galaxy is called an active galactic nucleus (AGN). \todo{I'm having some trouble finding information on AGNs, especially on their definitions. Find something concrete.} Large radio surveys such as Faint Images of the Radio Sky at Twenty-Centimeters (FIRST) \cite{white97, becker95} and the Australian Telescope Large Area Survey (ATLAS) \cite{franzen15} have found many sources of radio emissions, and these sources are dominated by AGNs \cite{banfield15}.
-
-\section{Radio Galaxy Zoo Consensus Labels}
-\label{sec:consensuses}
-    
-    Radio Galaxy Zoo volunteers are first asked to select combinations of radio objects that correspond to one radio source, and are then asked to select the location of the corresponding host galaxy \cite{banfield15}. Each radio subject is labelled by multiple volunteers. These labels are then collated as follows. First, the most common combination of radio objects is selected, and all labels that have a different combination are discarded. This radio combination is called the consensus radio combination. Then, the density of host location labels is estimated using Gaussian kernel density estimation (KDE), and the highest density location is selected. This is called the consensus host location. The consensus host location is then matched to the nearest infrared object.
-
-    An alternative way to find the consensus host location is by using a clustering algorithm such as $k$-means. Host locations are clustered and the cluster containing the most locations is taken to represent the consensus; the consensus location is then the mean of the cluster. This is faster and more robust than using KDE, but requires $k$ to be known. $k$ can be estimated using an algorithm such as PG-means \cite{hamerly07} or by choosing $k$ to maximise some information criterion \todo{cite:sklearn}.
-
-    Repeated volunteer labelling helps to reduce noise in the labels. This is necessary as the volunteers are not experts, and may incorrectly label the subject. The hope is that the majority of volunteers will correctly label subjects, which seems to be the case for radio subjects where more than 75\% of volunteers agree \cite{banfield15}. The number of times a radio subject is shown to different volunteers is called the redundancy. The redundancy is 5 if the subject is a compact source, and 20 for all other sources. These numbers were chosen based on the redundancy levels of the original Galaxy Zoo project [Banfield, personal communication] \todo{Is this how to cite personal communication? Alternatively, is this written down somewhere?}. Since labels with radio combinations that disagree with the consensus are discarded, the redundancy is usually lower in practice when finding the host location. This can lead to very low redundancy input to KDE, causing KDE to fail. This failure can usually be caught, but the existing solution in this case is to take the mean of all host locations. This is not the consensus host location in general. Another effect is that since more complex sources have higher levels of disagreement in the radio combination stage, more complex sources have more discarded volunteer labels, and thus lower redundancy --- so more complex sources have more noise in their labels.
-
-\section{Radio Cross-identification}
-\label{sec:cross-identification}
-
-    Each radio object has some associated infrared object called the host galaxy. The cross-identification task is to find the host galaxy given the radio object.
-    
-    This can be formalised as follows. Consider a set $\mathcal X$ of candidate host galaxies, and a radio object $r$ that we want to assign a host galaxy. Let $y : \mathcal X \to \{0, 1\}$ represent whether a given $x \in \mathcal X$ is the host galaxy associated with $r$. If we assume that a radio object has exactly one associated host galaxy, then there exists exactly one $x \in \mathcal X$ such that $y(x) = 1$, and for all other $x \in \mathcal X$, $y(x) = 0$. The cross-identification task then amounts to modelling $p(y(x) = 1 \mid x, r)$. Once this distribution is modelled, the host galaxy associated with $r$ is given by
-    \begin{equation}
-        \label{eq:cross-identification}
-        \mbox{host}(r) = \underset{x}{\mbox{argmax}}\ p(y(x) = 1 \mid x, r).
-    \end{equation}
-
-    Ideally, $\mathcal X$ is the set of all galaxies. This is clearly intractable and unknowable, so as an approximation we use a catalogue of infrared objects near the radio object of interest, taken from a survey such as SWIRE or WISE. We also make the assumption that the host galaxy is within $1'$ of the radio object --- while this doesn't hold in general, systems larger than $1'$ are rare and require human insight to discover\cite{banfield16}.
-
-    For modelling the distribution, I have chosen to use logistic regression, i.e.
-    \begin{equation}
-        \label{eq:logistic-regression-cross-identification}
-        p(y(x) = 1 \mid x, r) = \vec w \cdot \vec \phi(x, r)
-    \end{equation}
-    where $\vec \phi$ is a feature space mapping dependent on a galaxy and a radio object. The features should represent the galaxy in some way, so I have chosen the following feature space:
-    \begin{equation}
-        \label{eq:galaxy-features}
-        \vec \phi(x, r) = \begin{pmatrix}
-            \vec{\mbox{flux}}(x)\\
-            \mbox{dist}(x, r)\\
-            \vec{\mbox{cnn}}(\mbox{radio}(x))
-        \end{pmatrix}
-    \end{equation}
-    $\vec{\mbox{flux}}(x)$ is a vector of infrared flux measurements of $x$, which can be obtained from the infrared survey catalogue. $\mbox{dist}(x, r)$ is the Euclidean distance across the sky between the centre of the $x$ and the centre of $r$. $\vec{\mbox{cnn}}(m)$ is the output of the convolutional neural network on input image $m$, and $\mbox{radio}(x)$ is a $0.8' \times 0.8'$ image of the radio sky centred on $x$.
-
-\section{Training Data}
-\label{sec:training-data}
-  
-  The Crowdastro dataset is a set of training data for the binary classification problem described in Section \ref{sec:cross-identification}. The dataset contains features and labels for all objects detected in the WISE infrared survey. The prediction task is to predict the label of an object given its features.
-
-  The features are not scaled and have not undergone any feature extraction process. They are the raw fluxes, distances, and radio images described in Section \ref{sec:cross-identification}.
-
-  The labels are based on the consensus locations from the Radio Galaxy Zoo, matched to the nearest WISE object. WISE objects matched to a consensus location have the label $1$, and all other objects have the label $0$. Consensuses are found as described in Section \ref{sec:consensuses}, with consensus location decided by fitting a Gaussian mixture model. The number of Gaussians is found by a grid search minimising the Baysian information criterion.
+\input{0_misc}
+\input{1_intro}
+\input{2_astro}
+\input{3_ml}
+\input{4_cross_identification}
+\input{5_active}
 
 %% Conclusion
-\input conclusion
+\input{conclusion}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Here begins the end matter
+% End text.
 
-\input appendix
+\input{appendix}
 
 \backmatter
 
@@ -167,11 +105,3 @@
 \printindex
 
 \end{document}
-
-%%% Local Variables: 
-%%% mode: latex
-%%% TeX-master: "thesis"
-%%% End: 
-
-
-

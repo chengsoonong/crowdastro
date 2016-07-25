@@ -1,11 +1,59 @@
-# Pipeline
+# Running the Pipeline
 
-The processing pipeline is divided up into a number of scripts, each of which outputs into an SQLite3 database. They need to be run in order, but once you have the database output from each step, you can start from that step in future.
+Import data sources:
 
-## Parsing raw classifications
-
-Reads the raw Radio Galaxy Zoo classifications into a simpler format and does some data validation. All invalid data points are discarded.
-
+```bash
+python3 -m crowdastro.import_data
 ```
-python -m crowdastro raw_classifications database.db classifications
+
+Process the consensuses:
+
+```bash
+python3 -m crowdastro.consensuses
+```
+
+Generate the training data:
+
+```bash
+python3 -m crowdastro.generate_training_data
+```
+
+The training data contains `features` and `labels`. Note that image features have not been processed &mdash; these are raw pixels.
+
+Generate a model:
+
+```bash
+python3 -m crowdastro.compile_cnn
+```
+
+Train the CNN:
+
+```bash
+python3 -m crowdastro.train_cnn
+```
+
+Generate the CNN outputs:
+
+```bash
+python3 -m crowdastro.generate_cnn_outputs
+```
+
+Note that this mutates the `features` dataset, replacing image features with the CNN outputs.
+
+Repack the H5 file:
+
+```bash
+python3 crowdastro.repack_h5 training.h5
+```
+
+Train a classifier:
+
+```bash
+python3 -m crowdastro.train --classifier lr
+```
+
+Test the classifier against subjects:
+
+```bash
+python3 -m crowdastro.test
 ```

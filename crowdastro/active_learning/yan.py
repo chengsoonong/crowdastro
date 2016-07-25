@@ -16,7 +16,6 @@ import sklearn.datasets
 import sklearn.linear_model
 
 n_annotators, n_dim, n_samples = 4, 2, 50
-
 x, z = sklearn.datasets.make_classification(
         n_samples=n_samples,
         n_features=n_dim,
@@ -152,7 +151,8 @@ def em(x, y, epsilon=1e-5):
 
                     assert numpy.isclose(p_z + p_z_0, 1), p_z + p_z_0
 
-                    if numpy.isclose(post, 0) or numpy.isclose(anno, 0) or numpy.isclose(post, 1) or numpy.isclose(anno, 1):
+                    if numpy.isclose(post, 0) or numpy.isclose(anno, 0) or \
+                            numpy.isclose(post, 1) or numpy.isclose(anno, 1):
                         return 10000000, numpy.zeros(params.shape)
 
                     expectation += numpy.log(post) * p_z
@@ -194,7 +194,6 @@ def em(x, y, epsilon=1e-5):
                                                        approx_grad=False)
         logging.info('Terminated with Q = %4f', fv)
         logging.info(inf['task'].decode('ascii'))
-        # TODO(MatthewJA): Implement explicit gradients.
         a_, b_, w_, g_ = unpack(theta_)
 
         logging.info('Found new parameters - b: %f -> %f', b, b_)
@@ -206,6 +205,7 @@ def em(x, y, epsilon=1e-5):
             return a_, b_, w_, g_
 
         a, b, w, g = a_, b_, w_, g_
+
 
 if __name__ == '__main__':
     logging.root.setLevel(logging.DEBUG)

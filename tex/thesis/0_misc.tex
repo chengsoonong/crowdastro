@@ -1,0 +1,89 @@
+% Unsorted writing.
+
+\chapter{Imagine There's No Chapters}
+\label{cha:imagine}
+
+\section{Papers Read}
+\label{sec:papers}
+  
+  \begin{itemize}
+    \item \citet{banfield15}
+    \item \citet{yan10}
+    \item \citet{yan11}
+    \item \citet{dasgupta11}
+    \item \citet{mozafari12} (re-reading in progress)
+    \item \citet{fan15} (probably need to re-read)
+    \item \citet{freund97} (need to re-read)
+  \end{itemize}
+
+\section{The Radio Galaxy Zoo}
+\label{sec:rgz}
+
+    Many galaxies contain a supermassive black hole in their centre. These
+    black holes draw in surrounding matter, and may produce jets of matter as
+    they do. These jets emit radio waves \todo{Or X-rays, I think, which are
+    then redshifted to radio. Confirm and rewrite.} which can then be detected
+    by radio telescopes. As black holes cannot be observed directly, this is
+    the only way to identify black holes in distant galaxies. A radio-loud
+    black hole in the centre of a galaxy is called an active galactic nucleus
+    (AGN). \todo{I'm having some trouble finding information on AGNs,
+    especially on their definitions. Find something concrete.} Large radio
+    surveys such as Faint Images of the Radio Sky at Twenty-Centimeters (FIRST)
+    \citep{white97, becker95} and the Australian Telescope Large Area Survey
+    (ATLAS) \citep{franzen15} have found many sources of radio emissions, and
+    these sources are dominated by AGNs \citep{banfield15}.
+
+\section{Radio Galaxy Zoo Consensus Labels}
+
+\section{Radio Cross-identification}
+\label{sec:cross-identification}
+
+    Each radio object has some associated infrared object called the host
+    galaxy. The cross-identification task is to find the host galaxy given the
+    radio object.
+    
+    For modelling the distribution, I have chosen to use logistic regression,
+    i.e.
+    \begin{equation}
+        \label{eq:logistic-regression-cross-identification}
+        p(y(x) = 1 \mid x, r) = \vec w \cdot \vec \phi(x, r)
+    \end{equation}
+    where $\vec \phi$ is a feature space mapping dependent on a galaxy and a
+    radio object. The features should represent the galaxy in some way, so I
+    have chosen the following feature space:
+    \begin{equation}
+        \label{eq:galaxy-features}
+        \vec \phi(x, r) = \begin{pmatrix}
+            \vec{\mbox{flux}}(x)\\
+            \mbox{dist}(x, r)\\
+            \vec{\mbox{cnn}}(\mbox{radio}(x))
+        \end{pmatrix}
+    \end{equation}
+    $\vec{\mbox{flux}}(x)$ is a vector of infrared flux measurements of $x$,
+    which can be obtained from the infrared survey catalogue. $\mbox{dist}(x,
+    r)$ is the Euclidean distance across the sky between the centre of the $x$
+    and the centre of $r$. $\vec{\mbox{cnn}}(m)$ is the output of the
+    convolutional neural network on input image $m$, and $\mbox{radio}(x)$ is a
+    $0.8' \times 0.8'$ image of the radio sky centred on $x$.
+
+\section{Training Data}
+\label{sec:training-data}
+  
+  The Crowdastro dataset is a set of training data for the binary
+  classification problem described in Section \ref{sec:cross-identification}.
+  The dataset contains features and labels for all objects detected in the WISE
+  infrared survey. The prediction task is to predict the label of an object
+  given its features.
+
+  The features are not scaled and have not undergone any feature extraction
+  process. They are the raw fluxes, distances, and radio images described in
+  Section \ref{sec:cross-identification}.
+
+  The labels are based on the consensus locations from the Radio Galaxy Zoo,
+  matched to the nearest WISE object. WISE objects matched to a consensus
+  location have the label $1$, and all other objects have the label $0$.
+  Consensuses are found as described in Section \ref{sec:consensuses}, with
+  consensus location decided by fitting a Gaussian mixture model. The number of
+  Gaussians is found by a grid search minimising the Baysian information
+  criterion.
+
