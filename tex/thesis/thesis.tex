@@ -1,8 +1,6 @@
 %!TeX program=xelatex
-%%
-%% Template thesis.tex
-%%
 \documentclass[11pt]{book}
+
 \usepackage[palatino]{anuthesis}
 \usepackage{graphicx}
 \usepackage{thesis}
@@ -25,7 +23,8 @@
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Preamble
+%% Preamble.
+
 \title{Thesis Title Here}
 \author{Matthew Alger}
 \date{\today}
@@ -36,35 +35,39 @@
 \begin{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Title page
+%% Title page.
+
 \pagestyle{empty}
 \thispagestyle{empty}
-\input titlepage
+\input{titlepage}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Preliminaries.
-\input frontmatter
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Dedication (optional)
+\input{frontmatter}
+
+% Dedication.
+
 \cleardoublepage
 \pagestyle{empty}
-\input dedication
+\input{dedication}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Acknowledgements (optional!)
+% Acknowledgements.
+
 \cleardoublepage
 \pagestyle{empty}
-\input ack
+\input{ack}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Abstract
+%% Abstract.
+
 \cleardoublepage
 \pagestyle{headings}
-\input abstract
+\input{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Table of contents
+%% Table of contents.
+
 \cleardoublepage
 \pagestyle{headings}
 \markboth{Contents}{Contents}
@@ -87,7 +90,7 @@
 \input{conclusion}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% End tex.
+% End text.
 
 \input{appendix}
 
@@ -101,11 +104,3 @@
 \printindex
 
 \end{document}
-
-%%% Local Variables: 
-%%% mode: latex
-%%% TeX-master: "thesis"
-%%% End: 
-
-
-
