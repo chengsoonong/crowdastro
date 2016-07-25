@@ -69,11 +69,3 @@ Test the classifier against subjects:
 ```bash
 python3 -m crowdastro.test
 ```
-
-## Generating the Radio Galaxy Zoo catalogue
-
-Process the consensuses as above, then generate the catalogue:
-
-```bash
-python -m crowdastro catalogue processed.db consensuses gator_cache hosts radio_components --atlas
-```
