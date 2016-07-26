@@ -18,7 +18,6 @@ import matplotlib.pyplot
 import numpy
 import pymongo
 import requests
-import requests_cache
 
 from .config import config
 
@@ -232,8 +231,6 @@ def get_potential_hosts(subject, cache_name, convert_to_px=True):
         - uncertainty in RA
         - uncertainty in DEC
     """
-    requests_cache.install_cache(cache_name=cache_name, backend='sqlite',
-                                 expire_after=None)
 
     if subject['metadata']['source'].startswith('C'):
         # CDFS
@@ -283,7 +280,5 @@ def get_potential_hosts(subject, cache_name, convert_to_px=True):
             'unc_ra': row['unc_ra'],
             'unc_dec': row['unc_dec'],
         }
-
-    requests_cache.uninstall_cache()
 
     return out
