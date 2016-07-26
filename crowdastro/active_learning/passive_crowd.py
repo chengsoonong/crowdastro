@@ -8,63 +8,42 @@ The Australian National University
 import itertools
 import logging
 
-import matplotlib.pyplot as plt
 import numpy
 import scipy.optimize
 import scipy.special
-import sklearn.datasets
 import sklearn.linear_model
-
-n_annotators, n_dim, n_samples = 4, 2, 50
-x, z = sklearn.datasets.make_classification(
-        n_samples=n_samples,
-        n_features=n_dim,
-        n_informative=n_dim,
-        n_redundant=0,
-        random_state=100)
-z = z.reshape((-1, 1))
-y = z.repeat(n_annotators, axis=1).T
-if True:
-    # Annotator 1 is really bad at this.
-    y[0, :] = numpy.ones((n_samples,))
-    # Annotator 2 is wrong 10% of the time.
-    indices = numpy.arange(n_samples)
-    numpy.random.shuffle(indices)
-    indices = indices[:n_samples // 10]
-    indices.sort()
-    y[1, indices] = 1 - y[1, indices]
-    # Annotator 3 is good, but only if x[0] > 0.
-    y[2, x[:, 0] <= 0] = numpy.round(
-            numpy.random.uniform(size=((x[:, 0] <= 0).sum(),)))
-    # Annotator 4 is wrong 30% of the time.
-    indices = numpy.arange(n_samples)
-    numpy.random.shuffle(indices)
-    indices = indices[:n_samples * 3 // 10]
-    indices.sort()
-    y[3, indices] = 1 - y[3, indices]
-assert y.shape == (n_annotators, n_samples)
 
 
 def logistic_regression(a, b, x):
-    # assert a.shape == (n_dim,)
-    # assert isinstance(b, float)
-    # assert x.shape == (n_dim,)
+    """Logistic regression classifier.
+
+    a: Weights α. (n_dim,) NumPy array
+    b: Bias β. float
+    x: Data point x_i. (n_dim,) NumPy array
+    -> float in [0, 1]
+    """
     res = scipy.special.expit(x.dot(a) + b)
     return res
 
 
 def annotator_model(w, g, x, y, z):
-    # assert w.shape == (n_dim,)
-    # assert isinstance(g, float)
-    # assert x.shape == (n_dim,)
+    """Yan et al. (2010) Bernoulli annotator model.
+
+    w: Annotator weights w_t. (n_dim,) NumPy array
+    g: Annotator bias γ_t. (n_dim,) NumPy array
+    x: Data point x_i. (n_dim,) NumPy array
+    y: Label y_i^(t). int
+    z: "True" label z_i. int
+    -> float in [0, 1]
+    """
     eta = logistic_regression(w, g, x)
-    # assert isinstance(eta, float)
     label_difference = numpy.abs(y - z)
     return (numpy.power(1 - eta, label_difference)
             * numpy.power(eta, 1 - label_difference))
 
 
-def unpack(params):
+def unpack(params, n_dim, n_annotators):
+    """Unpacks an array of parameters in to a, b, w, and g."""
     a = params[:n_dim]
     b = params[n_dim]
     w = params[n_dim+1:n_dim+1+n_annotators*n_dim].reshape(
@@ -74,13 +53,21 @@ def unpack(params):
 
 
 def pack(a, b, w, g):
+    """Packs a, b, w, and g into an array of parameters."""
     return numpy.hstack([a, [b], w.ravel(), g])
 
 
-def em(x, y, epsilon=1e-5):
-    """Expectation-maximisation algorithm from Yan et al. (2010)."""
+def train(x, y, epsilon=1e-5):
+    """Expectation-maximisation algorithm from Yan et al. (2010).
 
-    # Init.
+    x: Data. (n_samples, n_dim) NumPy array
+    y: Labels. (n_annotators, n_samples) NumPy array
+    epsilon: Convergence threshold. Default 1e-5. float
+    """
+    n_samples, n_dim = x.shape
+    n_annotators, n_samples_ = y.shape
+    assert n_samples == n_samples_, 'Label array has wrong number of labels.'
+
     # For our initial guess, we'll fit logistic regression to a majority vote.
     lr_ab = sklearn.linear_model.LogisticRegression()
     majority_y = numpy.zeros((n_samples,))
@@ -138,7 +125,7 @@ def em(x, y, epsilon=1e-5):
 
         # Maximisation step.
         def Q(params):
-            a, b, w, g = unpack(params)
+            a, b, w, g = unpack(params, n_dim, n_annotators)
             expectation = 0
             for i in range(n_samples):
                 p_z = posteriors[i]
@@ -194,7 +181,7 @@ def em(x, y, epsilon=1e-5):
                                                        approx_grad=False)
         logging.info('Terminated with Q = %4f', fv)
         logging.info(inf['task'].decode('ascii'))
-        a_, b_, w_, g_ = unpack(theta_)
+        a_, b_, w_, g_ = unpack(theta_, n_dim, n_annotators)
 
         logging.info('Found new parameters - b: %f -> %f', b, b_)
 
@@ -207,30 +194,11 @@ def em(x, y, epsilon=1e-5):
         a, b, w, g = a_, b_, w_, g_
 
 
-if __name__ == '__main__':
-    logging.root.setLevel(logging.DEBUG)
-    logging.captureWarnings(True)
-    a, b, w, g = em(x, y)
-    print('w:', w)
-    print('g:', g)
-    predictions = numpy.round(logistic_regression(a, b, x))
-    # print(predictions[:15])
-    # print(z.ravel()[:15])
-    # print((predictions.ravel() == z.ravel()).mean())
-    plt.subplot(2, 3, 1)
-    plt.title('Groundtruth')
-    plt.scatter(x[z.ravel() == 0, 0], x[z.ravel() == 0, 1], c='blue', marker='x')
-    plt.scatter(x[z.ravel() == 1, 0], x[z.ravel() == 1, 1], c='red', marker='x')
-    for t in range(n_annotators):
-        if t >= 2:
-            plt.subplot(2, 3, 2 + t + 1)
-        else:
-            plt.subplot(2, 3, 2 + t)
-        plt.title('Annotator {}'.format(t + 1))
-        plt.scatter(x[y[t] == 0, 0], x[y[t] == 0, 1], c='blue', marker='x')
-        plt.scatter(x[y[t] == 1, 0], x[y[t] == 1, 1], c='red', marker='x')
-    plt.subplot(2, 3, 4)
-    plt.title('Predictions')
-    plt.scatter(x[predictions.ravel() == 0, 0], x[predictions.ravel() == 0, 1], c='blue', marker='x')
-    plt.scatter(x[predictions.ravel() == 1, 0], x[predictions.ravel() == 1, 1], c='red', marker='x')
-    plt.show()
+def predict(a, b, x):
+    """Classify data points using logistic regression.
+
+    a: Weights α. (n_dim,) NumPy array
+    b: Bias β. float
+    x: Data points. (n_samples, n_dim) NumPy array.
+    """
+    return numpy.round(logistic_regression(a, b, x))
