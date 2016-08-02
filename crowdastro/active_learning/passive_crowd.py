@@ -57,28 +57,37 @@ def pack(a, b, w, g):
     return numpy.hstack([a, [b], w.ravel(), g])
 
 
-def train(x, y, epsilon=1e-5):
+def train(x, y, epsilon=1e-5, lr_init=True, skip_zeros=True):
     """Expectation-maximisation algorithm from Yan et al. (2010).
 
     x: Data. (n_samples, n_dim) NumPy array
     y: Labels. (n_annotators, n_samples) NumPy array
     epsilon: Convergence threshold. Default 1e-5. float
+    lr_init: Initialised with logistic regression. Default True.
     """
     n_samples, n_dim = x.shape
     n_annotators, n_samples_ = y.shape
     assert n_samples == n_samples_, 'Label array has wrong number of labels.'
 
-    # For our initial guess, we'll fit logistic regression to a majority vote.
-    lr_ab = sklearn.linear_model.LogisticRegression()
+    # Compute majority vote labels (for debugging + logistic regression init).
     majority_y = numpy.zeros((n_samples,))
     for i in range(n_samples):
         labels = y[:, i]
         majority_y[i] = numpy.bincount(labels).argmax()
-    lr_ab.fit(x, majority_y)
-    a = lr_ab.coef_.ravel()
-    b = lr_ab.intercept_[0]
-    w = numpy.zeros((n_annotators, n_dim))
-    g = numpy.zeros((n_annotators,))
+
+    if lr_init:
+        # For our initial guess, we'll fit logistic regression to the majority
+        # vote.
+        lr_ab = sklearn.linear_model.LogisticRegression()
+        lr_ab.fit(x, majority_y)
+        a = lr_ab.coef_.ravel()
+        b = lr_ab.intercept_[0]
+    else:
+        a = numpy.random.normal(size=(n_dim,))
+        b = numpy.random.normal()
+    w = numpy.random.normal(size=(n_annotators, n_dim))
+    g = numpy.random.normal(size=(n_annotators,))
+
     logging.debug('Initial a: %s', a)
     logging.debug('Initial b: %s', b)
     logging.debug('Initial w: %s', w)
@@ -138,9 +147,17 @@ def train(x, y, epsilon=1e-5):
 
                     assert numpy.isclose(p_z + p_z_0, 1), p_z + p_z_0
 
-                    if numpy.isclose(post, 0) or numpy.isclose(anno, 0) or \
-                            numpy.isclose(post, 1) or numpy.isclose(anno, 1):
-                        return 10000000, numpy.zeros(params.shape)
+                    if (numpy.isclose(post, 0) or numpy.isclose(anno, 0) or 
+                            numpy.isclose(post, 1) or numpy.isclose(anno, 1)):
+                        logging.warning('Found zero probabilities.')
+                        logging.debug('a: %s, b: %f', a, b)
+                        logging.debug('Mean ~p(z): %f', posteriors.mean())
+                        predictions = predict(a, b, x)
+                        class_weight = predictions.mean()
+                        logging.debug('Predicted mean class: %f', class_weight)
+                        logging.debug('True mean class: %f', majority_y.mean())
+                        if skip_zeros:
+                            return 10000000, numpy.zeros(params.shape)
 
                     expectation += numpy.log(post) * p_z
                     expectation += numpy.log((1 - post)) * p_z_0
@@ -179,11 +196,11 @@ def train(x, y, epsilon=1e-5):
         theta = pack(a, b, w, g)
         theta_, fv, inf = scipy.optimize.fmin_l_bfgs_b(Q, x0=theta,
                                                        approx_grad=False)
-        logging.info('Terminated with Q = %4f', fv)
-        logging.info(inf['task'].decode('ascii'))
+        logging.debug('Terminated with Q = %4f', fv)
+        logging.debug(inf['task'].decode('ascii'))
         a_, b_, w_, g_ = unpack(theta_, n_dim, n_annotators)
 
-        logging.info('Found new parameters - b: %f -> %f', b, b_)
+        logging.debug('Found new parameters - b: %f -> %f', b, b_)
 
         # Check convergence.
         dist = numpy.linalg.norm(a - a_) ** 2 + (b - b_) ** 2
