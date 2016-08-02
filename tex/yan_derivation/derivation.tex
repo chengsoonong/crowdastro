@@ -8,7 +8,7 @@
 \usepackage[margin=1.1in]{geometry}
 
 \usepackage{fontspec}
-\setmainfont{Palatino Linotype}
+\setmainfont{Palatino}
 
 \begin{document}
     \title{Crowd Labelling EM Derivation}
@@ -18,7 +18,7 @@
     In this document, I elaborate on the derivation of the expectation-maximisation formulae from \citet{yan10}. Notation etc. is taken from \citet{yan10}. I only consider the case of binary labels.
 
     \section{Formulation}
- 
+
         We have $N$ data points $\{\vec x_1, \dots, \vec x_N\}$, where $\vec x_i \in \mathbb{R}^D$. We also have a set of labels $\{y_1^{(1)}, \dots, y_n^{(1)},$ $\dots, y_1^{(T)}, \dots, y_N^{(T)}\}$, where $y_i^{(t)} \in \mathbb{Z}_2$ is the (potentially incorrect) binary label assigned to $\vec x_i$ by annotator $t$. We want to train a classifier to predict labels of new data points, we want to estimate the groundtruth labels $\{z_1, \dots, z_N\}$ where $z_i \in \mathbb{Z}_2$, and we want to model the quality of each annotator's labels. Let $\vec x$, $y$, and $z$ be random variables representing data points, labels, and groundtruths, respectively. The classification task is then to model $p(z \mid \vec x)$.
         Define matrices to represent the data:
         \begin{align*}
@@ -106,7 +106,7 @@
             \end{align*}
 
         \subsection{$\frac{\partial f}{\partial \beta}(\vec \theta)$}
-            
+
             The derivative is mostly identical to the derivative for $\nabla_{\vec \alpha} f(\vec \theta)$, but with $\frac{\partial}{\partial \beta} (\vec \alpha^T \vec x_i + \beta) = 1$.
 
             \[
