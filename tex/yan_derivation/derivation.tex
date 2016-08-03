@@ -7,122 +7,12 @@
 
 \usepackage[margin=1.1in]{geometry}
 
-\usepackage{fontspec}
-\setmainfont{Palatino}
-
 \begin{document}
     \title{Crowd Labelling EM Derivation}
     \author{Matthew Alger\\The Australian National University}
     \maketitle
 
-    In this document, I elaborate on the derivation of the expectation-maximisation formulae from \citet{yan10}. Notation etc. is taken from \citet{yan10}. I only consider the case of binary labels.
-
-    \section{Formulation}
-
-        We have $N$ data points $\{\vec x_1, \dots, \vec x_N\}$, where $\vec x_i \in \mathbb{R}^D$. We also have a set of labels $\{y_1^{(1)}, \dots, y_n^{(1)},$ $\dots, y_1^{(T)}, \dots, y_N^{(T)}\}$, where $y_i^{(t)} \in \mathbb{Z}_2$ is the (potentially incorrect) binary label assigned to $\vec x_i$ by annotator $t$. We want to train a classifier to predict labels of new data points, we want to estimate the groundtruth labels $\{z_1, \dots, z_N\}$ where $z_i \in \mathbb{Z}_2$, and we want to model the quality of each annotator's labels. Let $\vec x$, $y$, and $z$ be random variables representing data points, labels, and groundtruths, respectively. The classification task is then to model $p(z \mid \vec x)$.
-        Define matrices to represent the data:
-        \begin{align*}
-            X &= [\vec x_1^T; \dots; \vec x_N^T] \in \mathbb{R}^{N \times D}\\
-            Y &= [y_1^{(1)}, \dots, y_1^{(T)}; \dots; y_N^{(1)}, \dots, y_N^{(T)}] \in \mathbb{Z}_2^{N \times T}\\
-            Z &= (z_1, \dots, z_N) \in \mathbb{Z}_2^N
-        \end{align*}
-        We assume that annotator labels depend on both the data point and the groundtruth, that annotator labels have annotator-dependent noise, and that annotator labels follow a Bernoulli distribution:
-        \begin{align*}
-            p(y_i^{(t)} \mid \vec x_i, z_i, \vec w_t, \gamma_t) &= (1 - \eta_t(\vec x_i \mid \vec w_t, \gamma_t))^{|y_i^{(t)} - z_i|} \eta_t(\vec x_i \mid \vec w_t, \gamma_t)^{1 - |y_i^{(t)} - z_i|}\\
-            \eta_t(\vec x_i \mid \vec w_t, \gamma_t) &= \sigma(\vec w_t^T \vec x_i - \gamma_t)
-        \end{align*}
-        We use logistic regression to model the posterior distribution:
-        \[
-            p(z_i = 1 \mid \vec x_i, \alpha, \beta) = \sigma(\vec \alpha^T \vec x_i + \beta)
-        \]
-        The parameters of the model are $\vec \theta = \{\vec \alpha, \beta, \vec w_1, \dots, \vec w_T, \gamma_1, \dots, \gamma_T\}$.
-
-    \section{Expectation-Maximisation}
-
-        We can find optimum values of the parameters by maximising the log-likelihood $p(Y \mid X, \vec \theta)$, i.e.
-        \begin{align*}
-            \vec \theta^\star &= \underset{\vec \theta}{\mbox{argmax}} \sum_{i = 1}^N \sum_{t = 1}^T \log p(y_i^{(t)} \mid \vec x_i, \vec \theta)\\
-                &= \underset{\vec \theta}{\mbox{argmax}} \sum_{i = 1}^N \sum_{t = 1}^T \log \sum_{z_i = 0}^1 p(y_i^{(t)}, z_i \mid \vec x_i, \vec \theta)
-        \end{align*}
-        noting that we assume independence between labels of different data points and labels from different annotators. Since $z_i$ are latent variables, we must use expectation-maximisation.\\
-
-        For the expectation step, we want to evaluate $p(z_i \mid \vec x_i, y_i^{(1)}, \dots, y_i^{(T)}, \vec \theta)$ for $i = 1, \dots, N$. We can write this in terms of the parameters:
-        \begin{align*}
-            p(z_i \mid \vec x_i, y_i^{(1)}, \dots, y_i^{(T)}, \vec \theta) &= \frac{1}{A_i} p(z_i, y_i^{(1)}, \dots, y_i^{(T)} \mid \vec x_i, \vec \theta)\\
-                &= \frac{1}{A_i} \prod_{t = 1}^T p(z_i, y_i^{(t)} \mid \vec x_i, \vec \theta)\\
-                &= \frac{1}{A_i} \prod_{t = 1}^T p(y_i^{(t)} \mid \vec x_i, z_i, \vec \theta) p(z_i \mid \vec x_i, \vec \theta)\\
-                &= \frac{1}{A_i} \prod_{t = 1}^T p(y_i^{(t)} \mid \vec x_i, z_i, \vec w_t, \gamma_t) p(z_i \mid \vec x_i, \vec \alpha, \beta)
-        \end{align*}
-        $A_i$ is a normalisation term given by
-        \[
-            A_i = \sum_{z_i = 0}^1 p(z_i, y_i^{(1)}, \dots, y_i^{(T)} \mid \vec x_i, \vec \theta).
-        \]
-        To simplify notation, let $\tilde p(z_i) = p(z_i \mid \vec x_i, y_i^{(1)}, \dots, y_i^{(T)}, \vec \theta)$.\\
-
-        For the maximisation step, we want to set
-        \[
-            \vec \theta^{\text{new}} = \underset{\vec \theta^{\text{new}}}{\mbox{argmax}} \sum_{i = 1}^N Q_i(\vec \theta^{\text{new}}, \vec \theta)
-        \]
-        where
-        \[
-            Q_i(\vec \theta^{\text{new}}, \vec \theta) = \sum_{z_i = 0}^1 p(z_i \mid \vec x_i, y_i^{(1)}, \dots, y_i^{(T)}, \vec \theta) \log p(\vec x_i, y_i^{(1)}, \dots, y_i^{(T)}, z_i \mid \vec \theta^{\text{new}}).
-        \]
-        Once again, we need to write this in terms of the parameters.
-        \begin{align*}
-            Q_i(\vec \theta^{\text{new}}, \vec \theta) &= \sum_{z_i = 0}^1 \tilde p(z_i) \log p(\vec x_i, y_i^{(1)}, \dots, y_i^{(T)}, z_i \mid \vec \theta^{\text{new}})\\
-                &= \sum_{z_i = 0}^1 \sum_{t = 1}^T \tilde p(z_i) \log p(\vec x_i, y_i^{(t)}, z_i \mid \vec \theta^{\text{new}})\\
-                &= \sum_{z_i = 0}^1 \sum_{t = 1}^T \tilde p(z_i) \log (p(y_i^{(t)}, z_i \mid \vec x_i, \vec \theta^{\text{new}}) p(\vec x_i \mid \vec \theta^{\text{new}}))\\
-                &=  T \log p(\vec x_i \mid \vec \theta^{\text{new}}) + \sum_{z_i = 0}^1 \sum_{t = 1}^T \tilde p(z_i) \log p(y_i^{(t)}, z_i \mid \vec x_i, \vec \theta^{\text{new}})\\
-                \begin{split}&= T \log p(\vec x_i \mid \vec \theta^{\text{new}}) + \\
-                             &\quad\quad \sum_{z_i = 0}^1 \sum_{t = 1}^T \tilde p(z_i) (\log p(y_i^{(t)}\mid \vec x_i, z_i, \vec \theta^{\text{new}}) + \log p(z_i \mid \vec x_i, \vec \theta^{\text{new}}))
-                \end{split}\\
-                \begin{split}&= T \log p(\vec x_i \mid \vec \theta^{\text{new}}) + \\
-                             &\quad\quad \sum_{z_i = 0}^1 \sum_{t = 1}^T \tilde p(z_i) (\log p(y_i^{(t)}\mid \vec x_i, z_i, \vec w_t^{\text{new}}, \gamma_t^{\text{new}}) + \log p(z_i \mid \vec x_i, \vec \alpha^{\text{new}}, \beta^{\text{new}}))
-                \end{split}
-        \end{align*}
-        Then the maximisation step is
-        \[
-            \vec \theta^{\text{new}} = \underset{\vec \theta^{\text{new}}}{\mbox{argmax}} \sum_{i = 1}^N \sum_{z_i = 0}^1 \sum_{t = 1}^T \tilde p(z_i) (\log p(y_i^{(t)}\mid \vec x_i, z_i, \vec w_t^{\text{new}}, \gamma_t^{\text{new}}) + \log p(z_i \mid \vec x_i, \vec \alpha^{\text{new}}, \beta^{\text{new}}))
-        \]
-        noting that $T \log p(\vec x_i \mid \vec \theta^{\text{new}})$ is the same for all $\vec \theta^{\text{new}}$ as $x_i$ is observed. To simplify notation, let
-        \[
-            f(\vec \theta) = \sum_{i = 1}^N \sum_{z_i = 0}^1 \sum_{t = 1}^T \tilde p(z_i) (\log p(y_i^{(t)}\mid \vec x_i, z_i, \vec w_t, \gamma_t) + \log p(z_i \mid \vec x_i, \vec \alpha, \beta)).
-        \]
-        where $\tilde p(z_i)$ is evaluated using the old value of $\vec \theta$.
-
-    \section{Gradients of the Optimisation Target}
-
-        In this section, I derive the gradients of $f$ with respect to the parameters $\vec \theta$.
-
-        \subsection{$\nabla_{\vec \alpha} f(\vec \theta)$}
-
-            \begin{align*}
-                \nabla_{\vec \alpha} f(\vec \theta) &= T \sum_{i = 1}^N \sum_{z_i = 0}^1 \nabla_{\vec \alpha} (\tilde p(z_i) \log p(z_i \mid \vec x_i, \vec \alpha, \beta))\\
-                    &= T \sum_{i = 1}^N \sum_{z_i = 0}^1 \tilde p(z_i) \nabla_{\vec \alpha} \log p(z_i \mid \vec x_i, \vec \alpha, \beta)\\
-                    &= T \sum_{i = 1}^N \tilde p(z_i = 1) \nabla_{\vec \alpha} \log \sigma(\vec \alpha^T \vec x_i + \beta) + \tilde p(z_i = 0) \nabla_{\vec \alpha} (1 - \log \sigma(\vec \alpha^T \vec x_i + \beta))\\
-                    &= T \sum_{i = 1}^N (\tilde p(z_i = 1) - \tilde p(z_i = 0)) \nabla_{\vec \alpha} \log \sigma(\vec \alpha^T \vec x_i + \beta)\\
-                    &= T \sum_{i = 1}^N (\tilde p(z_i = 1) - \tilde p(z_i = 0)) \frac{\nabla_{\vec \alpha} \sigma(\vec \alpha^T \vec x_i + \beta)}{\sigma(\vec \alpha^T \vec x_i + \beta)}\\
-                    &= T \sum_{i = 1}^N (\tilde p(z_i = 1) - \tilde p(z_i = 0)) \frac{\sigma(\vec \alpha^T \vec x_i + \beta)(1 - \sigma(\vec \alpha^T \vec x_i + \beta))}{\sigma(\vec \alpha^T \vec x_i + \beta)} \vec x\\
-                    &= T \sum_{i = 1}^N (\tilde p(z_i = 1) - \tilde p(z_i = 0)) (1 - \sigma(\vec \alpha^T \vec x_i + \beta)) \vec x\\
-            \end{align*}
-
-        \subsection{$\frac{\partial f}{\partial \beta}(\vec \theta)$}
-
-            The derivative is mostly identical to the derivative for $\nabla_{\vec \alpha} f(\vec \theta)$, but with $\frac{\partial}{\partial \beta} (\vec \alpha^T \vec x_i + \beta) = 1$.
-
-            \[
-                \frac{\partial f}{\partial \beta}(\vec \theta) = T \sum_{i = 1}^N (\tilde p(z_i = 1) - \tilde p(z_i = 0)) (1 - \sigma(\vec \alpha^T \vec x_i + \beta))\\
-            \]
-
-        \subsection{$\nabla_{\vec w_t} f(\vec \theta)$}
-
-            \begin{align*}
-                \nabla_{\vec w_t} f(\vec \theta) &= \sum_{i = 1}^N \sum_{z_i = 0}^1 \sum_{s = 1}^T \nabla_{\vec w_t} (\tilde p(z_i) \log p(y_i^{(s)}\mid \vec x_i, z_i, \vec w_s, \gamma_s))\\
-                    &= \sum_{i = 1}^N \sum_{z_i = 0}^1 \nabla_{\vec w_t} (\tilde p(z_i) \log p(y_i^{(t)}\mid \vec x_i, z_i, \vec w_t, \gamma_t))\\
-                    &= \sum_{i = 1}^N \sum_{z_i = 0}^1 \tilde p(z_i) \nabla_{\vec w_t} \log p(y_i^{(t)}\mid \vec x_i, z_i, \vec w_t, \gamma_t)\\
-                    &= \sum_{i = 1}^N \sum_{z_i = 0}^1 \tilde p(z_i) \nabla_{\vec w_t} ((1 - \eta_t(\vec x_i \mid \vec w_t, \gamma_t))^{|y_i^{(t)} - z_i|} \eta_t(\vec x_i \mid \vec w_t, \gamma_t)^{1 - |y_i^{(t)} - z_i|})\\
-                    &= \sum_{i = 1}^N \sum_{z_i = 0}^1 \tilde p(z_i) (\nabla_{\vec w_t} (1 - \eta_t(\vec x_i \mid \vec w_t, \gamma_t))^{|y_i^{(t)} - z_i|} \eta_t(\vec x_i \mid \vec w_t, \gamma_t)^{1 - |y_i^{(t)} - z_i|} + \nabla_{\vec w_t} (1 - \eta_t(\vec x_i \mid \vec w_t, \gamma_t))^{|y_i^{(t)} - z_i|} \eta_t(\vec x_i \mid \vec w_t, \gamma_t)^{1 - |y_i^{(t)} - z_i|})\\
-            \end{align*}
+    
 
     \bibliographystyle{plainnat}
     \bibliography{../papers}
