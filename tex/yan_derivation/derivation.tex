@@ -99,6 +99,7 @@
             \begin{align*}
                 \nabla_{\vec \alpha} f(\vec \theta) &= T \sum_{i = 1}^N \sum_{z_i = 0}^1 \nabla_{\vec \alpha} (\tilde p(z_i) \log p(z_i \mid \vec x_i, \vec \alpha, \beta))\\
                     &= T \sum_{i = 1}^N \sum_{z_i = 0}^1 \tilde p(z_i) \nabla_{\vec \alpha} \log p(z_i \mid \vec x_i, \vec \alpha, \beta)\\
+                    &= T \sum_{i = 1}^N \tilde p(z_i = 1) \nabla_{\vec \alpha} \log \sigma(\vec \alpha^T \vec x_i + \beta) + \tilde p(z_i = 0) \nabla_{\vec \alpha} (1 - \log \sigma(\vec \alpha^T \vec x_i + \beta))\\
                     &= T \sum_{i = 1}^N (\tilde p(z_i = 1) - \tilde p(z_i = 0)) \nabla_{\vec \alpha} \log \sigma(\vec \alpha^T \vec x_i + \beta)\\
                     &= T \sum_{i = 1}^N (\tilde p(z_i = 1) - \tilde p(z_i = 0)) \frac{\nabla_{\vec \alpha} \sigma(\vec \alpha^T \vec x_i + \beta)}{\sigma(\vec \alpha^T \vec x_i + \beta)}\\
                     &= T \sum_{i = 1}^N (\tilde p(z_i = 1) - \tilde p(z_i = 0)) \frac{\sigma(\vec \alpha^T \vec x_i + \beta)(1 - \sigma(\vec \alpha^T \vec x_i + \beta))}{\sigma(\vec \alpha^T \vec x_i + \beta)} \vec x\\
@@ -112,6 +113,16 @@
             \[
                 \frac{\partial f}{\partial \beta}(\vec \theta) = T \sum_{i = 1}^N (\tilde p(z_i = 1) - \tilde p(z_i = 0)) (1 - \sigma(\vec \alpha^T \vec x_i + \beta))\\
             \]
+
+        \subsection{$\nabla_{\vec w_t} f(\vec \theta)$}
+
+            \begin{align*}
+                \nabla_{\vec w_t} f(\vec \theta) &= \sum_{i = 1}^N \sum_{z_i = 0}^1 \sum_{s = 1}^T \nabla_{\vec w_t} (\tilde p(z_i) \log p(y_i^{(s)}\mid \vec x_i, z_i, \vec w_s, \gamma_s))\\
+                    &= \sum_{i = 1}^N \sum_{z_i = 0}^1 \nabla_{\vec w_t} (\tilde p(z_i) \log p(y_i^{(t)}\mid \vec x_i, z_i, \vec w_t, \gamma_t))\\
+                    &= \sum_{i = 1}^N \sum_{z_i = 0}^1 \tilde p(z_i) \nabla_{\vec w_t} \log p(y_i^{(t)}\mid \vec x_i, z_i, \vec w_t, \gamma_t)\\
+                    &= \sum_{i = 1}^N \sum_{z_i = 0}^1 \tilde p(z_i) \nabla_{\vec w_t} ((1 - \eta_t(\vec x_i \mid \vec w_t, \gamma_t))^{|y_i^{(t)} - z_i|} \eta_t(\vec x_i \mid \vec w_t, \gamma_t)^{1 - |y_i^{(t)} - z_i|})\\
+                    &= \sum_{i = 1}^N \sum_{z_i = 0}^1 \tilde p(z_i) (\nabla_{\vec w_t} (1 - \eta_t(\vec x_i \mid \vec w_t, \gamma_t))^{|y_i^{(t)} - z_i|} \eta_t(\vec x_i \mid \vec w_t, \gamma_t)^{1 - |y_i^{(t)} - z_i|} + \nabla_{\vec w_t} (1 - \eta_t(\vec x_i \mid \vec w_t, \gamma_t))^{|y_i^{(t)} - z_i|} \eta_t(\vec x_i \mid \vec w_t, \gamma_t)^{1 - |y_i^{(t)} - z_i|})\\
+            \end{align*}
 
     \bibliographystyle{plainnat}
     \bibliography{../papers}
