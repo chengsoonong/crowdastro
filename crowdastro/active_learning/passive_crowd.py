@@ -36,7 +36,7 @@ def annotator_model(w, g, x, y, z):
     z: "True" label z_i. int
     -> float in [0, 1]
     """
-    eta = logistic_regression(w, g, x)
+    eta = logistic_regression(w, g, x) + 0.0001
     label_difference = numpy.abs(y - z)
     return (numpy.power(1 - eta, label_difference)
             * numpy.power(eta, 1 - label_difference))
@@ -57,13 +57,14 @@ def pack(a, b, w, g):
     return numpy.hstack([a, [b], w.ravel(), g])
 
 
-def train(x, y, epsilon=1e-5, lr_init=True, skip_zeros=True):
+def train(x, y, epsilon=1e-5, lr_init=False, skip_zeros=False):
     """Expectation-maximisation algorithm from Yan et al. (2010).
 
     x: Data. (n_samples, n_dim) NumPy array
     y: Labels. (n_annotators, n_samples) NumPy array
     epsilon: Convergence threshold. Default 1e-5. float
-    lr_init: Initialised with logistic regression. Default True.
+    lr_init: Initialised with logistic regression. Default False.
+    skip_zeros: Whether to detect and skip zero probabilities. Default False.
     """
     n_samples, n_dim = x.shape
     n_annotators, n_samples_ = y.shape
@@ -85,8 +86,8 @@ def train(x, y, epsilon=1e-5, lr_init=True, skip_zeros=True):
     else:
         a = numpy.random.normal(size=(n_dim,))
         b = numpy.random.normal()
-    w = numpy.random.normal(size=(n_annotators, n_dim))
-    g = numpy.random.normal(size=(n_annotators,))
+    w = numpy.zeros((n_annotators, n_dim))
+    g = numpy.ones((n_annotators,))
 
     logging.debug('Initial a: %s', a)
     logging.debug('Initial b: %s', b)
@@ -149,7 +150,7 @@ def train(x, y, epsilon=1e-5, lr_init=True, skip_zeros=True):
 
                     if (numpy.isclose(post, 0) or numpy.isclose(anno, 0) or 
                             numpy.isclose(post, 1) or numpy.isclose(anno, 1)):
-                        logging.warning('Found zero probabilities.')
+                        logging.debug('Found zero probabilities.')
                         logging.debug('a: %s, b: %f', a, b)
                         logging.debug('Mean ~p(z): %f', posteriors.mean())
                         predictions = predict(a, b, x)
@@ -173,6 +174,8 @@ def train(x, y, epsilon=1e-5, lr_init=True, skip_zeros=True):
             dQ_dg = numpy.zeros(g.shape)
             for i in range(n_samples):
                 dp = posteriors[i] - posteriors_0[i]
+                # dQ_db_i = n_annotators * (posteriors[i] -
+                # logistic_regression(a, b, x[i]))
                 dQ_db_i = dp * scipy.special.expit(x[i].dot(a) + b) * \
                         (1 - scipy.special.expit(x[i].dot(a) + b))
                 dQ_da[:, i] = dQ_db_i * x[i]
@@ -181,6 +184,9 @@ def train(x, y, epsilon=1e-5, lr_init=True, skip_zeros=True):
                     dQ_dg_t_i = (-1) ** y[t, i] * (-dp) * \
                         scipy.special.expit(x[i].dot(w[t]) + g[t]) * \
                         (1 - scipy.special.expit(x[i].dot(w[t]) + g[t]))
+                    # dQ_dg_t_i = (2 * posteriors[i] * y[t, i] -
+                    # logistic_regression(w[t], g[t], x[i]) - y[t, i] +
+                    # posteriors_0[i]) / 100
                     dQ_dw[t] += dQ_dg_t_i * x[i]
                     dQ_dg[t] += dQ_dg_t_i
 
@@ -192,6 +198,21 @@ def train(x, y, epsilon=1e-5, lr_init=True, skip_zeros=True):
             grad /= n_annotators * n_samples
 
             return -expectation, -grad
+
+        # zs = []
+        # for a1 in numpy.linspace(-6, 6, 50):
+        #     ys = []
+        #     for b in numpy.linspace(-6, 6, 50):
+        #         ys.append(Q(pack([a1, 0], b, numpy.zeros(w.shape), ))[0])
+        #     print(ys)
+        #     zs.append(ys)
+        # import matplotlib.pyplot as plt
+        # zs = numpy.array(zs)
+        # plt.pcolormesh(numpy.linspace(-6, 6, 50), numpy.linspace(-6, 6, 50), zs)
+        # plt.colorbar()
+        # plt.show()
+        # raise
+
 
         theta = pack(a, b, w, g)
         theta_, fv, inf = scipy.optimize.fmin_l_bfgs_b(Q, x0=theta,
