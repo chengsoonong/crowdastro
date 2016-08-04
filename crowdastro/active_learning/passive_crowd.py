@@ -199,21 +199,6 @@ def train(x, y, epsilon=1e-5, lr_init=False, skip_zeros=False):
 
             return -expectation, -grad
 
-        # zs = []
-        # for a1 in numpy.linspace(-6, 6, 50):
-        #     ys = []
-        #     for b in numpy.linspace(-6, 6, 50):
-        #         ys.append(Q(pack([a1, 0], b, numpy.zeros(w.shape), ))[0])
-        #     print(ys)
-        #     zs.append(ys)
-        # import matplotlib.pyplot as plt
-        # zs = numpy.array(zs)
-        # plt.pcolormesh(numpy.linspace(-6, 6, 50), numpy.linspace(-6, 6, 50), zs)
-        # plt.colorbar()
-        # plt.show()
-        # raise
-
-
         theta = pack(a, b, w, g)
         theta_, fv, inf = scipy.optimize.fmin_l_bfgs_b(Q, x0=theta,
                                                        approx_grad=False)
