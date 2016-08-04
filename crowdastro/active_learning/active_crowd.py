@@ -1,4 +1,4 @@
-"""Yan et al. (2011) EM crowd active learning algorithm.
+"""Yan et al. (2010) EM crowd passive learning algorithm.
 
 Matthew Alger
 The Australian National University
@@ -14,40 +14,55 @@ import scipy.optimize
 import scipy.special
 import sklearn.linear_model
 
-from .passive_crowd import annotator_model, logistic_regression, pack, \
-                           predict, unpack
+from .passive_crowd import annotator_model
+from .passive_crowd import logistic_regression
+from .passive_crowd import pack
+from .passive_crowd import predict
+from .passive_crowd import unpack
 
 
-def train(x, y, epsilon=1e-5):
-    """Expectation-maximisation algorithm from Yan et al. (2010).
+def train(x, y, epsilon=1e-5, lr_init=False, skip_zeros=False):
+    """Expectation-maximisation algorithm from Yan et al. (2011).
 
     x: Data. (n_samples, n_dim) NumPy array
-    y: Labels. (n_annotators, n_samples) masked NumPy array
+    y: Labels. (n_annotators, n_samples) NumPy masked array
     epsilon: Convergence threshold. Default 1e-5. float
+    lr_init: Initialised with logistic regression. Default False.
+    skip_zeros: Whether to detect and skip zero probabilities. Default False.
     """
     n_samples, n_dim = x.shape
     n_annotators, n_samples_ = y.shape
     assert n_samples == n_samples_, 'Label array has wrong number of labels.'
 
-    # For our initial guess, we'll fit logistic regression to a majority vote.
-    lr_ab = sklearn.linear_model.LogisticRegression()
+    # Compute majority vote labels (for debugging + logistic regression init).
     majority_y = numpy.zeros((n_samples,))
     for i in range(n_samples):
         labels = y[:, i]
+
         if labels.mask is False:
             counter = collections.Counter(labels)
         else:
             counter = collections.Counter(labels[~labels.mask])
+
         if counter:
             majority_y[i] = max(counter, key=counter.get)
         else:
             # No labels for this data point.
             majority_y[i] = numpy.random.randint(2)  # ¯\_(ツ)_/¯
-    lr_ab.fit(x, majority_y)
-    a = lr_ab.coef_.ravel()
-    b = lr_ab.intercept_[0]
+
+    if lr_init:
+        # For our initial guess, we'll fit logistic regression to the majority
+        # vote.
+        lr_ab = sklearn.linear_model.LogisticRegression()
+        lr_ab.fit(x, majority_y)
+        a = lr_ab.coef_.ravel()
+        b = lr_ab.intercept_[0]
+    else:
+        a = numpy.random.normal(size=(n_dim,))
+        b = numpy.random.normal()
     w = numpy.zeros((n_annotators, n_dim))
-    g = numpy.zeros((n_annotators,))
+    g = numpy.ones((n_annotators,))
+
     logging.debug('Initial a: %s', a)
     logging.debug('Initial b: %s', b)
     logging.debug('Initial w: %s', w)
@@ -69,10 +84,9 @@ def train(x, y, epsilon=1e-5):
             posterior = 1
             posterior *= logistic_regression(a, b, x[i])
             for t in range(n_annotators):
-                if y.mask[t, i]:
-                    # Skip unobserved labels.
-                    continue
-                posterior *= annotator_model(w[t], g[t], x[i], y[t, i], z)
+                if not y.mask[t, i]:
+                    # If annotator t labelled point i.
+                    posterior *= annotator_model(w[t], g[t], x[i], y[t, i], z)
             posteriors[i] = posterior
 
         # Repeat for p(z_i = 0 | x_i, y_i).
@@ -83,11 +97,9 @@ def train(x, y, epsilon=1e-5):
             posterior = 1
             posterior *= 1 - logistic_regression(a, b, x[i])
             for t in range(n_annotators):
-                if y.mask[t, i]:
-                    # Skip unobserved labels.
-                    continue
-
-                posterior *= annotator_model(w[t], g[t], x[i], y[t, i], z)
+                if not y.mask[t, i]:
+                    # If annotator t labelled point i.
+                    posterior *= annotator_model(w[t], g[t], x[i], y[t, i], z)
             posteriors_0[i] = posterior
 
         # We want to normalise. We want p(z = 1) + p(z = 0) == 1.
@@ -108,7 +120,7 @@ def train(x, y, epsilon=1e-5):
                 p_z_0 = posteriors_0[i]
                 for t in range(n_annotators):
                     if y.mask[t, i]:
-                        # Skip unobserved labels.
+                        # No label by annotator t for sample i.
                         continue
 
                     anno = annotator_model(w[t], g[t], x[i], y[t, i], 1)
@@ -118,9 +130,17 @@ def train(x, y, epsilon=1e-5):
 
                     assert numpy.isclose(p_z + p_z_0, 1), p_z + p_z_0
 
-                    if numpy.isclose(post, 0) or numpy.isclose(anno, 0) or \
-                            numpy.isclose(post, 1) or numpy.isclose(anno, 1):
-                        return 10000000, numpy.zeros(params.shape)
+                    if (numpy.isclose(post, 0) or numpy.isclose(anno, 0) or 
+                            numpy.isclose(post, 1) or numpy.isclose(anno, 1)):
+                        logging.debug('Found zero probabilities.')
+                        logging.debug('a: %s, b: %f', a, b)
+                        logging.debug('Mean ~p(z): %f', posteriors.mean())
+                        predictions = predict(a, b, x)
+                        class_weight = predictions.mean()
+                        logging.debug('Predicted mean class: %f', class_weight)
+                        logging.debug('True mean class: %f', majority_y.mean())
+                        if skip_zeros:
+                            return 10000000, numpy.zeros(params.shape)
 
                     expectation += numpy.log(post) * p_z
                     expectation += numpy.log((1 - post)) * p_z_0
@@ -136,18 +156,23 @@ def train(x, y, epsilon=1e-5):
             dQ_dg = numpy.zeros(g.shape)
             for i in range(n_samples):
                 dp = posteriors[i] - posteriors_0[i]
+                # dQ_db_i = n_annotators * (posteriors[i] -
+                # logistic_regression(a, b, x[i]))
                 dQ_db_i = dp * scipy.special.expit(x[i].dot(a) + b) * \
                         (1 - scipy.special.expit(x[i].dot(a) + b))
                 dQ_da[:, i] = dQ_db_i * x[i]
                 dQ_db[i] = dQ_db_i
                 for t in range(n_annotators):
                     if y.mask[t, i]:
-                        # Skip unobserved labels.
+                        # No label by annotator t for sample i.
                         continue
 
                     dQ_dg_t_i = (-1) ** y[t, i] * (-dp) * \
                         scipy.special.expit(x[i].dot(w[t]) + g[t]) * \
                         (1 - scipy.special.expit(x[i].dot(w[t]) + g[t]))
+                    # dQ_dg_t_i = (2 * posteriors[i] * y[t, i] -
+                    # logistic_regression(w[t], g[t], x[i]) - y[t, i] +
+                    # posteriors_0[i]) / 100
                     dQ_dw[t] += dQ_dg_t_i * x[i]
                     dQ_dg[t] += dQ_dg_t_i
 
@@ -160,14 +185,15 @@ def train(x, y, epsilon=1e-5):
 
             return -expectation, -grad
 
+
         theta = pack(a, b, w, g)
         theta_, fv, inf = scipy.optimize.fmin_l_bfgs_b(Q, x0=theta,
                                                        approx_grad=False)
-        logging.info('Terminated with Q = %4f', fv)
-        logging.info(inf['task'].decode('ascii'))
+        logging.debug('Terminated with Q = %4f', fv)
+        logging.debug(inf['task'].decode('ascii'))
         a_, b_, w_, g_ = unpack(theta_, n_dim, n_annotators)
 
-        logging.info('Found new parameters - b: %f -> %f', b, b_)
+        logging.debug('Found new parameters - b: %f -> %f', b, b_)
 
         # Check convergence.
         dist = numpy.linalg.norm(a - a_) ** 2 + (b - b_) ** 2
@@ -176,4 +202,3 @@ def train(x, y, epsilon=1e-5):
             return a_, b_, w_, g_
 
         a, b, w, g = a_, b_, w_, g_
-
