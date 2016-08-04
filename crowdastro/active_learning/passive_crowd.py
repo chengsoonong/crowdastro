@@ -22,7 +22,7 @@ def logistic_regression(a, b, x):
     x: Data point x_i. (n_dim,) NumPy array
     -> float in [0, 1]
     """
-    res = scipy.special.expit(x.dot(a) + b)
+    res = scipy.special.expit(numpy.dot(x, a) + b)
     return res
 
 
@@ -108,9 +108,9 @@ def train(x, y, epsilon=1e-5, lr_init=False, skip_zeros=False):
             z = 1
             # Use the old parameters to compute the posterior.
             posterior = 1
-            posterior *= logistic_regression(a, b, x[i])
+            posterior *= logistic_regression(a, b, x[i, :])
             for t in range(n_annotators):
-                posterior *= annotator_model(w[t], g[t], x[i], y[t, i], z)
+                posterior *= annotator_model(w[t], g[t], x[i, :], y[t, i], z)
             posteriors[i] = posterior
 
         # Repeat for p(z_i = 0 | x_i, y_i).
@@ -119,9 +119,9 @@ def train(x, y, epsilon=1e-5, lr_init=False, skip_zeros=False):
             z = 0
             # Use the old parameters to compute the posterior.
             posterior = 1
-            posterior *= 1 - logistic_regression(a, b, x[i])
+            posterior *= 1 - logistic_regression(a, b, x[i, :])
             for t in range(n_annotators):
-                posterior *= annotator_model(w[t], g[t], x[i], y[t, i], z)
+                posterior *= annotator_model(w[t], g[t], x[i, :], y[t, i], z)
             posteriors_0[i] = posterior
 
         # We want to normalise. We want p(z = 1) + p(z = 0) == 1.
@@ -141,10 +141,10 @@ def train(x, y, epsilon=1e-5, lr_init=False, skip_zeros=False):
                 p_z = posteriors[i]
                 p_z_0 = posteriors_0[i]
                 for t in range(n_annotators):
-                    anno = annotator_model(w[t], g[t], x[i], y[t, i], 1)
-                    anno_0 = annotator_model(w[t], g[t], x[i], y[t, i], 0)
+                    anno = annotator_model(w[t], g[t], x[i, :], y[t, i], 1)
+                    anno_0 = annotator_model(w[t], g[t], x[i, :], y[t, i], 0)
                     assert numpy.isclose(anno + anno_0, 1), anno + anno_0
-                    post = logistic_regression(a, b, x[i])
+                    post = logistic_regression(a, b, x[i, :])
 
                     assert numpy.isclose(p_z + p_z_0, 1), p_z + p_z_0
 
@@ -175,19 +175,19 @@ def train(x, y, epsilon=1e-5, lr_init=False, skip_zeros=False):
             for i in range(n_samples):
                 dp = posteriors[i] - posteriors_0[i]
                 # dQ_db_i = n_annotators * (posteriors[i] -
-                # logistic_regression(a, b, x[i]))
-                dQ_db_i = dp * scipy.special.expit(x[i].dot(a) + b) * \
-                        (1 - scipy.special.expit(x[i].dot(a) + b))
-                dQ_da[:, i] = dQ_db_i * x[i]
+                # logistic_regression(a, b, x[i, :]))
+                dQ_db_i = dp * scipy.special.expit(x[i, :].dot(a) + b) * \
+                        (1 - scipy.special.expit(x[i, :].dot(a) + b))
+                dQ_da[:, i] = dQ_db_i * x[i, :]
                 dQ_db[i] = dQ_db_i
                 for t in range(n_annotators):
                     dQ_dg_t_i = (-1) ** y[t, i] * (-dp) * \
-                        scipy.special.expit(x[i].dot(w[t]) + g[t]) * \
-                        (1 - scipy.special.expit(x[i].dot(w[t]) + g[t]))
+                        scipy.special.expit(x[i, :].dot(w[t]) + g[t]) * \
+                        (1 - scipy.special.expit(x[i, :].dot(w[t]) + g[t]))
                     # dQ_dg_t_i = (2 * posteriors[i] * y[t, i] -
-                    # logistic_regression(w[t], g[t], x[i]) - y[t, i] +
+                    # logistic_regression(w[t], g[t], x[i, :]) - y[t, i] +
                     # posteriors_0[i]) / 100
-                    dQ_dw[t] += dQ_dg_t_i * x[i]
+                    dQ_dw[t] += dQ_dg_t_i * x[i, :]
                     dQ_dg[t] += dQ_dg_t_i
 
             dQ_da = numpy.sum(dQ_da, axis=1)
