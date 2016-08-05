@@ -43,7 +43,7 @@ Note that this mutates the `features` dataset, replacing image features with the
 Repack the H5 file:
 
 ```bash
-python3 crowdastro.repack_h5 training.h5
+python3 -m crowdastro.repack_h5 training.h5
 ```
 
 Train a classifier:
