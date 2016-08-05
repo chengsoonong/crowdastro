@@ -137,6 +137,7 @@ def train(x, y, epsilon=1e-5, lr_init=False, skip_zeros=False):
     skip_zeros: Whether to detect and skip zero probabilities. Default False.
     """
     # TODO(MatthewJA): Restore skip_zeros functionality.
+
     n_samples, n_dim = x.shape
     n_annotators, n_samples_ = y.shape
     assert n_samples == n_samples_, 'Label array has wrong number of labels.'
@@ -146,6 +147,8 @@ def train(x, y, epsilon=1e-5, lr_init=False, skip_zeros=False):
     for i in range(n_samples):
         labels = y[:, i]
         majority_y[i] = numpy.bincount(labels).argmax()
+
+    logging.info('Initialising...')
 
     if lr_init:
         # For our initial guess, we'll fit logistic regression to the majority
@@ -167,10 +170,12 @@ def train(x, y, epsilon=1e-5, lr_init=False, skip_zeros=False):
     assert x.shape == (n_samples, n_dim)
     assert y.shape == (n_annotators, n_samples)
 
+    logging.info('Iterating until convergence...')
+
     iters = 0
     while True:  # Until convergence (checked later).
         iters += 1
-        logging.debug('Iteration %d', iters)
+        logging.info('Iteration %d', iters)
 
         a_, b_, w_, g_ = em_step(
                 n_samples, n_annotators, n_dim, a, b, w, g, x, y)

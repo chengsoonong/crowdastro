@@ -91,6 +91,23 @@ class TestAnnotatorModel(unittest.TestCase):
                 passive_crowd.annotator_model(w, g, x, y, z).shape,
                 (5,))
 
+    def test_annotator_model_masked_anno_vector(self):
+        """annotator_model works on masked vectors of annotators."""
+        w = numpy.repeat(numpy.linspace(0, 1, 10).reshape((1, 10)), 5, axis=0)
+        g = -numpy.ones(5)
+        x = numpy.linspace(0, 1, 10)
+        y = numpy.ma.MaskedArray(numpy.ones(5), mask=[0, 0, 1, 0, 1])
+        z = 1
+        self.assertTrue(numpy.allclose(
+                passive_crowd.annotator_model(w, g, x, y, z),
+                numpy.ones(5) * 0.92552988))
+        self.assertEqual(
+                passive_crowd.annotator_model(w, g, x, y, z).shape,
+                (5,))
+        self.assertTrue(numpy.allclose(
+                passive_crowd.annotator_model(w, g, x, y, z).mask,
+                y.mask))
+
     def test_annotator_model_anno_vector(self):
         """annotator_model works on vectors of annotators and data matrices."""
         w = numpy.repeat(numpy.linspace(0, 1, 10).reshape((1, 10)), 5, axis=0)
