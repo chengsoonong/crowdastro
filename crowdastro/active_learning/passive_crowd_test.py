@@ -161,3 +161,55 @@ class TestQ(unittest.TestCase):
                          6.93889390e-20,   5.55111512e-19,   7.63278329e-19,
                          1.11022302e-18,   1.11022302e-18,   1.11022302e-18,
                          1.11022302e-18,   1.11022302e-18,   1.11022302e-18])))
+
+class TestEMStep(unittest.TestCase):
+
+    def test_em_step(self):
+        """em_step returns correct parameters."""
+        n_dim = 10
+        n_samples = 20
+        n_annotators = 5
+        x = numpy.repeat(numpy.linspace(0, 1, 10).reshape((1, 10)), 20, axis=0)
+        y = numpy.ones((5, 20))
+        a = numpy.ones(10)
+        b = 1
+        w = numpy.repeat(numpy.linspace(0, 1, 10).reshape((1, 10)), 5, axis=0)
+        g = -numpy.ones(5)
+        a_, b_, w_, g_ = passive_crowd.em_step(
+                n_samples, n_annotators, n_dim, a, b, w, g, x, y)
+        
+        self.assertTrue(numpy.allclose(
+            a_,
+            numpy.array([
+                1.        ,  1.09210253,  1.18420506,  1.27630758,  1.36841011,
+                1.46051264,  1.55261517,  1.64471769,  1.73682022,  1.82892275,
+            ])))
+        
+        self.assertTrue(numpy.isclose(
+            b_,
+            1.8289227496485554))
+        
+        self.assertTrue(numpy.allclose(
+            w_,
+            numpy.array([
+                [ 0.        , 0.27312482, 0.54624965, 0.81937447, 1.0924993 ,
+                  1.36562412, 1.63874894, 1.91187377, 2.18499859, 2.45812342],
+                [ 0.        , 0.27312482, 0.54624965, 0.81937447, 1.0924993 ,
+                  1.36562412, 1.63874894, 1.91187377, 2.18499859, 2.45812342],
+                [ 0.        , 0.27312482, 0.54624965, 0.81937447, 1.0924993 ,
+                  1.36562412, 1.63874894, 1.91187377, 2.18499859, 2.45812342],
+                [ 0.        , 0.27312482, 0.54624965, 0.81937447, 1.0924993 ,
+                  1.36562412, 1.63874894, 1.91187377, 2.18499859, 2.45812342],
+                [ 0.        , 0.27312482, 0.54624965, 0.81937447, 1.0924993 ,
+                  1.36562412, 1.63874894, 1.91187377, 2.18499859, 2.45812342],
+            ])))
+
+        self.assertTrue(numpy.allclose(
+            g_,
+            numpy.array(
+                [0.45812342, 0.45812342, 0.45812342, 0.45812342, 0.45812342])))
+
+
+# class TestTrain(unittest.TestCase):
+    
+#     def test_ 
