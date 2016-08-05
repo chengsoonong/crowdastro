@@ -1,5 +1,6 @@
-"""Yan et al. (2011) EM crowd active learning algorithm with adjustments from
-Izbicki & Stern (2013).
+"""Yan et al. (2011) EM crowd active learning algorithm with the assumption
+(inspired by Izbicki & Stern (2013)) that all annotators are confused by the
+same objects.
 
 Matthew Alger
 The Australian National University
@@ -19,7 +20,15 @@ from .passive_crowd import annotator_model
 from .passive_crowd import logistic_regression
 from .passive_crowd import pack
 from .passive_crowd import predict
-from .passive_crowd import unpack
+
+
+def unpack(params, n_dim, n_annotators):
+    """Unpacks an array of parameters in to a, b, w, and g."""
+    a = params[:n_dim]
+    b = params[n_dim]
+    w = params[n_dim+1:n_dim+1+n_dim].reshape((1, -1))
+    g = params[n_dim+1+n_dim]
+    return a, b, w, g
 
 
 def Q(params, n_dim, n_annotators, n_samples, posteriors, posteriors_0, x, y):
@@ -47,8 +56,8 @@ def Q(params, n_dim, n_annotators, n_samples, posteriors, posteriors_0, x, y):
 
     logit_t = scipy.special.expit(numpy.dot(w, x.T) + g.reshape((-1, 1)))
     dQ_dg_t_i = numpy.power(-1, y) * (-dp) * logit_t * (1 - logit_t)
-    dQ_dw = dQ_dg_t_i.dot(x)
-    dQ_dg = dQ_dg_t_i.sum(axis=1)
+    dQ_dw = dQ_dg_t_i.dot(x).sum(axis=0)
+    dQ_dg = dQ_dg_t_i.sum()
 
     grad = pack(dQ_da, dQ_db, dQ_dw, dQ_dg)
 
@@ -133,8 +142,8 @@ def train(x, y, epsilon=1e-5, lr_init=False, skip_zeros=False):
     else:
         a = numpy.random.normal(size=(n_dim,))
         b = numpy.random.normal()
-    w = numpy.zeros((n_annotators, n_dim))
-    g = numpy.ones((n_annotators,))
+    w = numpy.zeros((1, n_dim))
+    g = numpy.array([1]).reshape((1,))
 
     logging.debug('Initial a: %s', a)
     logging.debug('Initial b: %s', b)
