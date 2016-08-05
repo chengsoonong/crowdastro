@@ -23,7 +23,7 @@ from . import rgz_data as data
 from .config import config
 from .exceptions import CatalogueError
 
-VERSION = '0.5.0'  # Data version, not module version!
+VERSION = '0.5.1'  # Data version, not module version!
 MAX_RADIO_SIGNATURE_LENGTH = 50  # max number of components * individual
                                  # component signature size.
 MAX_NAME_LENGTH = 50  # b
@@ -620,6 +620,7 @@ def import_classifications(f_h5, test=False):
     atlas_ids = f_h5['/atlas/cdfs/string']['zooniverse_id']
     classification_positions = []
     classification_combinations = []
+    classification_usernames = []
 
     with astropy.io.fits.open(config['data_sources']['atlas_image'],
                               ignore_blank=True) as atlas_image:
@@ -637,6 +638,13 @@ def import_classifications(f_h5, test=False):
                       config['surveys']['atlas']['mosaic_scale_y'] // 2)
 
         for c_index, classification in enumerate(classifications):
+            user_name = classification.get('user_name', '').encode(
+                    'ascii', errors='ignore')
+            # Usernames actually don't have an upper length limit on RGZ(?!) so
+            # I'll cap everything at 50 characters for my own sanity.
+            if len(user_name) > 50:
+                user_name = user_name[:50]
+
             classification = parse_classification(classification, subject,
                                                   atlas_positions, wcs, offset)
             full_radio = '|'.join(classification.keys())
@@ -647,6 +655,7 @@ def import_classifications(f_h5, test=False):
                 # that they are the same later to check integrity.
                 classification_positions.append(pos_row)
                 classification_combinations.append(com_row)
+                classification_usernames.append(user_name)
 
     combinations_dtype = [('index', 'int'),
                           ('full_signature', '<S{}'.format(
@@ -661,6 +670,9 @@ def import_classifications(f_h5, test=False):
     f_h5['/atlas/cdfs/'].create_dataset('classification_positions',
                                         data=classification_positions,
                                         dtype=float)
+    f_h5['/atlas/cdfs/'].create_dataset('classification_usernames',
+                                        data=classification_usernames,
+                                        dtype='<S50')
     f_h5['/atlas/cdfs/'].create_dataset('classification_combinations',
                                         data=classification_combinations,
                                         dtype=combinations_dtype)
