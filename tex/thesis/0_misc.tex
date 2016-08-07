@@ -175,6 +175,8 @@
 
         In this section, I derive the gradients of $f$ with respect to the parameters $\vec \theta$.
 
+        First, we differentiate with respect to $\vec \alpha$.
+
         \begin{align*}
             \nabla_{\vec \alpha} f(\vec \theta) &= T \sum_{i = 1}^N \sum_{z_i = 0}^1 \nabla_{\vec \alpha} (\tilde p(z_i) \log p(z_i \mid \vec x_i, \vec \alpha, \beta))\\
                 &= T \sum_{i = 1}^N \sum_{z_i = 0}^1 \tilde p(z_i) \nabla_{\vec \alpha} \log p(z_i \mid \vec x_i, \vec \alpha, \beta)\\
@@ -189,6 +191,41 @@
         \[
             \frac{\partial f}{\partial \beta} f(\vec \theta) = T \sum_{i = 1}^N \tilde p(z_i = 1) - \sigma(\vec \alpha^T \vec x_i + \beta)
         \]
+
+        We now differentiate with respect to $\vec w_t$.
+
+        \begin{align*}
+            \nabla_{\vec w_t} f(\vec \theta) &= \sum_{i = 1}^N \sum_{z_i = 0}^1 \sum_{t = 1}^T \tilde p(z_i) \nabla_{\vec w_t} \log p(y_i^{(t)}\mid \vec x_i, z_i, \vec w_t, \gamma_t)\\
+                &= \sum_{i = 1}^N \sum_{z_i = 0}^1 \sum_{t = 1}^T \frac{\tilde p(z_i)}{p(y_i^{(t)} \mid \vec x_i, z_i, \vec w_t, \gamma_t)} \nabla_{\vec w_t} p(y_i^{(t)}\mid \vec x_i, z_i, \vec w_t, \gamma_t)\\
+                &= \sum_{i = 1}^N \sum_{z_i = 0}^1 \sum_{t = 1}^T \frac{\tilde p(z_i)}{p(y_i^{(t)} \mid \vec x_i, z_i, \vec w_t, \gamma_t)} \frac{\partial}{\partial \eta_t} p(y_i^{(t)}\mid \vec x_i, z_i, \vec w_t, \gamma_t) \nabla_{\vec w_t} \eta_t(\vec x_i \mid \vec w_t, \gamma_t)\\
+                &= \sum_{i = 1}^N \sum_{z_i = 0}^1 \sum_{t = 1}^T - \tilde p(z_i) \frac{(1-\eta_t)^{\abs{y_i^{(t)}-z_i}-1} \eta_t^{-\abs{y_i^{(t)}-z_i}} \left(\eta_t+\abs{y_i^{(t)}-z_i}-1\right)}{p(y_i^{(t)} \mid \vec x_i, z_i, \vec w_t, \gamma_t)} \nabla_{\vec w_t} \eta_t(\vec x_i \mid \vec w_t, \gamma_t)\\
+                &= \sum_{i = 1}^N \sum_{z_i = 0}^1 \sum_{t = 1}^T - \tilde p(z_i) \frac{\eta_t(\vec x_i \mid \vec w_t, \gamma_t)+\abs{y_i^{(t)}-z_i}-1}{(1-\eta_t(\vec x_i \mid \vec w_t, \gamma_t)) \eta_t(\vec x_i \mid \vec w_t, \gamma_t)} \nabla_{\vec w_t} \eta_t(\vec x_i \mid \vec w_t, \gamma_t)\\
+                &= \sum_{i = 1}^N \sum_{z_i = 0}^1 \sum_{t = 1}^T - \tilde p(z_i) \left(\eta_t(\vec x_i \mid \vec w_t, \gamma_t)+\abs{y_i^{(t)}-z_i}-1\right)\vec x_i\\
+                &= \sum_{i = 1}^N \sum_{t = 1}^T - \tilde p(z_i = 1) \left(\eta_t(\vec x_i \mid \vec w_t, \gamma_t) - y_i^{(t)}\right)\vec x_i - \tilde p(z_i = 0) \left(\eta_t(\vec x_i \mid \vec w_t, \gamma_t) + y_i^{(t)} - 1\right)\vec x_i\\
+                &= \sum_{i = 1}^N \sum_{t = 1}^T \left(
+                    2 \tilde p(z_i = 1) y_i^{(t)}
+                    - \eta_t(\vec x_i \mid \vec w_t, \gamma_t)
+                    - y_i^{(t)}
+                    + 1
+                    - \tilde p(z_i = 1)
+                \right)\vec x_i\\
+                &= \sum_{i = 1}^N \sum_{t = 1}^T \left(
+                    2 \tilde p(z_i = 1) y_i^{(t)}
+                    - \eta_t(\vec x_i \mid \vec w_t, \gamma_t)
+                    - y_i^{(t)}
+                    + \tilde p(z_i = 0)
+                \right)\vec x_i\\
+        \end{align*}
+
+        Similarly, the gradient with respect to $\gamma_t$ is
+        \[
+            \nabla_{\gamma_t} f(\vec \theta) = \sum_{i = 1}^N \sum_{t = 1}^T
+                    2 \tilde p(z_i = 1) y_i^{(t)}
+                    - \eta_t(\vec x_i \mid \vec w_t, \gamma_t)
+                    - y_i^{(t)}
+                    + \tilde p(z_i = 0)
+        \]
+
 
         % \subsubsection{$\frac{\partial f}{\partial \beta}(\vec \theta)$}
   
