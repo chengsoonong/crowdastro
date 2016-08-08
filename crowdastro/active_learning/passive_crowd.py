@@ -160,7 +160,7 @@ def train(x, y, epsilon=1e-5, lr_init=False, skip_zeros=False):
     else:
         a = numpy.random.normal(size=(n_dim,))
         b = numpy.random.normal()
-    w = numpy.zeros((n_annotators, n_dim))
+    w = numpy.random.normal(size=(n_annotators, n_dim))
     g = numpy.ones((n_annotators,))
 
     logging.debug('Initial a: %s', a)
