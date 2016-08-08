@@ -11,8 +11,6 @@ sys.path.insert(1, os.path.join('..'))
 import crowdastro.active_learning.active_crowd as active_crowd
 
 logging.captureWarnings(True)
-# import warnings
-# warnings.filterwarnings("error")
 
 # Generate some data.
 n_annotators, n_dim, n_samples = 4, 2, 50
@@ -41,10 +39,10 @@ for annotator in range(n_annotators):
             y[annotator, sample] = not z[sample]
 
 # Randomly mask 50% of the labels.
-y.mask = numpy.random.binomial(1, 0.9, size=y.shape)
+y.mask = numpy.random.binomial(1, 0.8, size=y.shape)
 
 # Train and predict using the passive crowd algorithm.
-a, b, w, g = active_crowd.train(x, y, skip_zeros=True)
+a, b, w, g = active_crowd.train(x, y, skip_zeros=True, lr_init=True)
 predictions = active_crowd.predict(a, b, x)
 
 ## Plots ##
