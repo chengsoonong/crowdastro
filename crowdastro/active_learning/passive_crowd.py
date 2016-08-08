@@ -79,9 +79,25 @@ def Q(params, n_dim, n_annotators, n_samples, posteriors, posteriors_0, x, y):
                       x))
 
     # logit_t = scipy.special.expit(numpy.dot(w, x.T) + g.reshape((-1, 1)))
-    dQ_dg_t_i = (2 * posteriors.dot(y.T) - logistic_regression(w, g, x) - y.sum(axis=1) + posteriors_0.sum()).T
-    dQ_dw = dQ_dg_t_i.dot(x)
-    dQ_dg = dQ_dg_t_i.sum(axis=1)
+    dQ_dw = numpy.zeros(w.shape)
+    # Inefficient, but unrolled for clarity.
+    for t in range(n_annotators):
+        dQ_dw[t] += sum(x[i] * posteriors[i] *
+                                (logistic_regression(-w[t], -g[t], x[i]) -
+                                 abs(y[t, i] - 1)) +
+                        x[i] * posteriors_0[i] *
+                                (logistic_regression(-w[t], -g[t], x[i]) -
+                                 abs(y[t, i] - 0))
+                        for i in range(n_samples))
+    dQ_dg = numpy.zeros(g.shape)
+    for t in range(n_annotators):
+        dQ_dg[t] += sum(posteriors[i] *
+                                (logistic_regression(-w[t], -g[t], x[i]) -
+                                 abs(y[t, i] - 1)) +
+                        posteriors_0[i] *
+                                (logistic_regression(-w[t], -g[t], x[i]) -
+                                 abs(y[t, i] - 0))
+                        for i in range(n_samples))
     grad = pack(dQ_da, dQ_db, dQ_dw, dQ_dg)
 
     return -expectation, -grad
