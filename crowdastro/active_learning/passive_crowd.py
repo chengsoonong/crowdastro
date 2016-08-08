@@ -59,36 +59,30 @@ def pack(a, b, w, g):
 def Q(params, n_dim, n_annotators, n_samples, posteriors, posteriors_0, x, y):
     """Maximisation step minimisation target."""
     a, b, w, g = unpack(params, n_dim, n_annotators)
-    expectation = 0
 
-    assert numpy.allclose(posteriors + posteriors_0, 1)
-    annos = annotator_model(w, g, x, y, 1)
-    annos_0 = annotator_model(w, g, x, y, 0)
-    posts = logistic_regression(a, b, x)
-    expectation += n_annotators * numpy.dot(
-            numpy.log(posts), posteriors_0)
-    expectation += n_annotators * numpy.dot(
-            numpy.log((1 - posts)), posteriors_0)
-    expectation += (numpy.dot(numpy.log(annos), posteriors)).sum()
-    expectation += (numpy.dot(numpy.log(annos_0), posteriors_0)).sum()
-
-    expectation /= n_annotators * n_samples
+    expectation = (
+            posteriors.dot((numpy.log(annotator_model(w, g, x, y, 1)) +
+                            numpy.log(logistic_regression(a, b, x))).T) +
+            posteriors_0.dot((numpy.log(annotator_model(w, g, x, y, 0)) +
+                              numpy.log(1 - logistic_regression(a, b, x))).T)
+    ).sum()
 
     # Also need the gradients.
     dp = posteriors - posteriors_0
-    logit_i = scipy.special.expit(x.dot(a) + b)
-    dQ_db_i = dp * logit_i * (1 - logit_i)
-    dQ_da = numpy.dot(dQ_db_i, x)
-    dQ_db = dQ_db_i.sum()
+    # logit_i = scipy.special.expit(x.dot(a) + b)
+    dQ_db = n_annotators * (
+            posteriors.dot(logistic_regression(-a, -b, x)) +
+            posteriors_0.dot(logistic_regression(-a, -b, x) - 1))
+    dQ_da = n_annotators * (
+            numpy.dot(posteriors * logistic_regression(-a, -b, x) +
+                      posteriors_0 * (logistic_regression(-a, -b, x) - 1),
+                      x))
 
-    logit_t = scipy.special.expit(numpy.dot(w, x.T) + g.reshape((-1, 1)))
-    dQ_dg_t_i = numpy.power(-1, y) * (-dp) * logit_t * (1 - logit_t)
+    # logit_t = scipy.special.expit(numpy.dot(w, x.T) + g.reshape((-1, 1)))
+    dQ_dg_t_i = (2 * posteriors.dot(y.T) - logistic_regression(w, g, x) - y.sum(axis=1) + posteriors_0.sum()).T
     dQ_dw = dQ_dg_t_i.dot(x)
     dQ_dg = dQ_dg_t_i.sum(axis=1)
-
     grad = pack(dQ_da, dQ_db, dQ_dw, dQ_dg)
-
-    grad /= n_annotators * n_samples
 
     return -expectation, -grad
 
