@@ -56,6 +56,7 @@ def pack(a, b, w, g):
     """Packs a, b, w, and g into an array of parameters."""
     return numpy.hstack([a, [b], w.ravel(), g])
 
+
 def Q(params, n_dim, n_annotators, n_samples, posteriors, posteriors_0, x, y):
     """Maximisation step minimisation target."""
     a, b, w, g = unpack(params, n_dim, n_annotators)
