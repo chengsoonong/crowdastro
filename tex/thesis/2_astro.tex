@@ -1,42 +1,77 @@
 %!TEX root=thesis.tex
-\chapter{The Radio and Infrared Sky}
+\chapter{Galaxies and Active Galactic Nuclei}
 \label{cha:astro}
 
-    Modern astronomy relies on observations of deep space. Telescopes image the sky in different wavelengths, with different wavelengths carrying different physical meanings. In this chapter, I will talk about distant galaxies, supermassive black holes, and how they are detected and studied. I will discuss radio and infrared surveys, including their motivations, measurements, and physical interpretations. Finally, I will introduce two infrared surveys (SWIRE and WISE) and two radio surveys (FIRST and ATLAS).
+    Modern astronomy relies on observations of deep space. Telescopes image the sky in different wavelengths, with different wavelengths carrying different physical meanings. Infrared surveys detect star formation and dust in distant galaxies, and radio surveys detect massive objects called active galactic nuclei. In this section, I introduce the physics of what we see when we look at the sky in these wavelengths, as well as introducing specific radio and infrared surveys relevant to this thesis. I will also discuss the motivation behind cross-identifying active galactic nuclei with their host galaxies as well as the inherent difficulty in doing so, and hence the motivation behind this thesis.
 
-    \section{Galaxies}
+    % \section{Galaxies}
 
+    % \section{Supermassive Black Holes and Active Galactic Nuclei}
 
+        % Black holes are compact, dense objects of extraordinarily large mass. Due to their density, black holes have extremely strong gravitational fields, and any object that gets close enough will be unable to escape \citep{wald10}. This even includes light, which is effectively absorbed by black holes, giving them their name.
 
-    \section{Supermassive Black Holes and Active Galactic Nuclei}
+        % \todo{Talk about how black holes are predicted by GR.}
 
-        Black holes are compact, dense objects of extraordinarily large mass. Due to their density, black holes have extremely strong gravitational fields, and any object that gets close enough will be unable to escape \citep{wald10}. This even includes light, which is effectively absorbed by black holes, giving them their name.
+        %     More information on black holes and general relativity can be found in \citet{wald10}.
 
-        \todo{Talk about how black holes are predicted by GR.}
+        % \todo{Talk about how we can observe black holes?}
 
-            More information on black holes and general relativity can be found in \citet{wald10}.
+    \section{Active Galactic Nuclei}
 
-        \todo{Talk about how we can observe black holes?}
+        Many galaxies contain a supermassive black hole in their centre. These black holes accrete matter from the surrounding galaxy in an accretion disk \todo{figure}. The accretion process emits huge amounts of light through different physical processes. These light-emitting black holes are called active galactic nuclei (AGNs). AGNs can be extremely bright, emitting up to $10^{39}$ J of energy every second --- nearly a thousand times more energy than our entire galaxy emits \citep{begelman84}. AGNs are found throughout the universe: The closest known AGN is Centaurus A (shown in Figure \ref{fig:centaurus-a}, with $z \approx 0.0018$, and AGNs have been detected up to redshifts of $z \approx 7$ \todo{citation needed}.
 
-        \subsection{Active Galactic Nuclei}
+        \begin{figure}[!ht]
+            \centering
+            \includegraphics[width=0.5\textwidth]{images/ESO_Centaurus_A_LABOCA.jpg}
+            \caption{Centaurus A, a relatively close radio active galactic nuclei. \emph{Image: ESO/WFI (Optical); MPIfR/ESO/APEX/A.Weiss et al. (Submillimetre); NASA/CXC/CfA/R.Kraft et al. (X-ray)}}
+            \label{fig:centaurus-a}
+        \end{figure}
 
-            Many galaxies contain a supermassive black hole in their centre. These black holes accrete mass from the surrounding galaxy, and in the process convert large amounts of matter into energy --- in some cases, up to $42\%$ of the matter is converted directly into energy \citep{alexander12}. This energy is emitted in the form of radio waves.
+        Many AGNs produce \emph{jets} from their accretion disk. Jets are long, thin streams of matter such as the one shown in Figure \ref{fig:m87}. These jets can be very long, with ``giant'' AGNs emitting jets up to 1 Mpc in length \todo{citation needed --- maybe \citet{banfield16}?}. The process through which jets are emitted is currently unknown \todo{citation needed}.
+        %--- for example, the jet in Figure \ref{fig:m87} is $1.5$ kpc in length \citep{rees87}.
 
+        \begin{figure}[!ht]
+            \centering
+            \includegraphics[width=0.5\textwidth]{images/M87_jet.jpg}
+            \caption{M87, a giant elliptical galaxy with a jet. \emph{Image: NASA and The Hubble Heritage Team (STScI/AURA)}}
+            \label{fig:m87}
+        \end{figure}
 
+        Electrons in jets produce \emph{synchrotron radiation}, a form of radiation emitted by charged particles as they accelerate at relativistic speeds in a magnetic field \todo{citation needed}. This radiation is emitted in radio wavelengths, and so AGNs emitting this kind of radiation are called \emph{radio AGNs}. It is radio AGNs that are the focus of this thesis, and from this point on, ``AGN'' will refer only to radio AGNs.
 
-        These black holes draw in surrounding matter, and may produce jets of matter as they do. These jets emit radio waves \todo{Directly? Or is something else redshifted? Confirm and rewrite.} which can then be detected by radio telescopes. As black holes cannot be observed directly, this is the only way to identify black holes in distant galaxies. A radio-loud black hole in the centre of a galaxy is called an active galactic nucleus (AGN). \todo{I'm having some trouble finding information on AGNs, especially on their definitions. Find something concrete.} Large radio surveys such as Faint Images of the Radio Sky at Twenty-Centimeters (FIRST) \citep{white97, becker95} and the Australian Telescope Large Area Survey (ATLAS) \citep{franzen15} have found many sources of radio emissions, and these sources are dominated by AGNs \citep{banfield15}.
+        % \begin{figure}[!ht]
+        %     \centering
+        %     \includegraphics[width=0.8\textwidth]{images/rgz_fig1.eps}
+        %     \caption{Different shaped radio AGNs. Figure reproduced from \citet{banfield15}.}
+        %     \label{fig:radio-agns}
+        % \end{figure}
 
-    \section{Infrared Surveys}
+    \section{ATLAS: The Australia Telescope Large Area Survey}
 
-        \subsection{WISE}
+        \begin{figure}[!ht]
+          % \centering
+          \includegraphics[width=0.8\linewidth,]{images/CDFS_sm.eps}
+          \caption{ATLAS observations of CDFS. Reproduced from \citet{franzen15}.}.
+          \label{fig:cdfs}
+        \end{figure}
 
-        \subsection{SWIRE}
+        The Australia Telescope Large Area Survey (ATLAS) is a deep \todo{define?} survey of two small areas of the sky in radio wavelengths, which aims to help understand the evolution of early galaxies \citep{norris06}. The Australia Telescope Compact Array was used to image the Chandra Deep Field South (CDFS) and the European Large Area ISO Survey - South 1 (ELAIS-S1) fields. These fields are areas of the sky with few nearby objects, meaning that observations in these fields are of very old, distant objects. These fields were chosen because they are the two fields imaged in the Spitzer Wide-area Infrared Extragalactic Survey (SWIRE) visible from the southern hemisphere. SWIRE produced high-resolution infrared and optical images of the fields, allowing all objects detected in the ATLAS radio images to be compared with their infrared and optical counterparts.
 
-    \section{Radio Surveys}
+        ATLAS is considered a pilot survey for the Evolutionary Map of the Universe (EMU), an upcoming radio survey of the entire southern sky at resolutions 45 times higher and angular resolutions 4.5 times better than the benchmark NRAO VLA Sky Survey \citep{norris11b}. EMU will image the same radio frequencies as ATLAS at the same resolutions, so tools and methods developed to process and interpret ATLAS data are expected to work well on the data produced by EMU. EMU is expected to detect around 70 million radio objects, compared to the 2.5 million currently known \citep{banfield15}.
 
-        \subsection{FIRST}
+        ATLAS provides both a catalogue of detected radio objects and a radio image of the CDFS and ELAIS-S1 fields. The CDFS image covers a total area of 3.7 deg$^2$ and the ELAIS-S1 image covers a total area of 2.7 deg$^2$. The CDFS image is shown in Figure \ref{fig:cdfs}. The catalogue is a list of all objects detected in the images with a peak or integrated flux more than 5 times the background noise levels. Each object has an associated survey identifier, an International Astronomical Union name, a position on the sky of the peak flux, a peak flux density, an integrated flux density, an angular size, whether the object is extended or compact, and a spectral index, as well as uncertainties associated with each measurement \citep{franzen15}.
 
-        \subsection{ATLAS}
+    % \section{Infrared Surveys}
+
+    %     \subsection{WISE}
+
+    % \subsection{SWIRE}
+
+    % \section{Radio Surveys}
+
+    %     \subsection{FIRST}
+
+    %     \subsection{ATLAS}
 
     \begin{enumerate}
         \item something about ATLAS, FIRST, EMU, Meerkat--MIGHTEE, WODAN
