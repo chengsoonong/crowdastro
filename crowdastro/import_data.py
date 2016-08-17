@@ -745,4 +745,5 @@ if __name__ == '__main__':
         elif args.ir == 'wise':
             import_wise(f_h5)
         import_norris(f_h5)
+        import_fan(f_h5)
         import_classifications(f_h5)
