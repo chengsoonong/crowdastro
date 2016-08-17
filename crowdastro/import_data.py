@@ -391,6 +391,43 @@ def import_norris(f_h5):
                          data=norris_labels)
 
 
+def import_fan(f_h5):
+    """Imports the Fan et al. (2015) labels.
+
+    f_h5: crowdastro HDF5 file with WISE or SWIRE already imported.
+    """
+    ir_survey = f_h5.attrs['ir_survey']
+    ir_names = f_h5['/{}/cdfs/string'.format(ir_survey)]
+    ir_positions = f_h5['/{}/cdfs/numeric'.format(ir_survey)][:, :2]
+    ir_tree = sklearn.neighbors.KDTree(ir_positions)
+    fan_coords = []
+    with open(config['data_sources']['fan_swire'], 'r') as fan_dat:
+        for row in csv.DictReader(fan_dat):
+            ra_hr = row['swire'][8:10]
+            ra_min = row['swire'][10:12]
+            ra_sec = row['swire'][12:17]
+            dec_sgn = row['swire'][17]
+            dec_deg = row['swire'][18:20]
+            dec_min = row['swire'][20:22]
+            dec_sec = row['swire'][22:26]
+
+            ra = '{} {} {}'.format(ra_hr, ra_min, ra_sec)
+            dec = '{}{} {} {}'.format(dec_sgn, dec_deg, dec_min, dec_sec)
+            fan_coords.append((ra, dec))
+
+    fan_labels = numpy.zeros((ir_positions.shape[0],))
+    for ra, dec in fan_coords:
+        # Find a neighbour.
+        skycoord = SkyCoord(ra=ra, dec=dec, unit=('hourangle', 'deg'))
+        ra = skycoord.ra.degree
+        dec = skycoord.dec.degree
+        ((dist,),), ((ir,),) = ir_tree.query([(ra, dec)])
+        if dist < config['surveys'][ir_survey]['distance_cutoff']:
+            fan_labels[ir] = 1
+    f_h5.create_dataset('/{}/cdfs/fan_labels'.format(ir_survey),
+                         data=fan_labels)
+
+
 def contains(bbox, point):
     """Checks if point is within bbox.
 
