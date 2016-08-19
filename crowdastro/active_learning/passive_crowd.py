@@ -14,6 +14,9 @@ import scipy.special
 import sklearn.linear_model
 
 
+EPS = 1E-8
+
+
 def logistic_regression(a, b, x):
     """Logistic regression classifier.
 
@@ -36,7 +39,7 @@ def annotator_model(w, g, x, y, z):
     z: "True" label z_i. int
     -> float in [0, 1]
     """
-    eta = logistic_regression(w, g, x) + 0.0001
+    eta = logistic_regression(w, g, x)
     label_difference = numpy.abs(y - z)
     return (numpy.power(1 - eta, label_difference.T)
             * numpy.power(eta, 1 - label_difference.T)).T
@@ -62,10 +65,11 @@ def Q(params, n_dim, n_annotators, n_samples, posteriors, posteriors_0, x, y):
     a, b, w, g = unpack(params, n_dim, n_annotators)
 
     expectation = (
-            posteriors.dot((numpy.log(annotator_model(w, g, x, y, 1)) +
-                            numpy.log(logistic_regression(a, b, x))).T) +
-            posteriors_0.dot((numpy.log(annotator_model(w, g, x, y, 0)) +
-                              numpy.log(1 - logistic_regression(a, b, x))).T)
+            posteriors.dot((numpy.log(annotator_model(w, g, x, y, 1) + EPS) +
+                            numpy.log(logistic_regression(a, b, x) + EPS)).T) +
+            posteriors_0.dot((numpy.log(annotator_model(w, g, x, y, 0) + EPS) +
+                              numpy.log(1 - logistic_regression(a, b, x) + EPS)
+                             ).T)
     ).sum()
 
     # Also need the gradients.
