@@ -14,6 +14,7 @@ import scipy.optimize
 import scipy.special
 import sklearn.linear_model
 
+from .passive_crowd import EPS
 from .passive_crowd import annotator_model
 from .passive_crowd import logistic_regression
 from .passive_crowd import pack
@@ -26,11 +27,12 @@ def Q(params, n_dim, n_annotators, n_samples, posteriors, posteriors_0, x, y):
     a, b, w, g = unpack(params, n_dim, n_annotators)
 
     expectation = numpy.ma.sum(
-            numpy.ma.dot(posteriors, (numpy.ma.log(annotator_model(w, g, x, y, 1)) +
-                               numpy.ma.log(logistic_regression(a, b, x))).T) +
+            numpy.ma.dot(posteriors,
+                (numpy.ma.log(annotator_model(w, g, x, y, 1) + EPS) +
+                 numpy.ma.log(logistic_regression(a, b, x) + EPS)).T) +
             numpy.ma.dot(posteriors_0, (
-                    numpy.ma.log(annotator_model(w, g, x, y, 0)) +
-                    numpy.ma.log(1 - logistic_regression(a, b, x))).T)
+                    numpy.ma.log(annotator_model(w, g, x, y, 0) + EPS) +
+                    numpy.ma.log(1 - logistic_regression(a, b, x) + EPS)).T)
     )
 
     # Also need the gradients.
