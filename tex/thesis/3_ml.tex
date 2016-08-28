@@ -15,30 +15,48 @@ efficiency.
 
 \section{Discuss some machine learning here}
 
-\section{Modelling Labeller Accuracy}
-    
-    For standard supervised learning tasks, the labels are generally provided by
-    some \emph{expert}, carrying the assumption that these labels are correct
-    and represent the groundtruth. More recently, however, many projects have
-    \emph{crowdsourced} their labels: Non-expert people (the \emph{crowd})
-    volunteer or are paid to label data. The most obvious advantage of
-    crowdsourcing is that crowds are able to cheaply or quickly label large
-    amounts of data simply because there are so many people labelling. The crowd
-    may be sourced from websites like Amazon Mechanical
-    Turk\footnote{\url{http://mturk.com}} where small amounts of money are paid
-    on a per-label basis, or they may volunteer out of interest in the labelling
-    project. Some notable examples of projects with crowdsourced labels include
-    Galaxy Zoo \citep{lintott08}, a project to identify morphologies of galaxies
-    from the Sloan Digital Sky Survey that has gathered tens of millions of
-    labels for nearly 900 000 galaxies from over 80 000 volunteers
-    \citep{lintott11}; and Snapshot Serengeti \citep{swanson15}, a project to
-    observe mammals in Serengeti National Park that has classified nearly 11
-    million camera trap images with the help of 28 000 volunteers. However,
-    crowdsourcing is not without downsides. Since the crowd necessarily consists
-    of non-experts, there is no longer any guarantee that labels are correct ---
-    indeed, for the Radio Galaxy Zoo, balanced accuracy of individual labellers
-    varies from 40--100\%, with an average of 71\%. Additionally, labels from
-    different labellers may be correlated, different labellers may be better
-    skilled at labelling different kinds of examples, some examples may be
-    intrinsically hard for non-experts to label, and labellers may even be
-    actively malicious in giving incorrect labels.
+\section{Crowdsourced Labelling}
+
+    \section{Crowdsourced Labels}
+        
+        For standard supervised learning tasks, the labels are generally
+        provided by some \emph{expert}, carrying the assumption that these
+        labels are correct and represent the groundtruth. More recently,
+        however, many projects have
+        \emph{crowdsourced} their labels: Non-expert people (the \emph{crowd})
+        volunteer or are paid to label data. The most obvious advantage of
+        crowdsourcing is that crowds are able to cheaply or quickly label large
+        amounts of data simply because there are so many people labelling. The
+        crowd may be sourced from websites like Amazon Mechanical
+        Turk\footnote{\url{http://mturk.com}} where small amounts of money are
+        paid on a per-label basis, or they may volunteer out of interest in the
+        labelling project. Some notable examples of projects with crowdsourced
+        labels include Galaxy Zoo \citep{lintott08}, a project to identify
+        morphologies of galaxies from the Sloan Digital Sky Survey that has
+        gathered tens of millions of labels for nearly 900 000 galaxies from
+        over 80 000 volunteers
+        \citep{lintott11}; and Snapshot Serengeti \citep{swanson15}, a project to
+        observe mammals in Serengeti National Park that has classified nearly
+        11 million camera trap images with the help of 28 000 volunteers.
+        However, crowdsourcing is not without downsides. Since the crowd
+        necessarily consists of non-experts, there is no longer any guarantee
+        that labels are correct --- indeed, for the Radio Galaxy Zoo, balanced
+        accuracy of individual labellers varies from 40--100\%, with an average
+        of 71\%. Additionally, labels from different labellers may be
+        correlated, different labellers may be better skilled at labelling
+        different kinds of examples, some examples may be intrinsically hard
+        for non-experts to label, and labellers may even be actively malicious
+        in giving incorrect labels.
+
+    \subsection{Majority Vote}
+
+        One way to reduce label noise is to allow multiple labellers to label the same examples, and then for each example take the \emph{majority vote} to find a ``consensus'' label. If the label provided by the $t$th labeller is denoted $y_t$ and there are $T$ labellers, then the consensus label is given by
+        \begin{equation*}
+            y = \begin{cases}
+                1 & \frac{1}{T} \sum_{t = 1}^T y_t > 0.5\\
+                0 & \frac{1}{T} \sum_{t = 1}^T y_t < 0.5\\
+            \end{cases}
+        \end{equation*}
+        with the remaining case decided evenly at random \citep{raykar10}.
+
+        The idea is that the majority of labels are correct, so with sufficiently large amounts of relabelling we expect the label noise to be reduced. How large ``sufficiently large'' is is unclear and domain-dependent, and is outside the scope of this thesis, though papers like \citet{sheng08} and \citet{lin16} provide some information on how to choose relabelling rates. Of course, this fails in situations where the majority of labellers are not correct, which may be due to intrinsic difficulty or malicious labelling, or where there is no clear majority.
