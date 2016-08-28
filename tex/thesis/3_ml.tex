@@ -1,6 +1,44 @@
-\chapter{Machine Learning}
+%!tex root=thesis.tex
+\chapter{Machine Learning on Crowds}
 
 \begin{enumerate}
     \item something about machine learning, classification, regression
     \item something about active learning, pool-based active learning
 \end{enumerate}
+
+\todo{Add a nice chapter summary.} In this chapter, I will introduce some
+concepts from machine learning that I will use for the rest of this thesis. I
+will discuss some common classification methods and techniques, describe image
+feature extraction using convolutional neural networks, survey some methods to
+combat label noise, and discuss the use of active learning to improve labelling
+efficiency.
+
+\section{Discuss some machine learning here}
+
+\section{Modelling Labeller Accuracy}
+    
+    For standard supervised learning tasks, the labels are generally provided by
+    some \emph{expert}, carrying the assumption that these labels are correct
+    and represent the groundtruth. More recently, however, many projects have
+    \emph{crowdsourced} their labels: Non-expert people (the \emph{crowd})
+    volunteer or are paid to label data. The most obvious advantage of
+    crowdsourcing is that crowds are able to cheaply or quickly label large
+    amounts of data simply because there are so many people labelling. The crowd
+    may be sourced from websites like Amazon Mechanical
+    Turk\footnote{\url{http://mturk.com}} where small amounts of money are paid
+    on a per-label basis, or they may volunteer out of interest in the labelling
+    project. Some notable examples of projects with crowdsourced labels include
+    Galaxy Zoo \citep{lintott08}, a project to identify morphologies of galaxies
+    from the Sloan Digital Sky Survey that has gathered tens of millions of
+    labels for nearly 900 000 galaxies from over 80 000 volunteers
+    \citep{lintott11}; and Snapshot Serengeti \citep{swanson15}, a project to
+    observe mammals in Serengeti National Park that has classified nearly 11
+    million camera trap images with the help of 28 000 volunteers. However,
+    crowdsourcing is not without downsides. Since the crowd necessarily consists
+    of non-experts, there is no longer any guarantee that labels are correct ---
+    indeed, for the Radio Galaxy Zoo, balanced accuracy of individual labellers
+    varies from 40--100\%, with an average of 71\%. Additionally, labels from
+    different labellers may be correlated, different labellers may be better
+    skilled at labelling different kinds of examples, some examples may be
+    intrinsically hard for non-experts to label, and labellers may even be
+    actively malicious in giving incorrect labels.
