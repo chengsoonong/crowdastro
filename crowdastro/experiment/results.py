@@ -12,7 +12,7 @@ import numpy
 class Results(object):
     """Stores experimental results."""
 
-    def __init__(self, path, methods, n_splits, n_examples, n_params):
+    def __init__(self, path, methods, n_splits, n_examples, n_params, model):
         """
         path: Path to the results file (h5). File will be created if it does not
             already exist.
@@ -20,6 +20,7 @@ class Results(object):
         n_splits: Number of data splits.
         n_examples: Number of examples.
         n_params: Number of parameters in the model.
+        model: String representing the model function and version.
         """
         if not path.endswith('.h5'):
             path += '.h5'
@@ -29,6 +30,7 @@ class Results(object):
         self.n_splits = n_splits
         self.n_examples = n_examples
         self.n_params = n_params
+        self.model = model
 
         try:
             with h5py.File(path, 'r+') as f:
@@ -51,8 +53,10 @@ class Results(object):
         models_shape = (self.n_methods, self.n_splits, self.n_params)
         if 'models' not in f:
             f.create_dataset('models', shape=models_shape)
+            f['models'].attrs['model'] = self.model
         else:
             assert f['models'].shape == models_shape
+            assert f['models'].attrs['model'] == self.model
 
         run_flag_shape = (self.n_methods, self.n_splits, self.n_examples)
         if 'run_flag' not in f:

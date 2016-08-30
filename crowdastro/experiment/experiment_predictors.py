@@ -15,6 +15,7 @@ import logging
 
 import h5py
 import numpy
+import sklearn
 
 from . import runners
 from .results import Results
@@ -28,9 +29,11 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path):
         n_examples, n_params = training_h5['features'].shape
         n_params += 1  # Bias term.
         methods = ['LR(Norris)', 'LR(Fan)', 'LR(RGZ-MV)']
+        model = '{} sklearn.linear_model.LogisticRegression'.format(
+                sklearn.__version__)
 
         results = Results(results_h5_path, methods, n_splits, n_examples,
-                          n_params)
+                          n_params, model)
 
         features = collections.defaultdict(
                 lambda: training_h5['features'].value)
