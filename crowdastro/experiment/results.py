@@ -42,22 +42,29 @@ class Results(object):
 
     def _create(self, f):
         """Creates the results dataset."""
+        results_shape = (self.n_methods, self.n_splits, self.n_examples)
         if 'results' not in f:
-            f.create_dataset('results',
-                    shape=(self.n_methods, self.n_splits, self.n_examples))
+            f.create_dataset('results', shape=results_shape)
+        else:
+            assert f['results'].shape == results_shape
+
+        models_shape = (self.n_methods, self.n_splits, self.n_params)
         if 'models' not in f:
-            f.create_dataset('models',
-                    shape=(self.n_methods, self.n_splits, self.n_params))
+            f.create_dataset('models', shape=models_shape)
+        else:
+            assert f['models'].shape == models_shape
+
+        run_flag_shape = (self.n_methods, self.n_splits, self.n_examples)
         if 'run_flag' not in f:
-            f.create_dataset('run_flag',
-                    shape=(self.n_methods, self.n_splits, self.n_examples),
-                    data=numpy.zeros(
-                            (self.n_methods, self.n_splits, self.n_examples)))
+            f.create_dataset('run_flag', shape=run_flag_shape,
+                             data=numpy.zeros(run_flag_shape))
+        else:
+            assert f['run_flag'].shape == run_flag_shape
 
     def store_trial(self, method, split, results, params, indices=None):
         """Stores results from one trial.
 
-        method: Method ID. int
+        method: Method. str
         split: Split ID. int
         results: Results for each example. (n_examples,) array
         params: (n_params,) array representing the classifier.
@@ -77,14 +84,27 @@ class Results(object):
         with h5py.File(self.h5_path, 'r') as f:
             return f['models'].value
 
-    def __getitem__(self, *args, **kwargs):
+    def get_mask(self, method, split):
+        """Get a mask for trials that have been run successfully.
+
+        Mask will be 1 for trials that have run, and 0 otherwise.
+
+        method: Method. str
+        split: Split ID. int
+        """
+        with h5py.File(self.h5_path, 'r') as f:
+            return f['run_flag'][self.methods[method], split].astype(bool)
+
+    def __getitem__(self, item, *args, **kwargs):
         with h5py.File(self.h5_path, 'r') as f:
             try:
-                args = (self.methods[args[0]],) + args[1:]
-            except TypeError:
+                item = (self.methods[item[0]],) + item[1:]
+            except TypeError as e:
+                print(item)
+                print(e)
                 pass
 
-            return f['results'].__getitem__(*args, **kwargs)
+            return f['results'].__getitem__(item, *args, **kwargs)
 
     def __repr__(self):
         return 'Results({}, methods={}, n_splits={}, n_examples={}, ' \

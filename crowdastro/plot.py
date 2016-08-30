@@ -10,6 +10,7 @@ import astropy.wcs
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
 import numpy
+import sklearn.metrics
 
 from .config import config
 
@@ -88,3 +89,46 @@ def plot_classifications_row(atlas_vector, ir_matrix, classifier_labels,
     plt.title('Norris')
     plot_classifications(atlas_vector, ir_matrix, norris_labels,
                          base_size=base_size, noise=noise)
+
+
+def vertical_scatter(xs, ys, style='bx', rotation='vertical'):
+    """Plots a vertical scatter plot.
+
+    xs: List of x labels.
+    ys: List of lists of points to scatter vertically.
+    style: Plots point style. Default 'bx'.
+    rotation: x label rotation. Default 'vertical'.
+    """
+    for x in range(len(xs)):
+        plt.plot([x] * len(ys[x]), ys[x], style)
+    plt.xticks(range(len(xs)), xs, rotation=rotation)
+
+
+def vertical_scatter_ba(results, targets, **kwargs):
+    """Plot a vertical scatter plot of balanced accuracies.
+
+    results: Results object.
+    targets: Target labels.
+    kwargs: Keyword arguments passed to vertical_scatter.
+    """
+    xs = sorted(results.methods, key=results.methods.get)
+    ys = []
+    for method in xs:
+        y = []
+        for split in range(results.n_splits):
+            mask = results.get_mask(method, split)
+            split_results = results[method, split][mask].round()
+            split_targets = targets[mask]
+            if len(split_results) == 0:
+                continue
+            # Calculate balanced accuracy.
+            cm = sklearn.metrics.confusion_matrix(split_targets, split_results)
+            tp = cm[1, 1]
+            n, p = cm.sum(axis=1)
+            tn = cm[0, 0]
+            ba = (tp / p + tn / n) / 2
+            y.append(ba)
+        ys.append(y)
+
+    vertical_scatter(xs, ys, **kwargs)
+    plt.ylabel('Balanced accuracy (%)')
