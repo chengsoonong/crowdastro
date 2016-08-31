@@ -83,6 +83,19 @@ class Results(object):
                 f['run_flag'][self.methods[method], split] = 1
             f['models'][self.methods[method], split] = params
 
+    def has_run(self, method, split):
+        """Returns whether a trial has run successfully.
+
+        If *any* example in the trial has been run successfully, then the trial
+        has run successfully.
+
+        method: Method. str.
+        split: Split ID. int
+        -> bool
+        """
+        with h5py.File(self.h5_path, 'r') as f:
+            return any(f['run_flag'][self.methods[method], split].astype(bool))
+
     @property
     def models(self):
         with h5py.File(self.h5_path, 'r') as f:
@@ -95,6 +108,7 @@ class Results(object):
 
         method: Method. str
         split: Split ID. int
+        -> (n_examples,) array
         """
         with h5py.File(self.h5_path, 'r') as f:
             return f['run_flag'][self.methods[method], split].astype(bool)

@@ -14,14 +14,17 @@ import collections
 import logging
 
 import h5py
+import matplotlib.pyplot as plt
 import numpy
 import sklearn
 
 from . import runners
 from .results import Results
+from ..plot import vertical_scatter_ba
 
 
-def main(crowdastro_h5_path, training_h5_path, results_h5_path):
+def main(crowdastro_h5_path, training_h5_path, results_h5_path,
+         overwrite=False, plot=False):
     with h5py.File(crowdastro_h5_path, 'r') as crowdastro_h5, \
             h5py.File(training_h5_path, 'r') as training_h5:
 
@@ -50,7 +53,12 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path):
                 logging.info('Method {} ({}/{})'.format(method, method_id + 1,
                                                         len(methods)))
                 runners.lr(results, method, split_id, features[method],
-                           targets[method], list(test_set))
+                           targets[method], list(test_set), overwrite=overwrite)
+
+        if plot:
+            vertical_scatter_ba(results,
+                    crowdastro_h5['/wise/cdfs/norris_labels'].value)
+            plt.show()
 
 
 if __name__ == '__main__':
@@ -61,8 +69,12 @@ if __name__ == '__main__':
                         help='HDF5 training data file')
     parser.add_argument('--results', default='data/results.h5',
                         help='HDF5 results data file')
+    parser.add_argument('--overwrite', action='store_true',
+                        help='Overwrite existing results')
+    parser.add_argument('--plot', action='store_true', help='Generate a plot')
     args = parser.parse_args()
 
     logging.root.setLevel(logging.INFO)
 
-    main(args.crowdastro, args.training, args.results)
+    main(args.crowdastro, args.training, args.results, overwrite=args.overwrite,
+         plot=args.plot)
