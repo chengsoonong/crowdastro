@@ -6,33 +6,27 @@ The Australian National University
 """
 
 import json
-import os.path
+import os
+import pkg_resources
 
 import numpy
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 
-# TODO(MatthewJA): Don't hardcode this.
-CONFIG_PATH = os.path.join(SCRIPT_PATH, '../crowdastro.json')
-
-with open(CONFIG_PATH) as config_file:
-    config = json.load(config_file)
+# TODO(MatthewJA): Don't hardcode this location.
+config = json.loads(pkg_resources.resource_string(
+        __name__, 'crowdastro.json').decode('utf-8'))
 
 # Normalise paths.
-# TODO(MatthewJA): Also don't hardcode these. They should be relative to the
-# JSON(?).
+# TODO(MatthewJA): Also don't hardcode these.
 config['data_sources']['atlas_catalogue'] = os.path.normpath(
-        os.path.join(SCRIPT_PATH, '..',
-                     config['data_sources']['atlas_catalogue']))
+        os.path.join(os.getcwd(), config['data_sources']['atlas_catalogue']))
 config['data_sources']['swire_catalogue'] = os.path.normpath(
-        os.path.join(SCRIPT_PATH, '..',
-                     config['data_sources']['swire_catalogue']))
+        os.path.join(os.getcwd(), config['data_sources']['swire_catalogue']))
 config['data_sources']['atlas_image'] = os.path.normpath(
-        os.path.join(SCRIPT_PATH, '..',
-                     config['data_sources']['atlas_image']))
+        os.path.join(os.getcwd(), config['data_sources']['atlas_image']))
 config['data_sources']['norris_coords'] = os.path.normpath(
-        os.path.join(SCRIPT_PATH, '..',
-                     config['data_sources']['norris_coords']))
+        os.path.join(os.getcwd(), config['data_sources']['norris_coords']))
 
 # Generate some helper configuration info.
 config['surveys']['atlas']['click_to_fits_x'] = (

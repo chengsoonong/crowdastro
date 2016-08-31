@@ -57,8 +57,11 @@ setup(
         'dev': ['scikit-image'],
         'test': [],
     },
+    package_dir={
+        'crowdastro': 'crowdastro',
+    },
     package_data={
-        'crowdastro': ['crowdastro.json'],
+        'crowdastro': ['../README.rst', 'crowdastro.json'],
     },
     entry_points={
         'console_scripts': [
