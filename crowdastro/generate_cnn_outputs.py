@@ -10,7 +10,6 @@ import csv
 import logging
 
 import h5py
-import keras
 import numpy
 
 from .config import config
@@ -26,6 +25,8 @@ def generate(training_h5, cnn_model_json, cnn_weights_path):
     cnn_model_path: JSON model file.
     cnn_weights_path: Path to CNN weights HDF5 file.
     """
+    # Have to import Keras here because it dumps to stdout...
+    import keras
     n_static = 6 if training_h5.attrs['ir_survey'] == 'swire' else 7
     cnn = keras.models.model_from_json(cnn_model_json.read())
     cnn.load_weights(cnn_weights_path)
@@ -60,16 +61,25 @@ def generate(training_h5, cnn_model_json, cnn_weights_path):
     del training_h5['_features']
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+def _populate_parser(parser):
+    parser.description = 'Generates convolutional neural network outputs for ' \
+                         'training data.'
     parser.add_argument('--training', default='data/training.h5',
                         help='HDF5 training file')
     parser.add_argument('--model', default='data/model.json',
                         help='JSON CNN model')
     parser.add_argument('--weights', default='data/weights.h5',
                         help='HDF5 CNN weights')
-    args = parser.parse_args()
 
+
+def _main(args):
     with h5py.File(args.training, 'r+') as training_h5:
         with open(args.model, 'r') as cnn_model_json:
             generate(training_h5, cnn_model_json, args.weights)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    _populate_parser(parser)
+    args = parser.parse_args()
+    _main(args)
