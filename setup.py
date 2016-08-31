@@ -15,7 +15,7 @@ from crowdastro import __description__, __version__
 here = path.abspath(path.dirname(__file__))
 
 # Load README for long descriptions.
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
