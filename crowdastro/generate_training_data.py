@@ -37,44 +37,50 @@ def generate(f_h5, out_f_h5):
     """
     if f_h5.attrs['ir_survey'] == 'swire':
         swire = f_h5['/swire/cdfs/numeric']
-        fluxes = swire[:, 2:7]
+        astro_features = swire[:, 2:7]
         distances = swire[:, 7].reshape((-1, 1))
         images = swire[:, 8:]
         coords = swire[:, :2]
     elif f_h5.attrs['ir_survey'] == 'wise':
         wise = f_h5['/wise/cdfs/numeric']
-        fluxes = wise[:, 2:6]
+        magnitudes = wise[:, 2:6]
         distances = wise[:, 6].reshape((-1, 1))
         images = wise[:, 7:]
         coords = wise[:, :2]
 
+        # Magnitude differences are probably useful features.
+        w1_w2 = magnitudes[:, 0] - magnitudes[:, 1]
+        w2_w3 = magnitudes[:, 1] - magnitudes[:, 2]
+
+        # Converting the magnitudes to a linear scale seems to improve
+        # performance.
+        linearised_magnitudes = numpy.power(10, -0.4 * magnitudes)
+        w1_w2 = numpy.power(10, -0.4 * w1_w2)
+        w2_w3 = numpy.power(10, -0.4 * w2_w3)
+        astro_features = numpy.concatenate([linearised_magnitudes,
+                w1_w2.reshape((-1, 1)),
+                w2_w3.reshape((-1, 1))], axis=1)
+
 
     # We now need to find the labels for each.
     truths = set(f_h5['/atlas/cdfs/consensus_objects'][:, 1])
-    labels = numpy.array([o in truths for o in range(len(fluxes))])
+    labels = numpy.array([o in truths for o in range(len(astro_features))])
 
-    assert len(labels) == len(fluxes)
-    assert len(fluxes) == len(distances)
+    assert len(labels) == len(astro_features)
+    assert len(astro_features) == len(distances)
     assert len(distances) == len(images)
 
-    features = numpy.hstack([fluxes, distances, images])
+    features = numpy.hstack([astro_features, distances, images])
     n_astro = features.shape[1] - images.shape[1]
-
-    if f_h5.attrs['ir_survey'] == 'swire':
-        assert fluxes.shape[1] == 5
-        assert features.shape[1] == 6 + (config['patch_radius'] * 2) ** 2
-        assert n_astro == 6
-    elif f_h5.attrs['ir_survey'] == 'wise':
-        assert fluxes.shape[1] == 4
-        assert features.shape[1] == 5 + (config['patch_radius'] * 2) ** 2
-        assert n_astro == 5
-
 
     # Save to HDF5.
     out_f_h5.create_dataset('labels', data=labels)
     out_f_h5.create_dataset('features', data=features)
     out_f_h5.create_dataset('positions', data=coords)
     out_f_h5.attrs['ir_survey'] = f_h5.attrs['ir_survey']
+
+    # These testing sets are used for training the CNN. For training/testing
+    # models, use crowdastro.generate_test_sets.
 
     # We want to ensure our training set is never in our testing set, so
     # 1. assign all ATLAS objects to a train or test set,
@@ -96,7 +102,7 @@ def generate(f_h5, out_f_h5):
     is_atlas_test[atlas_test_indices] = 1
     is_atlas_train[atlas_train_indices] = 1
 
-    n_ir = len(fluxes)
+    n_ir = len(astro_features)
     is_ir_train = numpy.ones((n_ir))
     is_ir_test = numpy.zeros((n_ir))
 
@@ -122,6 +128,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     with h5py.File(args.i, 'r') as f_h5:
-        assert f_h5.attrs['version'] == '0.5.0'
+        assert f_h5.attrs['version'] == '0.5.1'
         with h5py.File(args.o, 'w') as out_f_h5:
             generate(f_h5, out_f_h5)
