@@ -10,6 +10,7 @@ import logging
 import sys
 
 from . import __description__
+from . import __version__
 from . import compile_cnn
 from . import consensuses
 from . import generate_cnn_outputs
@@ -26,6 +27,8 @@ def main():
     parser = argparse.ArgumentParser(description=__description__)
     parser.add_argument('--verbose', '--v', '-v', action='store_true',
             help='verbose output')
+    parser.add_argument('--version', action='store_true',
+            help='get version number')
     subparsers = parser.add_subparsers(dest='subcommand')
 
     parser_compile_cnn = subparsers.add_parser('compile_cnn',
@@ -82,6 +85,10 @@ def main():
     logging.captureWarnings(True)
     if args.verbose:
         logging.root.setLevel(logging.DEBUG)
+
+    if args.version:
+        print(__version__)
+        return
 
     subcommands = {
         'compile_cnn': compile_cnn._main,

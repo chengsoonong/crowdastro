@@ -45,6 +45,7 @@ setup(
     install_requires=[
         'astropy',
         'h5py',
+        'keras',
         'matplotlib',
         'numpy',
         'pandas',
