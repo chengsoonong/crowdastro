@@ -1,4 +1,4 @@
-"""Trains a convolutional neural network model.
+"""Trains a convolutional neural network.
 
 Matthew Alger
 The Australian National University
@@ -11,7 +11,6 @@ import os.path
 
 import astropy.io.fits
 import h5py
-import keras.models
 import numpy
 
 from .config import config
@@ -29,6 +28,7 @@ def train(training_h5, model_json, weights_path, epochs, batch_size):
     epochs: Number of training epochs.
     batch_size: Batch size.
     """
+    import keras.models
     model = keras.models.model_from_json(model_json.read())
     model.compile(loss='binary_crossentropy', optimizer='adadelta')
 
@@ -62,8 +62,8 @@ def train(training_h5, model_json, weights_path, epochs, batch_size):
     model.save_weights(weights_path, overwrite=True)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+def _populate_parser(parser):
+    parser.description = 'Trains a convolutional neural network.'
     parser.add_argument('--h5', default='data/training.h5',
                         help='HDF5 training data file')
     parser.add_argument('--model', default='data/model.json',
@@ -73,11 +73,17 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', default=10,
                         help='number of epochs to train for')
     parser.add_argument('--batch_size', default=100, help='batch size')
-    args = parser.parse_args()
 
-    logging.root.setLevel(logging.DEBUG)
 
+def _main(args):
     with h5py.File(args.h5, 'r') as training_h5:
         with open(args.model, 'r') as model_json:
             train(training_h5, model_json, args.output, int(args.epochs),
                   int(args.batch_size))
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    _populate_parser(parser)
+    args = parser.parse_args()
+    _main(args)

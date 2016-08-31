@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Repacks an H5 file.
+Repacks an HDF5 file.
 
 Matthew Alger
 The Australian National University
@@ -14,11 +14,13 @@ import tempfile
 
 import h5py
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('h5', help='HDF5 file to repack')
-    args = parser.parse_args()
 
+def _populate_parser(parser):
+    parser.description = 'Repacks an HDF5 file.'
+    parser.add_argument('h5', help='HDF5 file to repack')
+
+
+def _main(args):
     with tempfile.TemporaryDirectory() as tempdir:
         temp_h5 = os.path.join(tempdir, 'temp.h5')
         with h5py.File(args.h5, 'r') as input_h5:
@@ -28,3 +30,10 @@ if __name__ == '__main__':
 
         os.remove(args.h5)
         shutil.copyfile(temp_h5, args.h5)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    _populate_parser(parser)
+    args = parser.parse_args()
+    _main(args)

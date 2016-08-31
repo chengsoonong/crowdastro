@@ -1,4 +1,4 @@
-"""Tests classifiers on subjects.
+"""Tests classifiers on radio subjects.
 
 Matthew Alger
 The Australian National University
@@ -69,8 +69,9 @@ def test(inputs_h5, training_h5, classifier_path, astro_transformer_path,
 
     print('{:.02%}'.format(n_correct / n_total))
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+
+def _populate_parser(parser):
+    parser.description = 'Tests classifiers on radio subjects.'
     parser.add_argument('--inputs', default='data/crowdastro.h5',
                         help='HDF5 crowdastro data file')
     parser.add_argument('--training', default='data/training.h5',
@@ -87,11 +88,19 @@ if __name__ == '__main__':
                         help='ignore astro features')
     parser.add_argument('--no_cnn', action='store_false', default=True,
                         help='ignore CNN features')
-    args = parser.parse_args()
 
+
+def _main(args):
     with h5py.File(args.training, 'r') as training_h5:
         with h5py.File(args.inputs, 'r') as inputs_h5:
             assert inputs_h5.attrs['version'] == '0.5.0'
             test(inputs_h5, training_h5, args.classifier,
                  args.astro_transformer, args.image_transformer,
                  use_astro=args.no_astro, use_cnn=args.no_cnn)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    _populate_parser(parser)
+    args = parser.parse_args()
+    _main(args)

@@ -19,7 +19,6 @@ import numpy
 import scipy.spatial.distance
 import sklearn.neighbors
 
-from . import rgz_data as data
 from .config import config
 from .exceptions import CatalogueError
 
@@ -47,6 +46,8 @@ def import_atlas(f_h5, test=False):
     f_h5: An HDF5 file.
     test: Flag to run on only 10 subjects. Default False.
     """
+    from . import rgz_data as data
+
     # Fetch groups from HDF5.
     cdfs = f_h5['/atlas/cdfs']
 
@@ -453,6 +454,7 @@ def make_radio_combination_signature(radio_annotation, wcs, atlas_positions,
     pix_offset: (x, y) pixel position of this radio subject on the ATLAS image.
     -> Something immutable
     """
+    from . import rgz_data as data
     # TODO(MatthewJA): This only works on ATLAS. Generalise.
     # My choice of immutable object will be stringified crowdastro ATLAS
     # indices.
@@ -653,6 +655,7 @@ def import_classifications(f_h5, test=False):
     test: Flag to run on only 10 subjects. Default False.
     """
     # TODO(MatthewJA): This only works for ATLAS/CDFS. Generalise.
+    from . import rgz_data as data
     atlas_positions = f_h5['/atlas/cdfs/numeric'][:, :2]
     atlas_ids = f_h5['/atlas/cdfs/string']['zooniverse_id']
     classification_positions = []
@@ -715,28 +718,17 @@ def import_classifications(f_h5, test=False):
                                         dtype=combinations_dtype)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+def _populate_parser(parser):
+    parser.description = 'Imports and standardises data into crowdastro.'
     parser.add_argument('--h5', default='data/crowdastro.h5',
                         help='HDF5 output file')
     parser.add_argument('--test', action='store_true', default=False,
                         help='Run with a small number of subjects',)
-    parser.add_argument('-v', '--verbose', default=False, action='store_true')
     parser.add_argument('--ir', choices={'swire', 'wise'},
                         default='swire', help='which infrared survey to use')
-    args = parser.parse_args()
 
-    logging.captureWarnings(True)
 
-    if args.verbose:
-        logging.root.setLevel(logging.DEBUG)
-    else:
-        warnings.simplefilter('ignore',
-                category=astropy.utils.exceptions.AstropyWarning)
-        warnings.simplefilter('ignore',
-                category=astropy.utils.exceptions.AstropyUserWarning)
-        warnings.simplefilter('ignore', UserWarning)
-
+def _main(args):
     with h5py.File(args.h5, 'w') as f_h5:
         prep_h5(f_h5, args.ir)
         import_atlas(f_h5, test=args.test)
@@ -747,3 +739,10 @@ if __name__ == '__main__':
         import_norris(f_h5)
         import_fan(f_h5)
         import_classifications(f_h5)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    _populate_parser(parser)
+    args = parser.parse_args()
+    _main(args)

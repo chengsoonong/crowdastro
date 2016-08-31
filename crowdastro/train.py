@@ -100,8 +100,8 @@ def train(training_h5, classifier_out_path, astro_transformer_out_path,
     return classifier, astro_transformer, image_transformer
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+def _populate_parser(parser):
+    parser.description = 'Trains classifiers.'
     parser.add_argument('--training', default='data/training.h5',
                         help='HDF5 training data file')
     parser.add_argument('--c_out', default='data/classifier.pkl',
@@ -119,11 +119,17 @@ if __name__ == '__main__':
                         help='ignore CNN features')
     parser.add_argument('--n_jobs', default=-1, type=int,
                         help='number of cores to use')
-    args = parser.parse_args()
 
-    logging.root.setLevel(logging.DEBUG)
 
+def _main(args):
     with h5py.File(args.training, 'r') as training_h5:
         train(training_h5, args.c_out, args.at_out, args.it_out,
               classifier=args.classifier, use_astro=args.no_astro,
               use_cnn=args.no_cnn)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    _populate_parser(parser)
+    args = parser.parse_args()
+    _main(args)

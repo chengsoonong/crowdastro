@@ -119,15 +119,24 @@ def generate(f_h5, out_f_h5):
     out_f_h5.create_dataset('is_ir_test', data=is_ir_test.astype(bool))
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+def _populate_parser(parser):
+    parser.description = 'Generates training data (potential hosts and their ' \
+                         'astronomical features).'
     parser.add_argument('-i', default='data/crowdastro.h5',
                         help='HDF5 input file')
     parser.add_argument('-o', default='data/training.h5',
                         help='HDF5 output file')
-    args = parser.parse_args()
 
+
+def _main(args):
     with h5py.File(args.i, 'r') as f_h5:
         assert f_h5.attrs['version'] == '0.5.1'
         with h5py.File(args.o, 'w') as out_f_h5:
             generate(f_h5, out_f_h5)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    _populate_parser(parser)
+    args = parser.parse_args()
+    _main(args)

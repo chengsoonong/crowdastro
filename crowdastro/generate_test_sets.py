@@ -72,8 +72,9 @@ def main(f_h5, n, p):
                         data=test_sets)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+def _populate_parser(parser):
+    parser.description = 'Generates sets of testing indices for the galaxy ' \
+                         'classification task.'
     parser.add_argument('--h5', default='data/crowdastro.h5',
                         help='Crowdastro HDF5 file')
     parser.add_argument('--n', default=5, type=int,
@@ -81,7 +82,14 @@ if __name__ == '__main__':
     parser.add_argument('--p', default=0.5, type=float,
                         help='Percentage size of test sets')
 
-    args = parser.parse_args()
 
+def _main(args):
     with h5py.File(args.h5, 'r+') as f_h5:
         main(f_h5, args.n, args.p)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    _populate_parser(parser)
+    args = parser.parse_args()
+    _main(args)
