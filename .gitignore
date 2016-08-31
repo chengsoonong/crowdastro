@@ -83,6 +83,7 @@ site/*
 *.csv
 *.json
 *.h5
+!crowdastro/crowdastro.json
 
 # Mac OS X
 *.DS_Store
