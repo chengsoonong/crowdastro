@@ -62,7 +62,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'my_project = crowdastro.__main__:main',
+            'crowdastro = crowdastro.__main__:main',
         ],
     },
 )
