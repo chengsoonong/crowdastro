@@ -300,6 +300,6 @@ if __name__ == '__main__':
         logging.root.setLevel(logging.DEBUG)
 
     with h5py.File(args.h5, 'r+') as f_h5:
-        assert f_h5.attrs['version'] == '0.5.0'
+        assert f_h5.attrs['version'] == '0.5.1'
         ir_survey = f_h5.attrs['ir_survey']
         find_consensuses(f_h5, ir_survey)

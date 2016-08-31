@@ -26,7 +26,7 @@ def generate(training_h5, cnn_model_json, cnn_weights_path):
     cnn_model_path: JSON model file.
     cnn_weights_path: Path to CNN weights HDF5 file.
     """
-    n_static = 6 if training_h5.attrs['ir_survey'] == 'swire' else 5
+    n_static = 6 if training_h5.attrs['ir_survey'] == 'swire' else 7
     cnn = keras.models.model_from_json(cnn_model_json.read())
     cnn.load_weights(cnn_weights_path)
     cnn.compile(loss='binary_crossentropy', optimizer='adadelta')
