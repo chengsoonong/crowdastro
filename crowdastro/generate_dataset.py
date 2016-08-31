@@ -30,10 +30,12 @@ def _populate_parser(parser):
     parser.add_argument('-o', default='data/dataset.h5',
                         help='HDF5 output file')
 
+
 def _main(args):
     with h5py.File(args.i, 'r') as f_h5:
         with h5py.File(args.o, 'w') as out_f_h5:
             generate(f_h5, out_f_h5)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
