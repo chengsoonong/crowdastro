@@ -18,12 +18,20 @@ ARCMIN = 1 / 60  # deg
 FITS_CONVENTION = 1
 IMAGE_DIAMETER = config['surveys']['atlas']['fits_width']
 
-with astropy.io.fits.open(config['data_sources']['atlas_image'],
-                          ignore_blank=True) as atlas_image:
-    wcs = astropy.wcs.WCS(atlas_image[0].header).dropaxis(3).dropaxis(2)
+wcs = None
+
+def _init_wcs():
+    """Initialise the ATLAS image WCS. Sets global variable wcs."""
+    with astropy.io.fits.open(config['data_sources']['atlas_image'],
+                              ignore_blank=True) as atlas_image:
+        global wcs
+        wcs = astropy.wcs.WCS(atlas_image[0].header).dropaxis(3).dropaxis(2)
 
 
 def ra_dec_to_pixels(subject_coords, coords):
+    if wcs is None:
+        _init_wcs()
+
     offset, = wcs.all_world2pix([subject_coords], FITS_CONVENTION)
     # The coords are of the middle of the subject.
     coords = wcs.all_world2pix(coords, FITS_CONVENTION)
@@ -91,13 +99,13 @@ def plot_classifications_row(atlas_vector, ir_matrix, classifier_labels,
                          base_size=base_size, noise=noise)
 
 
-def vertical_scatter(xs, ys, style='bx', rotation='vertical'):
+def vertical_scatter(xs, ys, style='bx', rotation='horizontal'):
     """Plots a vertical scatter plot.
 
     xs: List of x labels.
     ys: List of lists of points to scatter vertically.
     style: Plots point style. Default 'bx'.
-    rotation: x label rotation. Default 'vertical'.
+    rotation: x label rotation. Default 'horizontal'.
     """
     for x in range(len(xs)):
         plt.plot([x] * len(ys[x]), ys[x], style)
@@ -131,4 +139,5 @@ def vertical_scatter_ba(results, targets, **kwargs):
         ys.append(y)
 
     vertical_scatter(xs, ys, **kwargs)
+    plt.xlim((-0.5, len(xs) - 0.5))  # Adds a little buffer.
     plt.ylabel('Balanced accuracy (%)')
