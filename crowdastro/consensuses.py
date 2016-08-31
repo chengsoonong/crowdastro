@@ -289,17 +289,22 @@ def find_consensuses(f_h5, ir_survey):
                                         data=cons_objects, dtype=float)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+def _populate_parser(parser):
+    parser.description = 'Generates Radio Galaxy Zoo crowd consensus ' \
+                         'classifications.'
     parser.add_argument('--h5', default='data/crowdastro.h5',
                         help='HDF5 IO file')
-    parser.add_argument('-v', '--verbose', default=False, action='store_true')
-    args = parser.parse_args()
 
-    if args.verbose:
-        logging.root.setLevel(logging.DEBUG)
 
+def _main(args):
     with h5py.File(args.h5, 'r+') as f_h5:
         assert f_h5.attrs['version'] == '0.5.1'
         ir_survey = f_h5.attrs['ir_survey']
         find_consensuses(f_h5, ir_survey)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    _populate_parser(parser)
+    args = parser.parse_args()
+    _main(args)
