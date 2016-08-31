@@ -7,13 +7,15 @@ The Australian National University
 
 import argparse
 
-import keras.layers.core as core
-import keras.layers.convolutional as conv
-import keras.models as models
 
+def main(n_filters, conv_size, pool_size, dropout, hidden_layer_size,
+         patch_size, out_path=None):
+    # Imports must be in the function, or whenever we import this module, Keras
+    # will dump to stdout.
+    import keras.layers.core as core
+    import keras.layers.convolutional as conv
+    import keras.models as models
 
-def main(out_path, n_filters, conv_size, pool_size, dropout, hidden_layer_size,
-         patch_size):
     model = models.Sequential()
 
     model.add(conv.Convolution2D(n_filters, conv_size, conv_size,
@@ -34,12 +36,16 @@ def main(out_path, n_filters, conv_size, pool_size, dropout, hidden_layer_size,
     model.compile(loss='binary_crossentropy', optimizer='adadelta')
 
     model_json = model.to_json()
-    with open(out_path, 'w') as f:
-        f.write(model_json)
+
+    if out_path is not None:
+        with open(out_path, 'w') as f:
+            f.write(model_json)
+
+    return model_json
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+def _populate_parser(parser):
+    parser.description = 'Compiles a convolutional neural network to JSON.'
     parser.add_argument('--out_path', help='path to output model JSON',
                         default='data/model.json')
     parser.add_argument('--n_filters', help='number of convolutional filters',
@@ -54,7 +60,15 @@ if __name__ == '__main__':
                         default=64, type=int)
     parser.add_argument('--patch_size', help='size of image patches',
                         default=32, type=int)
-    args = parser.parse_args()
 
-    main(args.out_path, args.n_filters, args.conv_size, args.pool_size,
-         args.dropout, args.hidden_layer_size, args.patch_size)
+
+def _main(args):
+    main(args.n_filters, args.conv_size, args.pool_size, args.dropout,
+         args.hidden_layer_size, args.patch_size, out_path=args.out_path)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    _populate_parser(parser)
+    args = parser.parse_args()
+    _main(args)

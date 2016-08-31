@@ -61,4 +61,9 @@ setup(
     package_data={
         'crowdastro': ['crowdastro.json'],
     },
+    entry_points={
+        'console_scripts': [
+            'my_project = crowdastro.__main__:main',
+        ],
+    },
 )
