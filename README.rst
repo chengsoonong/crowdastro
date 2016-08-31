@@ -6,7 +6,7 @@ cross-identifying radio objects and their host galaxies, using
 crowdsourced labels from the `Radio Galaxy
 Zoo <http://radio.galaxyzoo.org>`__.
 
-|Travis-CI| |Documentation Status| |DOI|
+|PyPI| |Travis-CI| |Documentation Status| |DOI|
 
 For setup details, see the documentation on `Read the
 Docs <http://crowdastro.readthedocs.io/en/latest/>`__.
