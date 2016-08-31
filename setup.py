@@ -10,7 +10,7 @@ The Australian National University
 from setuptools import setup, find_packages
 from os import path
 
-from crowdastro import __version__
+from crowdastro import __description__, __version__
 
 here = path.abspath(path.dirname(__file__))
 
@@ -21,8 +21,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 setup(
     name='crowdastro',
     version=__version__,
-    description='Automated cross-identification of radio objects and host '
-                'galaxies using crowdsourced labels from the Radio Galaxy Zoo.',
+    description=__description__,
     long_description=long_description,
     url='https://github.com/chengsoonong/crowdastro',
     # Setup scripts don't support multiple authors, so this should be the main

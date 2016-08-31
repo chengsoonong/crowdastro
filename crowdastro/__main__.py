@@ -8,10 +8,11 @@ The Australian National University
 import argparse
 import sys
 
+from . import __description__
 from . import compile_cnn
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__description__)
     subparsers = parser.add_subparsers(dest='subcommand')
 
     parser_compile_cnn = subparsers.add_parser('compile_cnn',

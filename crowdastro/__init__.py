@@ -8,3 +8,6 @@ The Australian National University
 """
 
 __version__ = '0.0.1a0'
+__description__ = 'Automated cross-identification of radio objects and host ' \
+                  'galaxies using crowdsourced labels from the Radio Galaxy ' \
+                  'Zoo.'
