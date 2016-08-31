@@ -17,6 +17,8 @@ For a brief description of each notebook, see the documentation
 The cross-identification dataset is available `on
 Zenodo <http://dx.doi.org/10.5281/zenodo.58316>`__.
 
+.. |PyPI| image:: https://img.shields.io/pypi/v/crowdastro.svg
+   :target: https://pypi.python.org/pypi/crowdastro
 .. |Travis-CI| image:: https://travis-ci.org/chengsoonong/crowdastro.svg?branch=master
    :target: https://travis-ci.org/chengsoonong/crowdastro
 .. |Documentation Status| image:: https://readthedocs.org/projects/crowdastro/badge/?version=latest
