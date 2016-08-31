@@ -112,11 +112,12 @@ def vertical_scatter(xs, ys, style='bx', rotation='horizontal'):
     plt.xticks(range(len(xs)), xs, rotation=rotation)
 
 
-def vertical_scatter_ba(results, targets, **kwargs):
+def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), **kwargs):
     """Plot a vertical scatter plot of balanced accuracies.
 
     results: Results object.
     targets: Target labels.
+    ylim: (lower, upper) y axis.
     kwargs: Keyword arguments passed to vertical_scatter.
     """
     xs = sorted(results.methods, key=results.methods.get)
@@ -139,5 +140,6 @@ def vertical_scatter_ba(results, targets, **kwargs):
         ys.append(y)
 
     vertical_scatter(xs, ys, **kwargs)
+    plt.ylim(ylim)
     plt.xlim((-0.5, len(xs) - 0.5))  # Adds a little buffer.
     plt.ylabel('Balanced accuracy (%)')
