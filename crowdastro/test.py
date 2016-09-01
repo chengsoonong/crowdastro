@@ -39,8 +39,7 @@ def test(inputs_h5, training_h5, classifier_path, astro_transformer_path,
     astro_transformer = sklearn.externals.joblib.load(astro_transformer_path)
     image_transformer = sklearn.externals.joblib.load(image_transformer_path)
 
-    assert training_h5.attrs['ir_survey'] == inputs_h5.attrs['ir_survey']
-    n_static = 6 if training_h5.attrs['ir_survey'] == 'swire' else 5
+    n_static = 4+1+2 if training_h5.attrs['ir_survey'] == 'wise' else 5+1
 
     test_indices = training_h5['is_atlas_test'].value
     numeric_subjects = inputs_h5['/atlas/cdfs/numeric'][test_indices, :]
@@ -93,7 +92,7 @@ def _populate_parser(parser):
 def _main(args):
     with h5py.File(args.training, 'r') as training_h5:
         with h5py.File(args.inputs, 'r') as inputs_h5:
-            assert inputs_h5.attrs['version'] == '0.5.0'
+            assert inputs_h5.attrs['version'] == '0.5.1'
             test(inputs_h5, training_h5, args.classifier,
                  args.astro_transformer, args.image_transformer,
                  use_astro=args.no_astro, use_cnn=args.no_cnn)

@@ -40,7 +40,8 @@ def train(training_h5, classifier_out_path, astro_transformer_out_path,
     """
     if not any([use_astro, use_cnn]):
         raise ValueError('Must have features.')
-    n_static = 6 if training_h5.attrs['ir_survey'] == 'swire' else 5
+
+    n_static = 4+1+2 if training_h5.attrs['ir_survey'] == 'wise' else 5+1
 
     train_indices = training_h5['is_ir_train'].value
     outputs = training_h5['labels'].value[train_indices]
