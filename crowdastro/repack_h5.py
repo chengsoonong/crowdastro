@@ -27,6 +27,8 @@ def _main(args):
             with h5py.File(temp_h5, 'w') as output_h5:
                 for key in input_h5:
                     output_h5[key] = input_h5[key].value
+                for key, val in input_h5.attrs.items():
+                    output_h5.attrs[key] = val
 
         os.remove(args.h5)
         shutil.copyfile(temp_h5, args.h5)
