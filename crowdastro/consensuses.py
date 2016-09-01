@@ -176,7 +176,7 @@ def find_consensuses(f_h5, ir_survey):
     # boolean mask contained in the positions array.
     is_primary = class_positions[:, 3].astype(bool)
     class_positions = class_positions[is_primary, :3]
-    class_combinations = class_combinations[is_primary, :]
+    class_combinations = class_combinations[is_primary]
 
     assert len(class_positions) == len(class_combinations)
     assert class_positions.shape[1] == 3
