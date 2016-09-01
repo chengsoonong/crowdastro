@@ -39,6 +39,7 @@ def test(inputs_h5, training_h5, classifier_path, astro_transformer_path,
     astro_transformer = sklearn.externals.joblib.load(astro_transformer_path)
     image_transformer = sklearn.externals.joblib.load(image_transformer_path)
 
+    assert training_h5.attrs['ir_survey'] == inputs_h5.attrs['ir_survey']
     n_static = 4+1+2 if training_h5.attrs['ir_survey'] == 'wise' else 5+1
 
     test_indices = training_h5['is_atlas_test'].value
