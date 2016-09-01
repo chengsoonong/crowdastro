@@ -578,7 +578,8 @@ def parse_classification(classification, subject, atlas_positions, wcs,
     atlas_positions: [[RA, DEC]] NumPy array.
     wcs: World coordinate system of the ATLAS image.
     pix_offset: (x, y) pixel position of this radio subject on the ATLAS image.
-    -> dict mapping radio signature to corresponding IR host pixel location
+    -> dict mapping radio signature to list of corresponding IR host pixel
+        locations.
     """
     result = {}
 
@@ -604,42 +605,43 @@ def parse_classification(classification, subject, atlas_positions, wcs,
                           subject['zooniverse_id'])
             continue
 
-        if annotation['ir'] == 'No Sources':
-            ir_location = (None, None)
-        else:
-            ir_x = float(annotation['ir']['0']['x'])
-            ir_y = float(annotation['ir']['0']['y'])
+        ir_locations = []
+        if annotation['ir'] != 'No Sources':
+            for ir_click in annotation['ir']:
+                ir_x = float(annotation['ir'][ir_click]['x'])
+                ir_y = float(annotation['ir'][ir_click]['y'])
 
-            # Rescale to a consistent size.
-            ir_x *= config['surveys']['atlas']['click_to_fits_x']
-            ir_y *= config['surveys']['atlas']['click_to_fits_y']
+                # Rescale to a consistent size.
+                ir_x *= config['surveys']['atlas']['click_to_fits_x']
+                ir_y *= config['surveys']['atlas']['click_to_fits_y']
 
-            # Ignore out-of-range data.
-            if not 0 <= ir_x <= config['surveys']['atlas']['fits_width']:
-                n_invalid += 1
-                continue
+                # Ignore out-of-range data.
+                if not 0 <= ir_x <= config['surveys']['atlas']['fits_width']:
+                    n_invalid += 1
+                    continue
 
-            if not 0 <= ir_y <= config['surveys']['atlas']['fits_height']:
-                n_invalid += 1
-                continue
+                if not 0 <= ir_y <= config['surveys']['atlas']['fits_height']:
+                    n_invalid += 1
+                    continue
 
-            # Flip the y axis to match other data conventions.
-            ir_y = config['surveys']['atlas']['fits_height'] - ir_y
+                # Flip the y axis to match other data conventions.
+                ir_y = config['surveys']['atlas']['fits_height'] - ir_y
 
-            # Rescale to match the mosaic WCS.
-            ir_x *= config['surveys']['atlas']['mosaic_scale_x']
-            ir_y *= config['surveys']['atlas']['mosaic_scale_y']
+                # Rescale to match the mosaic WCS.
+                ir_x *= config['surveys']['atlas']['mosaic_scale_x']
+                ir_y *= config['surveys']['atlas']['mosaic_scale_y']
 
-            # Move to the reference location of the radio subject.
-            ir_x += pix_offset[0]
-            ir_y += pix_offset[1]
+                # Move to the reference location of the radio subject.
+                ir_x += pix_offset[0]
+                ir_y += pix_offset[1]
 
-            # Convert the location into RA/DEC.
-            (ir_x,), (ir_y,) = wcs.wcs_pix2world([ir_x], [ir_y], 1)
+                # Convert the location into RA/DEC.
+                (ir_x,), (ir_y,) = wcs.wcs_pix2world([ir_x], [ir_y], 1)
 
-            ir_location = (ir_x, ir_y)
+                ir_location = (ir_x, ir_y)
+                ir_locations.append(ir_location)
 
-        result[radio_signature] = ir_location
+            result[radio_signature] = ir_locations
 
     if n_invalid:
         logging.debug('%d invalid annotations for %s.', n_invalid,
@@ -688,14 +690,21 @@ def import_classifications(f_h5, test=False):
             classification = parse_classification(classification, subject,
                                                   atlas_positions, wcs, offset)
             full_radio = '|'.join(classification.keys())
-            for radio, location in classification.items():
-                pos_row = (obj_index, location[0], location[1])
-                com_row = (obj_index, full_radio, radio)
-                # A little redundancy here with the index, but we can assert
-                # that they are the same later to check integrity.
-                classification_positions.append(pos_row)
-                classification_combinations.append(com_row)
-                classification_usernames.append(user_name)
+            for radio, locations in classification.items():
+                if not locations:
+                    locations = [(None, None)]
+
+                for click_index, location in enumerate(locations):
+                    # Check whether the click index is 0 to maintain the
+                    # assumption that we only need the first click.
+                    pos_row = (obj_index, location[0], location[1],
+                               click_index == 0)
+                    com_row = (obj_index, full_radio, radio)
+                    # A little redundancy here with the index, but we can assert
+                    # that they are the same later to check integrity.
+                    classification_positions.append(pos_row)
+                    classification_combinations.append(com_row)
+                    classification_usernames.append(user_name)
 
     combinations_dtype = [('index', 'int'),
                           ('full_signature', '<S{}'.format(

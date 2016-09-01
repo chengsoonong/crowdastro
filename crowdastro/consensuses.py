@@ -171,7 +171,15 @@ def find_consensuses(f_h5, ir_survey):
 
     class_positions = f_h5['/atlas/cdfs/classification_positions']
     class_combinations = f_h5['/atlas/cdfs/classification_combinations']
+
+    # For computing the consensus, we ignore all but the first click. This is a
+    # boolean mask contained in the positions array.
+    is_primary = class_positions[:, 3].astype(bool)
+    class_positions = class_positions[is_primary, :3]
+    class_combinations = class_combinations[is_primary, :]
+
     assert len(class_positions) == len(class_combinations)
+    assert class_positions.shape[1] == 3
 
     logging.debug('Finding consensuses for %d classifications.',
                   len(class_combinations))
