@@ -120,7 +120,7 @@ def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), **kwargs):
     ylim: (lower, upper) y axis.
     kwargs: Keyword arguments passed to vertical_scatter.
     """
-    xs = sorted(results.methods, key=results.methods.get)
+    xs = sorted(results.method_idx, key=results.method_idx.get)
     ys = []
     for method in xs:
         y = []

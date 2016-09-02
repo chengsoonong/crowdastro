@@ -63,7 +63,7 @@ def import_atlas(f_h5, test=False):
     # https://github.com/chengsoonong/crowdastro/issues/63
     # Fortunately, @jbanfield has already done this, so we can just load
     # that CSV and match the names.
-    # TODO(MatthewJA): This matches the ATLAS component ID, but maybe we should\
+    # TODO(MatthewJA): This matches the ATLAS component ID, but maybe we should
     # be using the name instead.
     rgz_to_atlas = {}
     with open(config['data_sources']['rgz_to_atlas']) as f:
@@ -136,9 +136,6 @@ def import_atlas(f_h5, test=False):
             numeric[index, 2 : 2 + image_size] = radio.reshape(-1)
 
     logging.debug('ATLAS imported.')
-
-    # TODO(MatthewJA): Partition into training/testing sets, ideally using
-    # expert or gold standard classifications.
 
 
 def remove_nulls(n):

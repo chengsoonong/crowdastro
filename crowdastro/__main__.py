@@ -13,6 +13,7 @@ from . import __description__
 from . import __version__
 from . import compile_cnn
 from . import consensuses
+from . import generate_annotator_labels
 from . import generate_cnn_outputs
 from . import generate_dataset
 from . import generate_test_sets
@@ -39,6 +40,11 @@ def main():
             help='generate Radio Galaxy Zoo consensus classifications')
     consensuses._populate_parser(parser_consensuses)
 
+    parser_generate_annotator_labels = subparsers.add_parser(
+            'generate_annotator_labels',
+            help='generates individual annotator labels')
+    generate_annotator_labels._populate_parser(parser_generate_annotator_labels)
+
     parser_generate_cnn_outputs = subparsers.add_parser('generate_cnn_outputs',
             help='generate convolutional neural network training outputs')
     generate_cnn_outputs._populate_parser(parser_generate_cnn_outputs)
@@ -53,7 +59,7 @@ def main():
 
     parser_generate_training_data = subparsers.add_parser(
             'generate_training_data',
-            help='generate crowdastro galaxy test sets')
+            help='generate crowdastro galaxy training data')
     generate_training_data._populate_parser(parser_generate_training_data)
 
     parser_import_data = subparsers.add_parser('import_data',
@@ -93,6 +99,7 @@ def main():
     subcommands = {
         'compile_cnn': compile_cnn._main,
         'consensuses': consensuses._main,
+        'generate_annotator_labels': generate_annotator_labels._main,
         'generate_cnn_outputs': generate_cnn_outputs._main,
         'generate_dataset': generate_dataset._main,
         'generate_test_sets': generate_test_sets._main,
