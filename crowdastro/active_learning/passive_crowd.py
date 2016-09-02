@@ -5,6 +5,7 @@ The Australian National University
 2016
 """
 
+import collections
 import itertools
 import logging
 
@@ -58,6 +59,62 @@ def unpack(params, n_dim, n_annotators):
 def pack(a, b, w, g):
     """Packs a, b, w, and g into an array of parameters."""
     return numpy.hstack([a, [b], w.ravel(), g])
+
+
+def random_restarts(fun):
+    """Randomly runs function many times and returns the best results.
+
+    fun: Function of the form fun(x, y).
+        x: Data. (n_samples, n_dim) NumPy array
+        y: Labels. (n_annotators, n_samples) NumPy array
+    trials: Number of random restarts. Default 1.
+    """
+    results = []
+    def g(*args, **kwargs):
+        if 'trials' in kwargs:
+            trials = kwargs['trials']
+            del kwargs['trials']
+        else:
+            trials = 1
+
+        for trial in range(trials):
+            logging.debug('Trial {}/{}'.format(trial + 1, trials))
+            res = fun(*args, **kwargs)
+            majority_y = compute_majority_vote(args[1])
+            lr = sklearn.linear_model.LogisticRegression()
+            lr.fit(args[0], majority_y)
+            lr.coef_[:] = res[0]
+            lr.intercept_[:] = res[1]
+            # Balanced accuracy.
+            cm = sklearn.metrics.confusion_matrix(majority_y, lr.predict(args[0]))
+            tp = cm[1, 1]
+            n, p = cm.sum(axis=1)
+            tn = cm[0, 0]
+            ba = (tp / p + tn / n) / 2
+            results.append((ba, res))
+
+        return max(results)[1]
+
+    return g
+
+
+def compute_majority_vote(y,):
+    n_samples = y.shape[1]
+    majority_y = numpy.zeros((n_samples,))
+    for i in range(n_samples):
+        labels = y[:, i]
+
+        if labels.mask is False:
+            counter = collections.Counter(labels)
+        else:
+            counter = collections.Counter(labels[~labels.mask])
+
+        if counter:
+            majority_y[i] = max(counter, key=counter.get)
+        else:
+            # No labels for this data point.
+            majority_y[i] = numpy.random.randint(2)  # ¯\_(ツ)_/¯
+    return majority_y
 
 
 def Q(params, n_dim, n_annotators, n_samples, posteriors, posteriors_0, x, y):

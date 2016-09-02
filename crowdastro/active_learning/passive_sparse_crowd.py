@@ -1,4 +1,4 @@
-"""Yan et al. (2011) EM crowd active learning algorithm with scalar η_t.
+"""Yan et al. (2010) EM sparse crowd passive learning algorithm.
 
 Matthew Alger
 The Australian National University
@@ -14,48 +14,25 @@ import scipy.optimize
 import scipy.special
 import sklearn.linear_model
 
+from .passive_crowd import EPS
+from .passive_crowd import annotator_model
 from .passive_crowd import logistic_regression
+from .passive_crowd import pack
 from .passive_crowd import predict
-
-
-def annotator_model(h, y, z):
-    """Yan et al. (2010) Bernoulli annotator model with scalar η_t.
-
-    h: Annotator accuracies η_t. float
-    g: Annotator bias γ_t. (n_dim,) NumPy array
-    x: Data point x_i. (n_dim,) NumPy array
-    y: Label y_i^(t). int
-    z: "True" label z_i. int
-    -> float in [0, 1]
-    """
-    label_difference = numpy.abs(y - z)
-    return (numpy.power(1 - h, label_difference.T)
-            * numpy.power(h, 1 - label_difference.T)).T
-
-
-def unpack(params, n_dim, n_annotators):
-    """Unpacks an array of parameters in to a, b, and h."""
-    a = params[:n_dim]
-    b = params[n_dim]
-    h = params[n_dim+1:]
-    return a, b, h
-
-
-def pack(a, b, h):
-    """Packs a, b, and h into an array of parameters."""
-    return numpy.hstack([a, [b], h])
+from .passive_crowd import unpack
 
 
 def Q(params, n_dim, n_annotators, n_samples, posteriors, posteriors_0, x, y):
     """Maximisation step minimisation target."""
-    a, b, h = unpack(params, n_dim, n_annotators)
+    a, b, w, g = unpack(params, n_dim, n_annotators)
 
     expectation = numpy.ma.sum(
-            numpy.ma.dot(posteriors, (numpy.ma.log(annotator_model(h, y, 1)) +
-                               numpy.ma.log(logistic_regression(a, b, x))).T) +
+            numpy.ma.dot(posteriors,
+                (numpy.ma.log(annotator_model(w, g, x, y, 1) + EPS) +
+                 numpy.ma.log(logistic_regression(a, b, x) + EPS)).T) +
             numpy.ma.dot(posteriors_0, (
-                    numpy.ma.log(annotator_model(h, y, 0)) +
-                    numpy.ma.log(1 - logistic_regression(a, b, x))).T)
+                    numpy.ma.log(annotator_model(w, g, x, y, 0) + EPS) +
+                    numpy.ma.log(1 - logistic_regression(a, b, x) + EPS)).T)
     )
 
     # Also need the gradients.
@@ -69,31 +46,42 @@ def Q(params, n_dim, n_annotators, n_samples, posteriors, posteriors_0, x, y):
                          posteriors_0 * (logistic_regression(-a, -b, x) - 1),
                          x))
 
-    dQ_dh = numpy.zeros(h.shape)
+    dQ_dw = numpy.zeros(w.shape)
     # Inefficient, but unrolled for clarity.
     for t in range(n_annotators):
-        for i in range(n_samples):
-            if not y.mask[t, i]:
-                continue
-            dQ_dh[t] += -posteriors[i] * (h[t] + abs(y[t, i] - 1) - 1) / (
-                    (1 - h[t]) * h[t]) - posteriors_0[i] * (
-                    h[t] + abs(y[t, i] - 0) - 1) / ((1 - h[t]) * h[t])
-
-    grad = pack(dQ_da, dQ_db, dQ_dh)
+        dQ_dw[t] += sum(x[i] * posteriors[i] *
+                                (logistic_regression(-w[t], -g[t], x[i]) -
+                                 abs(y[t, i] - 1)) +
+                        x[i] * posteriors_0[i] *
+                                (logistic_regression(-w[t], -g[t], x[i]) -
+                                 abs(y[t, i] - 0))
+                        for i in range(n_samples)
+                        if not y.mask[t, i])
+    dQ_dg = numpy.zeros(g.shape)
+    for t in range(n_annotators):
+        dQ_dg[t] += sum(posteriors[i] *
+                                (logistic_regression(-w[t], -g[t], x[i]) -
+                                 abs(y[t, i] - 1)) +
+                        posteriors_0[i] *
+                                (logistic_regression(-w[t], -g[t], x[i]) -
+                                 abs(y[t, i] - 0))
+                        for i in range(n_samples)
+                        if not y.mask[t, i])
+    grad = pack(dQ_da, dQ_db, dQ_dw, dQ_dg)
 
     return -expectation, -grad
 
 
-def em_step(n_samples, n_annotators, n_dim, a, b, h, x, y):
+def em_step(n_samples, n_annotators, n_dim, a, b, w, g, x, y):
     # Expectation step.
     # Posterior for each i. p(z_i = 1 | x_i, y_i).
     lr = logistic_regression(a, b, x)
     posteriors = lr.copy()
-    posteriors *= numpy.ma.prod(annotator_model(h, y, 1), axis=0)
+    posteriors *= numpy.ma.prod(annotator_model(w, g, x, y, 1), axis=0)
 
     # Repeat for p(z_i = 0 | x_i, y_i).
     posteriors_0 = 1 - lr
-    posteriors_0 *= numpy.ma.prod(annotator_model(h, y, 0), axis=0)
+    posteriors_0 *= numpy.ma.prod(annotator_model(w, g, x, y, 0), axis=0)
 
     # We want to normalise. We want p(z = 1) + p(z = 0) == 1.
     # Currently, p(z = 1) + p(z = 0) == q.
@@ -105,17 +93,17 @@ def em_step(n_samples, n_annotators, n_dim, a, b, h, x, y):
             (posteriors, posteriors_0)
 
     # Maximisation step.
-    theta = pack(a, b, h)
+    theta = pack(a, b, w, g)
     theta_, fv, inf = scipy.optimize.fmin_l_bfgs_b(Q, x0=theta,
             approx_grad=False, args=(n_dim, n_annotators, n_samples,
                                      posteriors, posteriors_0, x, y))
     logging.debug('Terminated with Q = %4f', fv)
     logging.debug(inf['task'].decode('ascii'))
-    a_, b_, h_ = unpack(theta_, n_dim, n_annotators)
+    a_, b_, w_, g_ = unpack(theta_, n_dim, n_annotators)
 
     logging.debug('Found new parameters - b: %f -> %f', b, b_)
 
-    return a_, b_, h_
+    return a_, b_, w_, g_
 
 
 def train(x, y, epsilon=1e-5, lr_init=False, skip_zeros=False):
@@ -161,11 +149,13 @@ def train(x, y, epsilon=1e-5, lr_init=False, skip_zeros=False):
     else:
         a = numpy.random.normal(size=(n_dim,))
         b = numpy.random.normal()
-    h = numpy.random.uniform(size=(n_annotators,))
+    w = numpy.random.normal(size=(n_annotators, n_dim))
+    g = numpy.ones((n_annotators,))
 
     logging.debug('Initial a: %s', a)
     logging.debug('Initial b: %s', b)
-    logging.debug('Initial h: %s', h)
+    logging.debug('Initial w: %s', w)
+    logging.debug('Initial g: %s', g)
     assert x.shape == (n_samples, n_dim)
     assert y.shape == (n_annotators, n_samples)
 
@@ -176,13 +166,13 @@ def train(x, y, epsilon=1e-5, lr_init=False, skip_zeros=False):
         iters += 1
         logging.info('Iteration %d', iters)
 
-        a_, b_, h_ = em_step(
-                n_samples, n_annotators, n_dim, a, b, h, x, y)
+        a_, b_, w_, g_ = em_step(
+                n_samples, n_annotators, n_dim, a, b, w, g, x, y)
 
         # Check convergence.
         dist = numpy.linalg.norm(a - a_) ** 2 + (b - b_) ** 2
         logging.debug('Distance: {:.02f}'.format(dist))
         if dist <= epsilon:
-            return a_, b_, h_
+            return a_, b_, w_, g_
 
-        a, b, h = a_, b_, h_
+        a, b, w, g = a_, b_, w_, g_
