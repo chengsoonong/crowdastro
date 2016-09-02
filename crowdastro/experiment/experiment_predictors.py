@@ -31,7 +31,7 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
         n_splits = crowdastro_h5['/wise/cdfs/test_sets'].shape[0]
         n_examples, n_params = training_h5['features'].shape
         n_params += 1  # Bias term.
-        methods = ['LR(Norris)', 'LR(Fan)', 'LR(RGZ-MV)']
+        methods = ['LR(Norris)', 'LR(Fan)', 'LR(RGZ-MV)', 'LR(RGZ-Raw)']
         model = '{} sklearn.linear_model.LogisticRegression'.format(
                 sklearn.__version__)
 
@@ -45,6 +45,24 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
             'LR(Fan)': crowdastro_h5['/wise/cdfs/fan_labels'],
             'LR(RGZ-MV)': training_h5['labels'],
         }
+
+        # Build raw features/labels.
+        rgz_raw_labels = crowdastro_h5['/wise/cdfs/rgz_raw_labels']
+        rgz_raw_labels_mask = crowdastro_h5['/wise/cdfs/rgz_raw_labels_mask']
+        raw_features = []
+        raw_labels = []
+        for anno_labels, anno_mask in zip(rgz_raw_labels, rgz_raw_labels_mask):
+            seen = (~anno_mask).nonzero()[0]
+            raw_features_ = training_h5['features'][seen, :]
+            raw_labels_ = anno_labels[seen]
+            raw_features.extend(raw_features_)
+            raw_labels.extend(raw_labels_)
+        raw_features = numpy.array(raw_features)
+        raw_labels = numpy.array(raw_labels)
+        assert raw_features.shape[0] == raw_labels.shape[0]
+        print(raw_features.shape)
+        features['LR(RGZ-Raw)'] = raw_features
+        targets['LR(RGZ-Raw)'] = raw_labels
 
         for split_id, test_set in enumerate(
                     crowdastro_h5['/wise/cdfs/test_sets']):
