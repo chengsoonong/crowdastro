@@ -8,7 +8,7 @@ import sklearn.cluster
 import sklearn.datasets
 
 sys.path.insert(1, os.path.join('..'))
-import crowdastro.active_learning.active_crowd as active_crowd
+import crowdastro.active_learning.passive_sparse_crowd as active_crowd
 
 logging.captureWarnings(True)
 
@@ -42,7 +42,7 @@ for annotator in range(n_annotators):
 y.mask = numpy.random.binomial(1, 0.8, size=y.shape)
 
 # Train and predict using the passive crowd algorithm.
-a, b, w, g = active_crowd.train(x, y, skip_zeros=True, lr_init=True)
+a, b, *h = active_crowd.train(x, y, lr_init=True, trials=15)
 predictions = active_crowd.predict(a, b, x)
 
 ## Plots ##
