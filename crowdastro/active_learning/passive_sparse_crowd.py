@@ -19,6 +19,7 @@ from .passive_crowd import annotator_model
 from .passive_crowd import logistic_regression
 from .passive_crowd import pack
 from .passive_crowd import predict
+from .passive_crowd import random_restarts
 from .passive_crowd import unpack
 
 
@@ -106,6 +107,7 @@ def em_step(n_samples, n_annotators, n_dim, a, b, w, g, x, y):
     return a_, b_, w_, g_
 
 
+@random_restarts
 def train(x, y, epsilon=1e-5, lr_init=False, skip_zeros=False):
     """Expectation-maximisation algorithm from Yan et al. (2010).
 
