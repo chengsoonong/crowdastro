@@ -17,6 +17,10 @@ efficiency.
 
 \section{Crowdsourced Labelling}
 
+    \section{Notation}
+
+        \todo{add a notation section (maybe even not here)}
+
     \section{Crowdsourced Labels}
         
         For standard supervised learning tasks, the labels are generally
@@ -60,3 +64,36 @@ efficiency.
         with the remaining case decided evenly at random \citep{raykar10}.
 
         The idea is that the majority of labels are correct, so with sufficiently large amounts of relabelling we expect the label noise to be reduced. How large ``sufficiently large'' is is unclear and domain-dependent, and is outside the scope of this thesis, though papers like \citet{sheng08} and \citet{lin16} provide some information on how to choose relabelling rates. Of course, this fails in situations where the majority of labellers are not correct, which may be due to intrinsic difficulty or malicious labelling, or where there is no clear majority.
+
+    \subsection{Modelling Labeller Reliability}
+
+        In crowd learning scenarios, it is common to have multiple labels for a data point with no known groundtruth. One way to deal with this is to jointly model both the reliability of each labeller (the \emph{labeller model}) and the groundtruth itself (the \emph{classification model}). Methods following this approach are developed in \citet{raykar10} and \citet{yan10}. These methods make different assumptions on the labellers. I describe these methods in detail here.
+
+        \subsubsection{Raykar et al. (2010) Method}
+
+            \citet{raykar10} propose modelling the $t$th labeller by two parameters $\alpha_t$ and $\beta_t$. $\alpha_t$ is the \emph{sensitivity} and $\beta_t$ is the \emph{specificity} of labeller $t$, i.e.
+            \begin{align*}
+                \alpha_t &= p(y_t = 1 \mid z = 1)\\
+                \beta_t &= p(y_t = 0 \mid z = 0).
+            \end{align*}
+            This model assumes that labeller reliability is independent of the example $x$, but dependent on the groundtruth label $z$. Note that under this model, the probability that labeller $t$ will assign a given label to a positive example is given by
+            \begin{equation*}
+                p(y_t \mid z = 1, \alpha_t) = (\alpha_t)^{y_t} (1 - \alpha_t)^{1 - y_t}
+            \end{equation*}
+            and the probability that they will assign a given label to a negative example is given by
+            \begin{equation*}
+                p(y_t \mid z = 0, \beta_t) = (\beta_t)^{1 - y_t} (1 - \beta_t)^{y_t}.
+            \end{equation*}
+            For ease of notation, let $\vec \alpha = (\alpha_1, \dots, \alpha_t)$ and $\vec \beta = (\beta_1, \dots, \beta_t)$.
+
+            With this method, the classification model can be any classifier. \citeauthor{raykar10} choose to use logistic regression:
+            \begin{equation*}
+                p(z = 1 \mid \vec x, \vec w) = \vec\sigma(\vec w^T \vec x).
+            \end{equation*}
+
+            The model parameters $\vec \theta = \{\vec w, \vec \alpha, \vec \beta\}$ can be found by maximising the likelihood. Under the assumption that examples are independently sampled and labellers are independent, this is given by
+            \begin{align*}
+                p(\mathcal D \mid \vec \theta) &= \prod_{i = 1}^N \prod_{t = 1}^T p(y_{t, i} \mid \vec x_i, \vec w, \alpha_t, \beta_t)\\
+                &\begin{aligned}= \prod_{i = 1}^N \prod_{t = 1}^T &\bigg[p(y_{t, i} \mid z_i = 1, \alpha_t) p(z_i = 1 \mid \vec x_i, \vec w)\\
+                                                                  &+ p(y_{t, i} \mid z_i = 0, \beta_t) p(z_i = 0 \mid \vec x_i, \vec w)\bigg]\end{aligned}
+            \end{align*}
