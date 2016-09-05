@@ -88,12 +88,42 @@ efficiency.
 
             With this method, the classification model can be any classifier. \citeauthor{raykar10} choose to use logistic regression:
             \begin{equation*}
-                p(z = 1 \mid \vec x, \vec w) = \vec\sigma(\vec w^T \vec x).
+                p(z = 1 \mid \vec x, \vec w) = \sigma(\vec w^T \vec x).
             \end{equation*}
 
-            The model parameters $\vec \theta = \{\vec w, \vec \alpha, \vec \beta\}$ can be found by maximising the likelihood. Under the assumption that examples are independently sampled and labellers are independent, this is given by
+            The model parameters $\vec \theta = \{\vec w, \vec \alpha, \vec \beta\}$ can be found by maximising the likelihood. Under the assumption that examples are independently sampled and labellers are independent, the likelihood is given by
             \begin{align*}
                 p(\mathcal D \mid \vec \theta) &= \prod_{i = 1}^N \prod_{t = 1}^T p(y_{t, i} \mid \vec x_i, \vec w, \alpha_t, \beta_t)\\
                 &\begin{aligned}= \prod_{i = 1}^N \prod_{t = 1}^T &\bigg[p(y_{t, i} \mid z_i = 1, \alpha_t) p(z_i = 1 \mid \vec x_i, \vec w)\\
-                                                                  &+ p(y_{t, i} \mid z_i = 0, \beta_t) p(z_i = 0 \mid \vec x_i, \vec w)\bigg]\end{aligned}
+                                                                  &+ p(y_{t, i} \mid z_i = 0, \beta_t) p(z_i = 0 \mid \vec x_i, \vec w)\bigg].\end{aligned}
             \end{align*}
+            Since there are unknown values $z$, the maximum likelihood problem must be solved using expectation-maximisation. This has closed-form solutions for $\vec \alpha$ (Equation \ref{eq:raykar-alpha}) and $\vec \beta$ (Equation \ref{eq:raykar-beta}), but gradient methods must be used for finding $\vec w$.
+
+            $\mu_i$ is initialised with majority vote, i.e.
+            \begin{equation*}
+                \mu_i = \frac{1}{T} \sum_{t = 1}^T y_{t, i}.
+            \end{equation*}
+            The expectation step requires us to compute
+            \begin{align*}
+                a_i &= \prod_{t = 1}^T (\alpha_t)^{y_{t, i}} (1 - \alpha_t)^{1 - y_{t, i}}\\
+                b_i &= \prod_{t = 1}^T (\beta_t)^{1 - y_{t, i}} (1 - \beta_t)^{y_{t, i}}\\
+                \mu_i &\propto \frac{a_i \sigma(\vec w^T \vec x_i)}{a_i \sigma(\vec w^T \vec x_i) + b_i (1 - \sigma(\vec w^T \vec x_i))}.
+            \end{align*}
+            The maximisation step requires us to compute
+            \begin{align*}
+                \alpha_t &= \frac{\sum_{i = 1}^N \mu_i y_{t, i}}{\sum_{i = 1}^N \mu_i}\\
+                \beta_t &= \frac{\sum_{i = 1}^N (1 - \mu_i) (1 - y_{t, i})}{\sum_{i = 1}^N (1 - \mu_i)}\\
+            \end{align*}
+            and use the Newton-Raphson method to find $\vec w$ with gradient
+            \begin{equation*}
+                \vec g(w) = \sum_{i = 1}^N \left(\mu_i - \sigma(\vec w^T \vec x_i\right) \vec x_i
+            \end{equation*}
+            and Hessian
+            \begin{equation*}
+                H(w) = -\sum_{i = 1}^N \sigma(\vec w^T \vec x_i) (1 - \sigma(\vec w^T \vec x_i)) \vec x_i \vec x_i^T.
+            \end{equation*}
+
+            % \begin{align*}
+
+            %     \label{eq:raykar-alpha}
+            % \end{align*}
