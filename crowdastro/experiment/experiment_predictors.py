@@ -14,6 +14,7 @@ import collections
 import logging
 
 import h5py
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy
 import sklearn
@@ -44,6 +45,7 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
             'LR(Norris)': crowdastro_h5['/wise/cdfs/norris_labels'],
             'LR(Fan)': crowdastro_h5['/wise/cdfs/fan_labels'],
             'LR(RGZ-MV)': training_h5['labels'],
+            'LR(RGZ-Raw)': None,
         }
 
         # Build raw features/labels.
@@ -74,6 +76,8 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
                            targets[method], list(test_set), overwrite=overwrite)
 
         if plot:
+            matplotlib.rcParams['font.family'] = 'serif'
+            matplotlib.rcParams['font.serif'] = ['Palatino Linotype']
             vertical_scatter_ba(results,
                     crowdastro_h5['/wise/cdfs/norris_labels'].value)
             plt.show()
