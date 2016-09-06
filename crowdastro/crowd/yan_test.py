@@ -2,7 +2,7 @@ import unittest
 
 import numpy
 
-from . import passive_crowd
+from . import yan
 
 
 class TestGradients(unittest.TestCase):
@@ -26,7 +26,7 @@ class TestGradients(unittest.TestCase):
 
         self.params = numpy.random.normal(scale=0.5, size=(D + 1 + T * D + T,))
 
-        self.grad = passive_crowd.Q(
+        self.grad = yan.Q(
                 self.params, D, T, N, self.posteriors, self.posteriors_0,
                 self.x, self.y)[1]
 
@@ -42,7 +42,7 @@ class TestGradients(unittest.TestCase):
             h = numpy.zeros(self.params.shape)
             h[self.D] = (i + 1) / self.trials \
                     * numpy.linalg.norm(self.params) * 1e-10
-            grads.append((passive_crowd.Q(
+            grads.append((yan.Q(
                         self.params + h,
                         self.D,
                         self.T,
@@ -51,7 +51,7 @@ class TestGradients(unittest.TestCase):
                         self.posteriors_0,
                         self.x,
                         self.y
-                    )[0] - passive_crowd.Q(
+                    )[0] - yan.Q(
                         self.params,
                         self.D,
                         self.T,
@@ -71,7 +71,7 @@ class TestGradients(unittest.TestCase):
                 h = numpy.zeros(self.params.shape)
                 h[-self.T+t] = (i + 1) / self.trials \
                         * numpy.linalg.norm(self.params) * 1e-10
-                grads.append((passive_crowd.Q(
+                grads.append((yan.Q(
                             self.params + h,
                             self.D,
                             self.T,
@@ -80,7 +80,7 @@ class TestGradients(unittest.TestCase):
                             self.posteriors_0,
                             self.x,
                             self.y
-                        )[0] - passive_crowd.Q(
+                        )[0] - yan.Q(
                             self.params,
                             self.D,
                             self.T,
@@ -103,7 +103,7 @@ class TestGradients(unittest.TestCase):
                     h = numpy.zeros(self.params.shape)
                     h[index] = (i + 1) / self.trials \
                             * numpy.linalg.norm(self.params) * 1e-10
-                    grads.append((passive_crowd.Q(
+                    grads.append((yan.Q(
                                 self.params + h,
                                 self.D,
                                 self.T,
@@ -112,7 +112,7 @@ class TestGradients(unittest.TestCase):
                                 self.posteriors_0,
                                 self.x,
                                 self.y
-                            )[0] - passive_crowd.Q(
+                            )[0] - yan.Q(
                                 self.params,
                                 self.D,
                                 self.T,
@@ -133,7 +133,7 @@ class TestGradients(unittest.TestCase):
                 h = numpy.zeros(self.params.shape)
                 h[d] = (i + 1) / self.trials \
                         * numpy.linalg.norm(self.params) * 1e-10
-                grads.append((passive_crowd.Q(
+                grads.append((yan.Q(
                             self.params + h,
                             self.D,
                             self.T,
@@ -142,7 +142,7 @@ class TestGradients(unittest.TestCase):
                             self.posteriors_0,
                             self.x,
                             self.y
-                        )[0] - passive_crowd.Q(
+                        )[0] - yan.Q(
                             self.params,
                             self.D,
                             self.T,
