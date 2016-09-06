@@ -8,7 +8,7 @@ import sklearn.cluster
 import sklearn.datasets
 
 sys.path.insert(1, os.path.join('..', 'crowdastro', 'active_learning'))
-import passive_crowd
+import yan
 
 logging.captureWarnings(True)
 
@@ -41,8 +41,8 @@ def run_example(x, z, n_annotators, n_dim, n_samples, plot=False):
                 y[annotator, sample] = not z[sample]
 
     # Train and predict using the passive crowd algorithm.
-    a, b, w, g = passive_crowd.train(x, y, skip_zeros=True, lr_init=True)
-    predictions = passive_crowd.predict(a, b, x)
+    a, b, w, g = yan.train(x, y, skip_zeros=True, lr_init=True)
+    predictions = yan.predict(a, b, x)
 
     if plot:
         ## Plots ##
