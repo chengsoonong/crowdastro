@@ -71,7 +71,8 @@ def _hessian_inverse_multiply(x, H, g):
     return numpy.linalg.norm(H.dot(x) - g)
 
 
-def max_w_step(m, x, mv, epsilon=1e-4, step_size=1e-4, max_iters=5000):
+def max_w_step(m, x, mv, init_w=None, epsilon=1e-4, step_size=1e-4,
+               max_iters=5000):
     """Computes w based on μ.
 
     m: μ
@@ -81,10 +82,14 @@ def max_w_step(m, x, mv, epsilon=1e-4, step_size=1e-4, max_iters=5000):
     """
     n_samples, n_features = x.shape
 
-    lr = sklearn.linear_model.LogisticRegression(class_weight='balanced',
-                                                 fit_intercept=False)
-    lr.fit(x, mv)
-    w = lr.coef_.ravel()
+    # lr = sklearn.linear_model.LogisticRegression(class_weight='balanced',
+    #                                              fit_intercept=False)
+    # lr.fit(x, mv)
+    # w = lr.coef_.ravel()
+    if init_w is None:
+        w = numpy.random.normal(size=(x.shape[1],))
+    else:
+        w = init_w
 
     for i in range(max_iters):
         lr = logistic_regression(w, x)
@@ -130,7 +135,52 @@ def exp_m_step(a, b, w, x, y, y_mask):
     return exp_a * lr / (exp_a * lr + exp_b * (1 - lr) + EPS)
 
 
-def train(x, y, epsilon=1e-5):
+def likelihood(a, b, w, x, y, y_mask):
+    """Computes the likelihood p(D | θ) = p({x, y} | α, β, w).
+
+    a: α. (n_labellers,) NumPy array.
+    b: β. (n_labellers,) NumPy array.
+    w: Weights w. (n_features,) NumPy array
+    x: (n_samples, n_features) NumPy array of examples.
+    y: (n_labellers, n_samples) Array of crowd labels.
+    y_mask: Mask of unobserved crowd labels.
+    -> Likelihood float
+    """
+    exp_a = numpy.ones((x.shape[0],))
+    exp_b = numpy.ones((x.shape[0],))
+    for t in range(a.shape[0]):
+        for i in range(x.shape[0]):
+            if y_mask[t, i]:
+                continue
+
+            exp_a *= a[t] ** y[t, i] * (1 - a[t]) ** (1 - y[t, i])
+            exp_b *= b[t] ** (1 - y[t, i]) * (1 - b[t]) ** y[t, i]
+    exp_p = logistic_regression(w, x)
+
+    return (exp_a * exp_p + exp_b * (1 - exp_p)).prod()
+
+
+def train(x, y, epsilon=1e-5, restarts=5):
+    """Trains the Raykar algorithm.
+
+    x: (n_samples, n_features) NumPy array of examples.
+    y: (n_labellers, n_samples) Masked NumPy array of crowd labels.
+    epsilon: Convergence threshold. Default 1e-5.
+    restarts: Number of random restarts. Default 5.
+    -> α, β, w
+    """
+    results = []
+    x_with_bias = numpy.hstack([x, numpy.ones((x.shape[0], 1))])
+    for trial in range(restarts):
+        logging.debug('Trial {}/{}'.format(trial + 1, restarts))
+        a, b, w = _train(x, y, epsilon=epsilon)
+        lh = likelihood(a, b, w, x_with_bias, y.filled(0), y.mask)
+        results.append((lh, (a, b, w)))
+
+    return max(results, key=lambda z: z[0])[1]
+
+
+def _train(x, y, epsilon=1e-5):
     """Trains the Raykar algorithm.
 
     x: (n_samples, n_features) NumPy array of examples.
@@ -159,7 +209,7 @@ def train(x, y, epsilon=1e-5):
         # Maximisation step.
         a = max_alpha_step(m, y, y_mask)
         b = max_beta_step(m, y, y_mask)
-        w = max_w_step(m, x, mv, step_size=step_size)
+        w = max_w_step(m, x, mv, step_size=step_size, init_w=w)
         # step_size /= 1.1
 
         # Expectation step.

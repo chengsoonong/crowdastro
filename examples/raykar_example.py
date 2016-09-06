@@ -7,8 +7,8 @@ import numpy
 import sklearn.cluster
 import sklearn.datasets
 
-sys.path.insert(1, os.path.join('..', 'crowdastro', 'active_learning'))
-import raykar
+sys.path.insert(1, os.path.join('..'))
+import crowdastro.crowd.raykar as raykar
 
 logging.captureWarnings(True)
 
@@ -32,11 +32,13 @@ def run_example(x, z, n_labellers, n_dim, n_examples, plot=False):
     k = 5
     k_means = sklearn.cluster.KMeans(n_clusters=k) 
     clusters = k_means.fit_predict(x)
-    accuracies = [0.1, 0.4, 0.8, 1.0]
+    accuracies = [[0.1, 0.4, 0.8, 1.0],
+                  [0.8, 0.4, 0.5, 0.1]]
     for annotator in range(n_labellers):
         for sample in range(n_examples):
             if (clusters[sample] == annotator % k or
-                    numpy.random.random() < accuracies[annotator]):
+                    numpy.random.random()
+                    < accuracies[z[sample][0]][annotator]):
                 y[annotator, sample] = z[sample]
             else:
                 # Flip labels at random for non-expert regions.
@@ -47,7 +49,7 @@ def run_example(x, z, n_labellers, n_dim, n_examples, plot=False):
             mask=False)#numpy.random.binomial(1, 0.5, size=y.shape))
 
     # Train and predict using the passive crowd algorithm.
-    a, b, w = raykar.train(x, y)
+    a, b, w = raykar.train(x, y, restarts=15)
     predictions = raykar.predict(w, x)
 
     print('a: {}'.format(a))
