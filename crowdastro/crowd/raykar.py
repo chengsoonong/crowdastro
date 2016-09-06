@@ -10,6 +10,7 @@ import logging
 
 import numpy
 import scipy.optimize
+import sklearn.linear_model
 
 EPS = 1e-10
 
@@ -21,7 +22,7 @@ class RaykarClassifier(object):
     """
 
     def __init__(self, n_restarts=5, epsilon=1e-5, inner_epsilon=1e-4,
-                 inner_step=1e-4, max_inner_iters=5000):
+                 inner_step=1e-4, max_inner_iters=5000, lr_init=True):
         """
         n_restarts: Number of times to run the algorithm. Higher numbers improve
             chances of finding a global maximum likelihood solution.
@@ -29,12 +30,14 @@ class RaykarClassifier(object):
         inner_epsilon: Convergence threshold for maximisation step.
         inner_step: Step size for maximisation step.
         max_inner_iters: Maximum number of iterations for maximisation step.
+        lr_init: Whether to initialise w using logistic regression.
         """
         self.n_restarts = n_restarts
         self.epsilon = epsilon
         self.inner_epsilon = inner_epsilon
         self.inner_step = inner_step
         self.max_inner_iters = max_inner_iters
+        self.lr_init = lr_init
 
     def fit(self, X, Y):
         """
@@ -85,7 +88,7 @@ class RaykarClassifier(object):
             # Maximisation step.
             a = self._max_alpha_step(m, y, y_mask)
             b = self._max_beta_step(m, y, y_mask)
-            w = self._max_w_step(m, x, init_w=w)
+            w = self._max_w_step(m, x, mv, init_w=w)
 
             # Expectation step.
             m_ = self._exp_m_step(a, b, w, x, y, y_mask)
@@ -116,21 +119,24 @@ class RaykarClassifier(object):
     def _hessian_inverse_multiply(self, x, H, g):
         return numpy.linalg.norm(H.dot(x) - g)
 
-    def _max_w_step(self, m, x, init_w=None):
+    def _max_w_step(self, m, x, mv, init_w=None):
         """Computes w based on μ.
 
         m: μ
         x: (n_samples, n_features) NumPy array of examples.
+        mv: Majority vote of labels.
+        init_w: Initial value of w.
         -> w
         """
         n_samples, n_features = x.shape
 
-        # lr = sklearn.linear_model.LogisticRegression(class_weight='balanced',
-        #                                              fit_intercept=False)
-        # lr.fit(x, mv)
-        # w = lr.coef_.ravel()
-        if init_w is None:
+        if init_w is None and not self.lr_init:
             w = numpy.random.normal(size=(x.shape[1],))
+        elif init_w is None:
+            lr = sklearn.linear_model.LogisticRegression(
+                    class_weight='balanced', fit_intercept=False)
+            lr.fit(x, mv)
+            w = lr.coef_.ravel()
         else:
             w = init_w
 

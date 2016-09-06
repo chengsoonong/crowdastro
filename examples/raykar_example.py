@@ -49,7 +49,7 @@ def run_example(x, z, n_labellers, n_dim, n_examples, plot=False):
             mask=False)#numpy.random.binomial(1, 0.5, size=y.shape))
 
     # Train and predict using the passive crowd algorithm.
-    rc = raykar.RaykarClassifier(n_restarts=5)
+    rc = raykar.RaykarClassifier(n_restarts=5, lr_init=True)
     rc.fit(x, y)
     predictions = rc.predict(x)
 
