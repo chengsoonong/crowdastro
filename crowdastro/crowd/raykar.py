@@ -244,3 +244,18 @@ class RaykarClassifier(object):
         exp_p = self._logistic_regression(w, X)
 
         return (exp_a * exp_p + exp_b * (1 - exp_p)).prod()
+
+    def get_params(self, deep=True):
+        return {
+            'n_restarts': self.n_restarts,
+            'epsilon': self.epsilon,
+            'inner_epsilon': self.inner_epsilon,
+            'inner_step': self.inner_step,
+            'max_inner_iters': self.max_inner_iters,
+            'lr_init': self.lr_init,
+        }
+
+    def set_params(self, **parameters):
+        for parameter, value in parameters.items():
+            setattr(self, parameter, value)
+        return self
