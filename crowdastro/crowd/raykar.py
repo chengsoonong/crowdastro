@@ -215,7 +215,8 @@ def _train(x, y, epsilon=1e-5):
         # Expectation step.
         m_ = exp_m_step(a, b, w, x, y, y_mask)
 
-        logging.debug('Current value of delta mu: %f', numpy.linalg.norm(m_ - m))
+        logging.debug('Current value of delta mu: %f',
+                      numpy.linalg.norm(m_ - m))
 
         if numpy.linalg.norm(m_ - m) < epsilon:
             return a, b, w
