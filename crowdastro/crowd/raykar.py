@@ -259,3 +259,11 @@ class RaykarClassifier(object):
         for parameter, value in parameters.items():
             setattr(self, parameter, value)
         return self
+
+    def serialise(self):
+        """Returns a NumPy array representing the optimised parameters."""
+        return numpy.concatenate([
+                self.a_.ravel(),
+                self.b_.ravel(),
+                self.w_.ravel(),
+        ])
