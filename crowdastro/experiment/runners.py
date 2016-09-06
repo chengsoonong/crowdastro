@@ -11,6 +11,8 @@ import numpy
 import sklearn.ensemble
 import sklearn.linear_model
 
+from ..crowd.raykar import RaykarClassifier
+
 
 def lr_to_params(lr):
     """Converts a LogisticRegression object into an array."""
@@ -85,3 +87,32 @@ def rf(results, method_name, split_id, features, targets, test_indices,
     results.store_trial(method_name, split_id,
             rf.predict_proba(features[test_indices])[:, 1],
             indices=test_indices, params=numpy.zeros((results.n_params,)))
+
+
+def raykar(results, method_name, split_id, features, targets, test_indices,
+        overwrite=False):
+    """Run the Raykar algorithm and store results.
+
+    results: Results object.
+    features: (n_examples, n_features) array of features.
+    targets: (n_labellers, n_examples) masked array of binary targets.
+    test_indices: List of integer testing indices.
+    method_name: Name of this method in the results.
+    split_id: ID of the split in the results.
+    overwrite: Whether to overwrite existing results (default False).
+    """
+    assert max(test_indices) < features.shape[0]
+    assert min(test_indices) >= 0
+
+    train_indices = make_train_indices(test_indices, features.shape[0])
+
+    if results.has_run(method_name, split_id) and not overwrite:
+        logging.info('Skipping trial {}:{}.'.format(method_name, split_id))
+        return
+
+    rc = RaykarClassifier()
+    rc.fit(features[train_indices], targets[:, train_indices])
+    results.store_trial(method_name, split_id,
+            rc.predict_proba(features[test_indices])[:, 1],
+            indices=test_indices, params=rc.serialise())
+
