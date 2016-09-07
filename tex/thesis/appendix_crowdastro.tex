@@ -1,0 +1,31 @@
+%!tex root=thesis.tex
+
+\appendix
+\chapter{Crowdastro Package}
+
+As part of this thesis, I developed an open source Python package called
+\emph{crowdastro}, containing methods for machine learning on the cross-
+identification task, and implementations of many of the methods described here.
+In this appendix, I briefly describe how to obtain this package, and list the
+submodules available.
+
+\section{Obtaining Crowdastro}
+
+    The source for crowdastro is available on GitHub at
+    \url{http://github.com/chengsoonong/crowdastro}. Crowdastro can also be
+    installed through pip, by running \texttt{pip3 install crowdastro}. The code
+    is MIT licensed.
+
+\section{Submodules}
+    \label{sec:crowdastro-submodules}
+    
+    \todo{List submodules.}
+
+    \subsection{crowdastro.crowd.raykar}
+        \label{sec:crowdastro-raykar}
+
+        \texttt{crowdastro.crowd.raykar} is an implementation of the crowd
+        learning algorithm developed by \citet{raykar10}, described here in
+        \Section \ref{sec:raykar}. The module provides a
+        \texttt{RaykarClassifier} object which implements a modified scikit-
+        learn interface.

@@ -1,11 +1,6 @@
 %!tex root=thesis.tex
 \chapter{Machine Learning on Crowds}
 
-\begin{enumerate}
-    \item something about machine learning, classification, regression
-    \item something about active learning, pool-based active learning
-\end{enumerate}
-
 \todo{Add a nice chapter summary.} In this chapter, I will introduce some
 concepts from machine learning that I will use for the rest of this thesis. I
 will discuss some common classification methods and techniques, describe image
@@ -70,6 +65,7 @@ efficiency.
         In crowd learning scenarios, it is common to have multiple labels for a data point with no known groundtruth. One way to deal with this is to jointly model both the reliability of each labeller (the \emph{labeller model}) and the groundtruth itself (the \emph{classification model}). Methods following this approach are developed in \citet{raykar10} and \citet{yan10}. These methods make different assumptions on the labellers. I describe these methods in detail here.
 
         \subsubsection{Raykar et al. (2010) Method}
+            \label{sec:raykar}
 
             \citet{raykar10} propose modelling the $t$th labeller by two parameters $\alpha_t$ and $\beta_t$. $\alpha_t$ is the \emph{sensitivity} and $\beta_t$ is the \emph{specificity} of labeller $t$, i.e.
             \begin{align*}
@@ -110,20 +106,13 @@ efficiency.
                 \mu_i &\propto \frac{a_i \sigma(\vec w^T \vec x_i)}{a_i \sigma(\vec w^T \vec x_i) + b_i (1 - \sigma(\vec w^T \vec x_i))}.
             \end{align*}
             The maximisation step requires us to compute
-            \begin{align*}
+            \begin{align}
+                \label{eq:raykar-alpha}
                 \alpha_t &= \frac{\sum_{i = 1}^N \mu_i y_{t, i}}{\sum_{i = 1}^N \mu_i}\\
-                \beta_t &= \frac{\sum_{i = 1}^N (1 - \mu_i) (1 - y_{t, i})}{\sum_{i = 1}^N (1 - \mu_i)}\\
-            \end{align*}
-            and use the Newton-Raphson method to find $\vec w$ with gradient
-            \begin{equation*}
-                \vec g(w) = \sum_{i = 1}^N \left(\mu_i - \sigma(\vec w^T \vec x_i\right) \vec x_i
-            \end{equation*}
-            and Hessian
-            \begin{equation*}
-                H(w) = -\sum_{i = 1}^N \sigma(\vec w^T \vec x_i) (1 - \sigma(\vec w^T \vec x_i)) \vec x_i \vec x_i^T.
-            \end{equation*}
+                \label{eq:raykar-beta}
+                \beta_t &= \frac{\sum_{i = 1}^N (1 - \mu_i) (1 - y_{t, i})}{\sum_{i = 1}^N (1 - \mu_i)}
+            \end{align}
+            and find the $\vec w$ that maximises the likelihood using gradient methods.
 
-            % \begin{align*}
+            As part of this thesis, I have produced an open source implementation of this algorithm, described in Section \ref{sec:crowdastro-raykar}.
 
-            %     \label{eq:raykar-alpha}
-            % \end{align*}
