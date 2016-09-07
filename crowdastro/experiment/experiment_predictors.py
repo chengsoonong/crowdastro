@@ -56,8 +56,15 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
             for method_id, method in enumerate(methods):
                 logging.info('Method {} ({}/{})'.format(method, method_id + 1,
                                                         len(methods)))
-                runners.lr(results, method, split_id, features[method],
-                           targets[method], list(test_set), overwrite=overwrite)
+                if method.startswith('LR'):
+                    runners.lr(results, method, split_id, features[method],
+                               targets[method], list(test_set),
+                               overwrite=overwrite)
+                elif method.startswith('Raykar'):
+                    runners.raykar(results, method, split_id, features[method],
+                                   targets[method], list(test_set),
+                                   overwrite=overwrite)
+
 
         if plot:
             matplotlib.rcParams['font.family'] = 'serif'
@@ -77,10 +84,13 @@ if __name__ == '__main__':
                         help='HDF5 results data file')
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite existing results')
+    parser.add_argument('--verbose -v', action='store_true',
+                        help='Verbose output')
     parser.add_argument('--plot', action='store_true', help='Generate a plot')
     args = parser.parse_args()
 
-    logging.root.setLevel(logging.INFO)
+    if args.verbose:
+        logging.root.setLevel(logging.DEBUG)
 
     main(args.crowdastro, args.training, args.results, overwrite=args.overwrite,
          plot=args.plot)

@@ -90,7 +90,7 @@ def rf(results, method_name, split_id, features, targets, test_indices,
 
 
 def raykar(results, method_name, split_id, features, targets, test_indices,
-        overwrite=False):
+           overwrite=False, n_restarts=5):
     """Run the Raykar algorithm and store results.
 
     results: Results object.
@@ -100,6 +100,7 @@ def raykar(results, method_name, split_id, features, targets, test_indices,
     method_name: Name of this method in the results.
     split_id: ID of the split in the results.
     overwrite: Whether to overwrite existing results (default False).
+    n_restarts: Number of random restarts. Default 5.
     """
     assert max(test_indices) < features.shape[0]
     assert min(test_indices) >= 0
@@ -110,9 +111,9 @@ def raykar(results, method_name, split_id, features, targets, test_indices,
         logging.info('Skipping trial {}:{}.'.format(method_name, split_id))
         return
 
-    rc = RaykarClassifier()
+    rc = RaykarClassifier(max_inner_iters=5, n_restarts=n_restarts)
     rc.fit(features[train_indices], targets[:, train_indices])
     results.store_trial(method_name, split_id,
-            rc.predict_proba(features[test_indices])[:, 1],
+            rc.predict_proba(features[test_indices]),
             indices=test_indices, params=rc.serialise())
 

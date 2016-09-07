@@ -143,7 +143,8 @@ class Results(object):
             else:
                 f['results'][self.method_idx[method], split] = results
                 f['run_flag'][self.method_idx[method], split] = 1
-            f['models'][self.method_idx[method], split] = params
+            f['models'][self.method_idx[method],
+                    split, :params.shape[0]] = params
 
     def has_run(self, method, split):
         """Returns whether a trial has run successfully.
