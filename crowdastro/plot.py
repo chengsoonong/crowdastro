@@ -110,14 +110,30 @@ def vertical_scatter(xs, ys, style='bx', rotation='horizontal'):
     for x in range(len(xs)):
         plt.plot([x] * len(ys[x]), ys[x], style)
     plt.xticks(range(len(xs)), xs, rotation=rotation)
+    plt.xlim((-0.5, len(xs) - 0.5))  # Adds a little buffer.
 
 
-def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), **kwargs):
+def violinplot(xs, ys, rotation='horizontal', points=100):
+    """Plots a vertical scatter plot.
+
+    xs: List of x labels.
+    ys: List of lists of points to scatter vertically.
+    rotation: x label rotation. Default 'horizontal'.
+    points: Number of points to use in the density estimate.
+    """
+    plt.violinplot(ys, showmeans=True, points=points)
+    plt.xticks([1 + i for i in range(len(xs))], xs, rotation=rotation)
+    plt.xlim((0.5, len(xs) + 0.5))  # Adds a little buffer.
+
+
+def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), violin=False,
+                        **kwargs):
     """Plot a vertical scatter plot of balanced accuracies.
 
     results: Results object.
     targets: Target labels.
     ylim: (lower, upper) y axis.
+    violin: Plot a violin plot instead. Default False.
     kwargs: Keyword arguments passed to vertical_scatter.
     """
     xs = sorted(results.method_idx, key=results.method_idx.get)
@@ -139,7 +155,9 @@ def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), **kwargs):
             y.append(ba)
         ys.append(y)
 
-    vertical_scatter(xs, ys, **kwargs)
+    if violin:
+        violinplot(xs, ys, **kwargs)
+    else:
+        vertical_scatter(xs, ys, **kwargs)
     plt.ylim(ylim)
-    plt.xlim((-0.5, len(xs) - 0.5))  # Adds a little buffer.
     plt.ylabel('Balanced accuracy (%)')
