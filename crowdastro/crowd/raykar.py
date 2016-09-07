@@ -274,8 +274,8 @@ class RaykarClassifier(object):
                 if y_mask[t, i]:
                     continue
 
-                exp_a *= a[t] ** Y[t, i] * (1 - a[t]) ** (1 - Y[t, i])
-                exp_b *= b[t] ** (1 - Y[t, i]) * (1 - b[t]) ** Y[t, i]
+                exp_a[i] *= a[t] ** Y[t, i] * (1 - a[t]) ** (1 - Y[t, i])
+                exp_b[i] *= b[t] ** (1 - Y[t, i]) * (1 - b[t]) ** Y[t, i]
         exp_p = self._logistic_regression(w, X)
 
         return (exp_a * exp_p + exp_b * (1 - exp_p)).prod()
