@@ -15,6 +15,25 @@ import sklearn.linear_model
 EPS = 1e-10
 
 
+def majority_vote(y):
+    _, n_samples = y.shape
+    mv = numpy.zeros((n_samples,))
+    for i in range(n_samples):
+        labels = y[:, i]
+
+        if labels.mask is False:
+            counter = collections.Counter(labels)
+        else:
+            counter = collections.Counter(labels[~labels.mask])
+
+        if counter:
+            mv[i] = max(counter, key=counter.get)
+        else:
+            # No labels for this data point.
+            mv[i] = numpy.random.randint(2)  # ¯\_(ツ)_/¯
+    return mv
+
+
 class RaykarClassifier(object):
     """Classifier based on the Raykar et al. (2010) EM algorithm.
 
@@ -75,10 +94,16 @@ class RaykarClassifier(object):
             raise ValueError('x and y have different numbers of samples.')
 
         # Compute majority vote labels for initialisation.
-        m = mv = self._majority_vote(y)
+        mv = self._majority_vote(y)
+        m = mv.copy()
+        # Add a small random factor for variety.
+        m[m == 1] -= numpy.abs(numpy.random.normal(scale=1e-2,
+                                                   size=m[m == 1].shape[0]))
+        m[m == 0] += numpy.abs(numpy.random.normal(scale=1e-2,
+                                                   size=m[m == 0].shape[0]))
 
-        # Convert y into a dense array and a mask. Then we can ignore the mask when
-        # we don't need it and get nice fast code (numpy.ma is quite slow).
+        # Convert y into a dense array and a mask. Then we can ignore the mask
+        # when we don't need it and get nice fast code (numpy.ma is quite slow).
         y_mask = y.mask
         y = y.filled(0)
 
@@ -88,7 +113,7 @@ class RaykarClassifier(object):
             # Maximisation step.
             a = self._max_alpha_step(m, y, y_mask)
             b = self._max_beta_step(m, y, y_mask)
-            w = self._max_w_step(m, x, mv, init_w=w)
+            w = self._max_w_step(a, b, m, x, y, y_mask, mv, init_w=w)
 
             # Expectation step.
             m_ = self._exp_m_step(a, b, w, x, y, y_mask)
@@ -97,6 +122,8 @@ class RaykarClassifier(object):
                           numpy.linalg.norm(m_ - m))
 
             if numpy.linalg.norm(m_ - m) < self.epsilon:
+                logging.debug('a: {}'.format(a))
+                logging.debug('b: {}'.format(b))
                 return a, b, w
 
             m = m_
@@ -111,19 +138,25 @@ class RaykarClassifier(object):
                 if y_mask[t, i]:
                     continue
 
-                exp_a *= a[t] ** y[t, i] * (1 - a[t]) ** (1 - y[t, i])
-                exp_b *= b[t] ** (1 - y[t, i]) * (1 - b[t]) ** y[t, i]
+                exp_a[i] *= a[t] ** y[t, i] * (1 - a[t]) ** (1 - y[t, i])
+                exp_b[i] *= b[t] ** (1 - y[t, i]) * (1 - b[t]) ** y[t, i]
+
+        logging.debug('Average a_i: {:.02}'.format(exp_a.mean()))
+        logging.debug('Average alpha_t: {:.02}'.format(a.mean()))
+        logging.debug('Max alpha_t: {}'.format(a.max()))
+        logging.debug('Min alpha_t: {}'.format(a.min()))
 
         return exp_a * lr / (exp_a * lr + exp_b * (1 - lr) + EPS)
 
     def _hessian_inverse_multiply(self, x, H, g):
         return numpy.linalg.norm(H.dot(x) - g)
 
-    def _max_w_step(self, m, x, mv, init_w=None):
+    def _max_w_step(self, a, b, m, x, y, y_mask, mv, init_w=None):
         """Computes w based on μ.
 
         m: μ
         x: (n_samples, n_features) NumPy array of examples.
+        y: Array of crowd labels.
         mv: Majority vote of labels.
         init_w: Initial value of w.
         -> w
@@ -140,32 +173,37 @@ class RaykarClassifier(object):
         else:
             w = init_w
 
-        for i in range(self.max_inner_iters):
-            lr = self._logistic_regression(w, x)
-            g = numpy.dot(m - lr, x)
-
-            H = numpy.zeros((n_features, n_features))
-            for i in range(n_samples):
-                H += -lr[i] * (1 - lr[i]) * numpy.outer(x[i], x[i])
-
-            # Need to find H^{-1} g. Since there may be many features, this is
-            # fastest if we minimise ||Hx - g|| for x.
-            invHg = scipy.optimize.fmin_bfgs(self._hessian_inverse_multiply,
-                    numpy.random.normal(size=w.shape), args=(H, g), disp=False)
-
-            w_ = w - self.inner_step * invHg
-
-            dw = numpy.linalg.norm(w_ - w)
-
-            logging.debug('Current value of delta w: %f', dw)
-
-            if dw < self.inner_epsilon:
-                return w
-
-            w = w_
-
-        logging.warning('Optimisation of w failed to converge, delta w: %f', dw)
+        w = scipy.optimize.fmin_bfgs(self._log_likelihood, w,
+                                     args=(a, b, x, y, y_mask),
+                                     disp=False)
         return w
+
+        # for i in range(self.max_inner_iters):
+        #     lr = self._logistic_regression(w, x)
+        #     g = numpy.dot(m - lr, x)
+
+        #     H = numpy.zeros((n_features, n_features))
+        #     for i in range(n_samples):
+        #         H += -lr[i] * (1 - lr[i]) * numpy.outer(x[i], x[i])
+
+        #     # Need to find H^{-1} g. Since there may be many features, this is
+        #     # fastest if we minimise ||Hx - g|| for x.
+        #     invHg = scipy.optimize.fmin_bfgs(self._hessian_inverse_multiply,
+        #             numpy.random.normal(size=w.shape), args=(H, g), disp=False)
+
+        #     w_ = w - self.inner_step * invHg
+
+        #     dw = numpy.linalg.norm(w_ - w)
+
+        #     logging.debug('Current value of delta w: %f', dw)
+
+        #     if dw < self.inner_epsilon:
+        #         return w
+
+        #     w = w_
+
+        # logging.warning('Optimisation of w failed to converge, delta w: %f', dw)
+        # return w
 
     def _max_alpha_step(self, m, y, y_mask):
         """Computes α based on μ.
@@ -175,26 +213,14 @@ class RaykarClassifier(object):
         y_mask: Mask of unobserved crowd labels.
         -> α
         """
+        logging.debug('Percentage y == m == 1: {:.02%}'.format(
+                numpy.logical_and(y == 1, y == m.round()).mean()))
+        logging.debug('Percentage m == 1: {:.02%}'.format(m.round().mean()))
         return numpy.dot(y, m) / (m.sum() + EPS)
 
     def _majority_vote(self, y):
         """Computes majority vote of partially observed crowd labels."""
-        _, n_samples = y.shape
-        mv = numpy.zeros((n_samples,))
-        for i in range(n_samples):
-            labels = y[:, i]
-
-            if labels.mask is False:
-                counter = collections.Counter(labels)
-            else:
-                counter = collections.Counter(labels[~labels.mask])
-
-            if counter:
-                mv[i] = max(counter, key=counter.get)
-            else:
-                # No labels for this data point.
-                mv[i] = numpy.random.randint(2)  # ¯\_(ツ)_/¯
-        return mv
+        return majority_vote(y)
 
     def _logistic_regression(self, w, x):
         """Logistic regression classifier model.
@@ -228,10 +254,19 @@ class RaykarClassifier(object):
         X: (n_samples, n_features) NumPy array of data.
         Y: (n_labellers, n_samples) NumPy masked array of crowd labels.
         """
-        a, b, w = self.a_, self.b_, self.w_
         X = numpy.hstack([X, numpy.ones((X.shape[0], 1))])
-        y_mask = Y.mask
-        Y = Y.filled(0)
+        return self._likelihood(self.w_, self.a_, self.b_, X, Y.filled(0),
+                                Y.mask)
+
+    def _log_likelihood(self, *args, **kwargs):
+        return numpy.log(self._likelihood(*args, **kwargs) + EPS)
+
+    def _likelihood(self, w, a, b, X, Y, y_mask):
+        """Computes the likelihood of labels and data under a model.
+
+        X: (n_samples, n_features) NumPy array of data.
+        Y: (n_labellers, n_samples) NumPy masked array of crowd labels.
+        """
         exp_a = numpy.ones((X.shape[0],))
         exp_b = numpy.ones((X.shape[0],))
         for t in range(a.shape[0]):
