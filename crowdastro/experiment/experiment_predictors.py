@@ -24,6 +24,17 @@ from .results import Results
 from ..plot import vertical_scatter_ba
 
 
+def raw_majority_vote_experiment(results, method, split_id, n_params,
+                                 crowdastro_h5):
+    # For each galaxy, find a percentage for that galaxy. >= 0.5 will identify a
+    # galaxy as containing an AGN.
+    labels = crowdastro_h5['/wise/cdfs/rgz_raw_labels'].value
+    labels_mask = crowdastro_h5['/wise/cdfs/rgz_raw_labels_mask'].value
+    labels = numpy.ma.MaskedArray(labels, mask=labels_mask)
+    percentages = labels.mean(axis=0)
+    results.store_trial(method, split_id, percentages, numpy.zeros((n_params,)))
+
+
 def main(crowdastro_h5_path, training_h5_path, results_h5_path,
          overwrite=False, plot=False):
     with h5py.File(crowdastro_h5_path, 'r') as crowdastro_h5, \
@@ -32,7 +43,8 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
         n_splits = crowdastro_h5['/wise/cdfs/test_sets'].shape[0]
         n_examples, n_params = training_h5['features'].shape
         n_params += 1  # Bias term.
-        methods = ['LR(Norris)', 'LR(Fan)', 'LR(RGZ-MV)', 'Raykar(RGZ-Raw)']
+        methods = ['LR(Norris)', 'LR(Fan)', 'LR(RGZ-MV)', 'Raykar(RGZ-Raw)',
+                   'RGZ-Raw-MV']
         model = '{} sklearn.linear_model.LogisticRegression'.format(
                 sklearn.__version__)
 
@@ -60,11 +72,13 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
                     runners.lr(results, method, split_id, features[method],
                                targets[method], list(test_set),
                                overwrite=overwrite)
-                elif method.startswith('Raykar'):
-                    runners.raykar(results, method, split_id, features[method],
-                                   targets[method], list(test_set),
-                                   overwrite=overwrite, n_restarts=1)
-
+                # elif method.startswith('Raykar'):
+                #     runners.raykar(results, method, split_id, features[method],
+                #                    targets[method], list(test_set),
+                #                    overwrite=overwrite, n_restarts=1)
+                elif method == 'RGZ-Raw-MV':
+                    raw_majority_vote_experiment(results, method, split_id,
+                            n_params, crowdastro_h5)
 
         if plot:
             matplotlib.rcParams['font.family'] = 'serif'
