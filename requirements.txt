@@ -5,7 +5,6 @@ matplotlib==1.5.1
 numpy==1.11.0
 pandas==0.18.1
 pymongo>=3.0.3
-pyyaml-3.12
 requests==2.10.0
 scikit-image==0.12.3
 scikit-learn==0.17.1
