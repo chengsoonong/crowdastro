@@ -11,7 +11,7 @@ pip3 install crowdastro
 
 ## MongoDB
 
-Install and run MongoDB. On Mac OS X or Linux, you can run MongoDB as follows:
+Install and run [MongoDB](https://docs.mongodb.com/manual/installation/). On Mac OS X or Linux, you can run MongoDB as follows:
 
 ```bash
 mongod --config /usr/local/etc/mongod.conf --fork

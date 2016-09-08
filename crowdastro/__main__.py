@@ -9,20 +9,21 @@ import argparse
 import logging
 import sys
 
-from . import __description__
-from . import __version__
-from . import compile_cnn
-from . import consensuses
-from . import generate_annotator_labels
-from . import generate_cnn_outputs
-from . import generate_dataset
-from . import generate_test_sets
-from . import generate_training_data
-from . import import_data
-from . import repack_h5
-from . import test
-from . import train
-from . import train_cnn
+from crowdastro import __description__
+from crowdastro import __version__
+from crowdastro import compile_cnn
+from crowdastro import consensuses
+from crowdastro import generate_annotator_labels
+from crowdastro import generate_cnn_outputs
+from crowdastro import generate_dataset
+from crowdastro import generate_test_sets
+from crowdastro import generate_training_data
+from crowdastro import import_data
+from crowdastro import repack_h5
+from crowdastro import test
+from crowdastro import train
+from crowdastro import train_cnn
+
 
 def main():
     parser = argparse.ArgumentParser(description=__description__)
