@@ -105,7 +105,8 @@ class RaykarClassifier(object):
         # Convert y into a dense array and a mask. Then we can ignore the mask
         # when we don't need it and get nice fast code (numpy.ma is quite slow).
         y_mask = y.mask
-        y = y.filled(0)
+        y_1 = y.filled(1)
+        y = y_0 = y.filled(0)
 
         w = None
 
@@ -113,7 +114,7 @@ class RaykarClassifier(object):
             # Maximisation step.
             a = self._max_alpha_step(m, y, y_mask)
             b = self._max_beta_step(m, y, y_mask)
-            w = self._max_w_step(a, b, m, x, y, y_mask, mv, init_w=w)
+            w = self._max_w_step(a, b, m, x, y_0, y_1, mv, init_w=w)
 
             # Expectation step.
             m_ = self._exp_m_step(a, b, w, x, y, y_mask)
@@ -151,12 +152,12 @@ class RaykarClassifier(object):
     def _hessian_inverse_multiply(self, x, H, g):
         return numpy.linalg.norm(H.dot(x) - g)
 
-    def _max_w_step(self, a, b, m, x, y, y_mask, mv, init_w=None):
+    def _max_w_step(self, a, b, m, x, y_0, y_1, mv, init_w=None):
         """Computes w based on μ.
 
         m: μ
         x: (n_samples, n_features) NumPy array of examples.
-        y: Array of crowd labels.
+        y_0, y_1: Array of crowd labels filled with 0 or 1.
         mv: Majority vote of labels.
         init_w: Initial value of w.
         -> w
@@ -174,7 +175,8 @@ class RaykarClassifier(object):
             w = init_w
 
         w = scipy.optimize.fmin_bfgs(self._log_likelihood, w,
-                                     args=(a, b, x, y, y_mask),
+                                     args=(a.reshape((-1, 1)),
+                                           b.reshape((-1, 1)), x, y_0, y_1),
                                      disp=False)
         return w
 
@@ -255,28 +257,27 @@ class RaykarClassifier(object):
         Y: (n_labellers, n_samples) NumPy masked array of crowd labels.
         """
         X = numpy.hstack([X, numpy.ones((X.shape[0], 1))])
-        return self._likelihood(self.w_, self.a_, self.b_, X, Y.filled(0),
-                                Y.mask)
+        return self._likelihood(self.w_, self.a_.reshape((-1, 1)),
+                                self.b_.reshape((-1, 1)), X, Y.filled(0),
+                                Y.filled(1))
 
     def _log_likelihood(self, *args, **kwargs):
         return numpy.log(self._likelihood(*args, **kwargs) + EPS)
 
-    def _likelihood(self, w, a, b, X, Y, y_mask):
+    def _likelihood(self, w, a, b, X, Y_0, Y_1):
         """Computes the likelihood of labels and data under a model.
 
         X: (n_samples, n_features) NumPy array of data.
         Y: (n_labellers, n_samples) NumPy masked array of crowd labels.
         """
-        exp_a = numpy.ones((X.shape[0],))
-        exp_b = numpy.ones((X.shape[0],))
-        for t in range(a.shape[0]):
-            for i in range(X.shape[0]):
-                if y_mask[t, i]:
-                    continue
-
-                exp_a[i] *= a[t] ** Y[t, i] * (1 - a[t]) ** (1 - Y[t, i])
-                exp_b[i] *= b[t] ** (1 - Y[t, i]) * (1 - b[t]) ** Y[t, i]
+        n_examples = X.shape[0]
         exp_p = self._logistic_regression(w, X)
+        exp_a = numpy.ones((n_examples,))
+        exp_b = numpy.ones((n_examples,))
+        exp_a = numpy.power(a, Y_0).prod(axis=0)
+        exp_a *= numpy.power(1 - a, 1 - Y_1).prod(axis=0)
+        exp_b *= numpy.power(b, 1 - Y_1).prod(axis=0)
+        exp_b *= numpy.power(1 - b, Y_0).prod(axis=0)
 
         return (exp_a * exp_p + exp_b * (1 - exp_p)).prod()
 
