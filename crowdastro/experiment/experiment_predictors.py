@@ -63,7 +63,7 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
                 elif method.startswith('Raykar'):
                     runners.raykar(results, method, split_id, features[method],
                                    targets[method], list(test_set),
-                                   overwrite=overwrite)
+                                   overwrite=overwrite, n_restarts=1)
 
 
         if plot:
@@ -84,13 +84,15 @@ if __name__ == '__main__':
                         help='HDF5 results data file')
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite existing results')
-    parser.add_argument('--verbose -v', action='store_true',
+    parser.add_argument('--verbose', '-v', action='store_true',
                         help='Verbose output')
     parser.add_argument('--plot', action='store_true', help='Generate a plot')
     args = parser.parse_args()
 
     if args.verbose:
         logging.root.setLevel(logging.DEBUG)
+    else:
+        logging.root.setLevel(logging.INFO)
 
     main(args.crowdastro, args.training, args.results, overwrite=args.overwrite,
          plot=args.plot)
