@@ -160,4 +160,7 @@ def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), violin=False,
     else:
         vertical_scatter(xs, ys, **kwargs)
     plt.ylim(ylim)
+    plt.grid(b=True, which='both', axis='y', color='grey', linestyle='-',
+             alpha=0.5)
+    plt.minorticks_on()
     plt.ylabel('Balanced accuracy (%)')
