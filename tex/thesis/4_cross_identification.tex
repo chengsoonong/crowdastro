@@ -175,5 +175,20 @@
     For each infrared object, features and labels were generated as described in Sections \ref{sec:features} and \ref{sec:consensuses}, respectively. Note that the labels were sourced from the Radio Galaxy Zoo. A logistic regression classifier was then trained on the training set using binary cross-entropy loss, with loss of each data point weighted based on the frequency of its label.
 
     The classifier was then used to classify the objects in the testing set. The labels were compared to those found by \citet{norris06} as described in Section \ref{sec:norris}, resulting in $80.14\%$ balanced accuracy.
+    \todo{This number is out of date.}
 
     \todo{ROC/precision--recall curves}
+
+    \begin{figure}[!ht]
+      \centering
+      \includegraphics[width=\textwidth]{images/experiments/predictors.pdf}
+      \caption{Performance of logistic regression on the galaxy classification task, trained on different sets of labels and tested on the galaxies where \citeauthor{norris06} and \citeauthor{fan15} labels agree. LR($Y$) indicates logistic regression trained on $Y$. RGZ-MV is the set of majority vote labels from the Radio Galaxy Zoo. RGZ-Raw-MV is the majority vote of all crowd labels and is included for comparison.}
+    \end{figure}
+
+  \subsection{Number of Training Examples}
+
+    \begin{figure}[!ht]
+      \centering
+      \includegraphics[width=\textwidth]{images/experiments/passive.pdf}
+      \caption{Performance of logistic regression on the galaxy classification task, trained on different amounts of the \citeauthor{norris06} label set.}
+    \end{figure}

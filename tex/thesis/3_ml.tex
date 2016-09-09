@@ -112,7 +112,7 @@ efficiency.
                 \label{eq:raykar-beta}
                 \beta_t &= \frac{\sum_{i = 1}^N (1 - \mu_i) (1 - y_{t, i})}{\sum_{i = 1}^N (1 - \mu_i)}
             \end{align}
-            and find the $\vec w$ that maximises the likelihood using gradient methods.
+            and find the $\vec w$ that maximises the likelihood using gradient methods. I initialised $\vec w$ using logistic regression trained on the majority vote, and then used the old $\vec w$ to initialise each subsequent maximisation step.
 
             As part of this thesis, I have produced an open source implementation of this algorithm, described in Section \ref{sec:crowdastro-raykar}.
 
