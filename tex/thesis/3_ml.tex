@@ -83,9 +83,10 @@ efficiency.
             For ease of notation, let $\vec \alpha = (\alpha_1, \dots, \alpha_t)$ and $\vec \beta = (\beta_1, \dots, \beta_t)$.
 
             With this method, the classification model can be any classifier. \citeauthor{raykar10} choose to use logistic regression:
-            \begin{equation*}
+            \begin{equation}
+                \label{eq:raykar-logreg}
                 p(z = 1 \mid \vec x, \vec w) = \sigma(\vec w^T \vec x).
-            \end{equation*}
+            \end{equation}
 
             The model parameters $\vec \theta = \{\vec w, \vec \alpha, \vec \beta\}$ can be found by maximising the likelihood. Under the assumption that examples are independently sampled and labellers are independent, the likelihood is given by
             \begin{align*}
@@ -125,4 +126,13 @@ efficiency.
 
         \subsubsection{Yan et al. Method}
 
-            \citet{yan10} propose modelling the $t$th labeller by a data-dependent function $\eta_t(\vec x)$, parametrised as a logistic regression function $\sigma(\vec \alpha_t^T \vec x + \beta_t)$.
+            \citet{yan10} propose modelling the $t$th labeller by a Bernoulli distribution of a data-dependent function $\eta_t(\vec x)$, parametrised as a logistic regression function $\eta_t(\vec x) = \sigma(\vec \omega_t^T \vec x + \gamma_t)$. The labeller model is thus
+            \begin{equation*}
+                p(y_t \mid \vec x, z, \vec \omega_t, \gamma_t) = \eta_t(\vec x)^{1 - |y_t - z|} (1 - \eta_t(\vec x))^{|y_t - z|}.
+            \end{equation*}
+            For ease of notation, let $\Omega = (\vec \omega_1^T, \dots, \vec \omega_T^T)$ and let $\vec \gamma = (\gamma_1, \dots, \gamma_T)$. This model can be obtained from the \citeauthor{raykar10} model by requiring $\alpha_t = \beta_t = \eta_t(\vec x)$ and allowing these parameters be data-dependent.
+
+            As with \citeauthor{raykar10}, the classification model can be any classifier and \citeauthor{yan10} choose to use logistic regression (Equation \ref{eq:raykar-logreg}). The parameters $\vec \theta = \{\Omega, \vec \gamma, \vec w\}$ can be found by maximising the likelihood with expectation-maximisation. Under the assumptions that examples are independently sampled and that the labellers are independent, the likelihood is given by
+            \begin{align*}
+                p(\mathcal D \mid \vec \theta) &= \prod_{i = 1}^N \prod_{t = 1}^T p(y_{t, i} \mid \vec x_i, \vec w, \Omega, \vec \gamma)\\ &= \prod_{i = 1}^N \prod_{t = 1}^T \sum_{z = 0}^1 p(y_t \mid \vec x_i, z, \vec \omega_t, \gamma_t) p(z \mid \vec x_i, \vec w)\\
+            \end{align*}
