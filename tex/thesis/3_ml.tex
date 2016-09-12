@@ -64,7 +64,7 @@ efficiency.
 
         In crowd learning scenarios, it is common to have multiple labels for a data point with no known groundtruth. One way to deal with this is to jointly model both the reliability of each labeller (the \emph{labeller model}) and the groundtruth itself (the \emph{classification model}). Methods following this approach are developed in \citet{raykar10} and \citet{yan10}. These methods make different assumptions on the labellers. I describe these methods in detail here.
 
-        \subsubsection{Raykar et al. (2010) Method}
+        \subsubsection{Raykar et al. Method}
             \label{sec:raykar}
 
             \citet{raykar10} propose modelling the $t$th labeller by two parameters $\alpha_t$ and $\beta_t$. $\alpha_t$ is the \emph{sensitivity} and $\beta_t$ is the \emph{specificity} of labeller $t$, i.e.
@@ -112,7 +112,7 @@ efficiency.
                 \label{eq:raykar-beta}
                 \beta_t &= \frac{\sum_{i = 1}^N (1 - \mu_i) (1 - y_{t, i})}{\sum_{i = 1}^N (1 - \mu_i)}
             \end{align}
-            and find the $\vec w$ that maximises the likelihood using gradient methods. I initialised $\vec w$ using logistic regression trained on the majority vote, and then used the old $\vec w$ to initialise each subsequent maximisation step.
+            and find the $\vec w$ that maximises the likelihood using gradient methods. In my implementation of this algorithm, I initialised $\vec w$ using logistic regression trained on the majority vote, and then used the old $\vec w$ to initialise each subsequent maximisation step.
 
             As part of this thesis, I have produced an open source implementation of this algorithm, described in Section \ref{sec:crowdastro-raykar}. I then used this implementation to classify a simple, simulated crowd labelling problem. Five simulated labellers were assigned true positive and false positive rates uniformly distributed in the range $[0.25, 0.75]$. Each simulated labeller labelled 50\% of the breast cancer dataset \citep{wolberg90} which can be obtained from the UCI Machine Learning Repository \citep{lichman13}\footnote{\url{https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+\%28Original\%29}}. Random samples of 75\% of the examples were drawn 20 times and used to train both the \citeauthor{raykar10} classifier and a logistic regression classifier (using majority vote for the labels). These classifiers were tested against the groundtruth of the remaining 25\%. The results are plotted in Figure \ref{fig:raykar}. The Raykar classifier attained a balanced accuracy of $(58 \pm 8)\%$ and the logistic regression classifier attained a balanced accuracy of $(56 \pm 8)\%$.
 
@@ -123,3 +123,6 @@ efficiency.
                 \label{fig:raykar}
             \end{figure}
 
+        \subsubsection{Yan et al. Method}
+
+            \citet{yan10} propose modelling the $t$th labeller by a data-dependent function $\eta_t(\vec x)$, parametrised as a logistic regression function $\sigma(\vec \alpha_t^T \vec x + \beta_t)$.
