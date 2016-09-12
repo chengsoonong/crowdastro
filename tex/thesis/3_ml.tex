@@ -114,5 +114,12 @@ efficiency.
             \end{align}
             and find the $\vec w$ that maximises the likelihood using gradient methods. I initialised $\vec w$ using logistic regression trained on the majority vote, and then used the old $\vec w$ to initialise each subsequent maximisation step.
 
-            As part of this thesis, I have produced an open source implementation of this algorithm, described in Section \ref{sec:crowdastro-raykar}.
+            As part of this thesis, I have produced an open source implementation of this algorithm, described in Section \ref{sec:crowdastro-raykar}. I then used this implementation to classify a simple, simulated crowd labelling problem. Five simulated labellers were assigned true positive and false positive rates uniformly distributed in the range $[0.25, 0.75]$. Each simulated labeller labelled 50\% of the breast cancer dataset \citep{wolberg90} which can be obtained from the UCI Machine Learning Repository \citep{lichman13}\footnote{\url{https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+\%28Original\%29}}. Random samples of 75\% of the examples were drawn 20 times and used to train both the \citeauthor{raykar10} classifier and a logistic regression classifier (using majority vote for the labels). These classifiers were tested against the groundtruth of the remaining 25\%. The results are plotted in Figure \ref{fig:raykar}. The Raykar classifier attained a balanced accuracy of $(58 \pm 8)\%$ and the logistic regression classifier attained a balanced accuracy of $(56 \pm 8)\%$.
+
+            \begin{figure}[!ht]
+                \centering
+                \includegraphics[width=\textwidth]{images/experiments/raykar.pdf}
+                \caption{Performance of the \citeauthor{raykar10} classifier against logistic regression on a simulated crowd labelling of the breast cancer dataset \citep{wolberg90}.}
+                \label{fig:raykar}
+            \end{figure}
 

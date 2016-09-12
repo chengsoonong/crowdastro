@@ -5,6 +5,8 @@ The Australian National University
 2016
 """
 
+import logging
+
 import astropy.io.fits
 import astropy.wcs
 import matplotlib.pyplot as plt
@@ -127,13 +129,14 @@ def violinplot(xs, ys, rotation='horizontal', points=100):
 
 
 def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), violin=False,
-                        **kwargs):
+                        minorticks=True, **kwargs):
     """Plot a vertical scatter plot of balanced accuracies.
 
     results: Results object.
     targets: Target labels.
     ylim: (lower, upper) y axis.
     violin: Plot a violin plot instead. Default False.
+    minorticks: Use minor ticks. Default True.
     kwargs: Keyword arguments passed to vertical_scatter.
     """
     xs = sorted(results.method_idx, key=results.method_idx.get)
@@ -153,6 +156,10 @@ def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), violin=False,
             tn = cm[0, 0]
             ba = (tp / p + tn / n) / 2
             y.append(ba)
+        logging.info('Average balanced accuracy ({}): {:.02%}'.format(
+                method, numpy.mean(y)))
+        logging.info('Standard deviation ({}): {:.02%}'.format(
+                method, numpy.std(y)))
         ys.append(y)
 
     if violin:
@@ -162,5 +169,6 @@ def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), violin=False,
     plt.ylim(ylim)
     plt.grid(b=True, which='both', axis='y', color='grey', linestyle='-',
              alpha=0.5)
-    plt.minorticks_on()
+    if minorticks:
+        plt.minorticks_on()
     plt.ylabel('Balanced accuracy (%)')

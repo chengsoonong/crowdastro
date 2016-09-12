@@ -14,6 +14,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy
 import sklearn
+import sklearn.decomposition
 import sklearn.metrics
 
 from . import runners
@@ -61,17 +62,22 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
         n_splits = crowdastro_h5['/wise/cdfs/test_sets'].shape[0]
         n_examples, n_params = training_h5['features'].shape
         n_params += 1  # Bias term.
-        n_params += 5 * 2  # α, β.
-        methods = ['Top-5-annotators']
+        n_params += crowdastro_h5['/wise/cdfs/rgz_raw_labels'].shape[0] * 2
+        methods = ['Top-5-annotators', 'Top-10-annotators', 'PCA-10D']
         model = '{} crowdastro.crowd.raykar.RaykarClassifier'.format(
                 __version__)
 
         results = Results(results_h5_path, methods, n_splits, n_examples,
                           n_params, model)
 
-        features = training_h5['features'].value
+        all_features = training_h5['features'].value
         targets = {
             'Top-5-annotators': top_n_targets(crowdastro_h5, n_annotators=5),
+            'Top-10-annotators': top_n_targets(crowdastro_h5, n_annotators=10),
+            'PCA-10D': numpy.ma.MaskedArray(
+                    crowdastro_h5['/wise/cdfs/rgz_raw_labels'].value,
+                    mask=crowdastro_h5['/wise/cdfs/rgz_raw_labels_mask'].value,
+            ),
         }
 
         for split_id, test_set in enumerate(
@@ -80,6 +86,17 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
             for method_id, method in enumerate(methods):
                 logging.info('Method {} ({}/{})'.format(method, method_id + 1,
                                                         len(methods)))
+
+                if method == 'PCA-10D':
+                    pca = sklearn.decomposition.PCA(n_components=10)
+                    train_set = range(
+                            crowdastro_h5['/wise/cdfs/numeric'].shape[0])
+                    train_set = sorted(set(train_set) - set(test_set))
+                    pca.fit(all_features[train_set])
+                    features = pca.transform(all_features)
+                else:
+                    features = all_features
+
                 runners.raykar(results, method, split_id, features,
                                targets[method], list(test_set),
                                overwrite=overwrite, n_restarts=1)

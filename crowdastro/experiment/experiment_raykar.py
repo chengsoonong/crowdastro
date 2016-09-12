@@ -105,7 +105,8 @@ def main(input_csv_path, results_h5_path, overwrite=False, plot=False,
         if plot:
             matplotlib.rcParams['font.family'] = 'serif'
             matplotlib.rcParams['font.serif'] = ['Palatino Linotype']
-            vertical_scatter_ba(results, labels, violin=True)
+            vertical_scatter_ba(results, labels, violin=True, minorticks=False)
+            plt.ylim((0, 1))
             plt.show()
 
 
@@ -124,5 +125,7 @@ if __name__ == '__main__':
 
     if args.verbose:
         logging.root.setLevel(logging.DEBUG)
+    else:
+        logging.root.setLevel(logging.INFO)
 
     main(args.input, args.results, overwrite=args.overwrite, plot=args.plot)
