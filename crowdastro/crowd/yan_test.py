@@ -17,82 +17,28 @@ class TestGradients(unittest.TestCase):
         self.T = T = 4
         self.D = D = 5
         self.N = N = 20
-        
+
         self.x = numpy.random.random(size=(N, D))
+        self.x_with_bias = numpy.hstack(
+                [self.x, numpy.ones((self.x.shape[0], 1))])
         self.y = numpy.random.binomial(1, 0.5, size=(T, N))
-        
+
         self.posteriors = numpy.random.random(size=(N,))
         self.posteriors_0 = 1 - self.posteriors
 
         self.params = numpy.random.normal(scale=0.5, size=(D + 1 + T * D + T,))
 
-        self.grad = yan.Q(
-                self.params, D, T, N, self.posteriors, self.posteriors_0,
-                self.x, self.y)[1]
+        self.yc = yan.YanClassifier()
+        self.grad = yan.YanClassifier._Q(
+                self.yc,
+                self.params, D + 1, T, N, self.posteriors, self.posteriors_0,
+                self.x_with_bias, self.y)[1]
 
         self.trials = 10
 
     # A neater way to do this would be to just loop over all indices in the
     # gradient. I've chosen to split this into each parameter so that the tests
     # will better indicate which gradients are incorrect.
-
-    def test_grad_b(self):
-        grads = []
-        for i in range(self.trials):
-            h = numpy.zeros(self.params.shape)
-            h[self.D] = (i + 1) / self.trials \
-                    * numpy.linalg.norm(self.params) * 1e-10
-            grads.append((yan.Q(
-                        self.params + h,
-                        self.D,
-                        self.T,
-                        self.N,
-                        self.posteriors,
-                        self.posteriors_0,
-                        self.x,
-                        self.y
-                    )[0] - yan.Q(
-                        self.params,
-                        self.D,
-                        self.T,
-                        self.N,
-                        self.posteriors,
-                        self.posteriors_0,
-                        self.x,
-                        self.y
-                    )[0]) / h[self.D])
-        grad = numpy.mean(grads, axis=0)
-        self.assertTrue(numpy.isclose(grad, self.grad[self.D], atol=1e-2))
-
-    def test_grad_g(self):
-        for t in range(self.T):
-            grads = []
-            for i in range(self.trials):
-                h = numpy.zeros(self.params.shape)
-                h[-self.T+t] = (i + 1) / self.trials \
-                        * numpy.linalg.norm(self.params) * 1e-10
-                grads.append((yan.Q(
-                            self.params + h,
-                            self.D,
-                            self.T,
-                            self.N,
-                            self.posteriors,
-                            self.posteriors_0,
-                            self.x,
-                            self.y
-                        )[0] - yan.Q(
-                            self.params,
-                            self.D,
-                            self.T,
-                            self.N,
-                            self.posteriors,
-                            self.posteriors_0,
-                            self.x,
-                            self.y
-                        )[0]) / h[-self.T+t])
-            grad = numpy.mean(grads, axis=0)
-            self.assertTrue(numpy.allclose(grad, self.grad[-self.T+t],
-                                           atol=1e-2))
 
     def test_grad_w(self):
         for t in range(self.T):
@@ -101,25 +47,27 @@ class TestGradients(unittest.TestCase):
                 index = self.D+1+self.D*t+d
                 for i in range(self.trials):
                     h = numpy.zeros(self.params.shape)
-                    h[index] = (i + 1) / self.trials \
-                            * numpy.linalg.norm(self.params) * 1e-10
-                    grads.append((yan.Q(
+                    h[index] = (i + 1) / self.trials * \
+                        numpy.linalg.norm(self.params) * 1e-10
+                    grads.append((yan.YanClassifier._Q(
+                                self.yc,
                                 self.params + h,
-                                self.D,
+                                self.D + 1,
                                 self.T,
                                 self.N,
                                 self.posteriors,
                                 self.posteriors_0,
-                                self.x,
+                                self.x_with_bias,
                                 self.y
-                            )[0] - yan.Q(
+                            )[0] - yan.YanClassifier._Q(
+                                self.yc,
                                 self.params,
-                                self.D,
+                                self.D + 1,
                                 self.T,
                                 self.N,
                                 self.posteriors,
                                 self.posteriors_0,
-                                self.x,
+                                self.x_with_bias,
                                 self.y
                             )[0]) / h[index])
                 grad = numpy.mean(grads, axis=0)
@@ -131,25 +79,27 @@ class TestGradients(unittest.TestCase):
             grads = []
             for i in range(self.trials):
                 h = numpy.zeros(self.params.shape)
-                h[d] = (i + 1) / self.trials \
-                        * numpy.linalg.norm(self.params) * 1e-10
-                grads.append((yan.Q(
+                h[d] = (i + 1) / self.trials * \
+                    numpy.linalg.norm(self.params) * 1e-10
+                grads.append((yan.YanClassifier._Q(
+                            self.yc,
                             self.params + h,
-                            self.D,
+                            self.D + 1,
                             self.T,
                             self.N,
                             self.posteriors,
                             self.posteriors_0,
-                            self.x,
+                            self.x_with_bias,
                             self.y
-                        )[0] - yan.Q(
+                        )[0] - yan.YanClassifier._Q(
+                            self.yc,
                             self.params,
-                            self.D,
+                            self.D + 1,
                             self.T,
                             self.N,
                             self.posteriors,
                             self.posteriors_0,
-                            self.x,
+                            self.x_with_bias,
                             self.y
                         )[0]) / h[d])
             grad = numpy.mean(grads, axis=0)

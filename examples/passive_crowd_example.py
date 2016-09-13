@@ -1,5 +1,4 @@
 import logging
-import os.path
 import sys
 
 import matplotlib.pyplot as plt
@@ -7,10 +6,8 @@ import numpy
 import sklearn.cluster
 import sklearn.datasets
 
-sys.path.insert(1, os.path.join('..', 'crowdastro', 'active_learning'))
-import yan
-
-logging.captureWarnings(True)
+sys.path.insert(1, '..')
+import crowdastro.crowd.yan
 
 # Generate some data.
 n_annotators, n_dim, n_samples = 5, 2, 50
@@ -24,13 +21,14 @@ x, z = sklearn.datasets.make_classification(
         random_state=50)
 z = z.reshape((-1, 1)).astype(bool)
 
+
 def run_example(x, z, n_annotators, n_dim, n_samples, plot=False):
     # Generate annotator labels. Cluster the data using k-means, then let each
     # annotator be an expert on one cluster. Switch labels at random 35% of the
     # time for all other clusters.
     y = numpy.zeros((n_annotators, n_samples), dtype=bool)
     k = 5
-    k_means = sklearn.cluster.KMeans(n_clusters=k) 
+    k_means = sklearn.cluster.KMeans(n_clusters=k)
     clusters = k_means.fit_predict(x)
     for annotator in range(n_annotators):
         for sample in range(n_samples):
@@ -40,13 +38,17 @@ def run_example(x, z, n_annotators, n_dim, n_samples, plot=False):
                 # Flip labels at random for non-expert regions.
                 y[annotator, sample] = not z[sample]
 
+    # Hide a percentage of labels.
+    p_hide = 0.35
+    y = numpy.ma.MaskedArray(
+            y, mask=numpy.random.binomial(1, p_hide, size=y.shape))
+
     # Train and predict using the passive crowd algorithm.
-    a, b, w, g = yan.train(x, y, skip_zeros=True, lr_init=True)
-    predictions = yan.predict(a, b, x)
+    yc = crowdastro.crowd.yan.YanClassifier(lr_init=True, n_restarts=15)
+    yc.fit(x, y)
+    predictions = yc.predict(x)
 
     if plot:
-        ## Plots ##
-
         fig = plt.figure()
 
         # Plot the groundtruth.
@@ -100,6 +102,6 @@ def run_many(n, x, z, n_annotators, n_dim, n_samples):
 
 
 if __name__ == '__main__':
+    logging.captureWarnings(True)
+    logging.root.setLevel(logging.DEBUG)
     run_example(x, z, n_annotators, n_dim, n_samples, plot=True)
-    # mean, stdev = run_many(10, x, z, n_annotators, n_dim, n_samples)
-    # print(mean, stdev)

@@ -1,271 +1,238 @@
-"""Yan et al. (2010) EM crowd passive learning algorithm.
+"""Yan et al. (2010) EM crowd learning algorithm.
 
 Matthew Alger
 The Australian National University
 2016
 """
 
-import collections
-import itertools
 import logging
 
+import numba
 import numpy
 import scipy.optimize
 import scipy.special
 import sklearn.linear_model
 
+from crowdastro.crowd.util import majority_vote as compute_majority_vote
+from crowdastro.crowd.util import logistic_regression
+
 
 EPS = 1E-8
 
 
-def logistic_regression(a, b, x):
-    """Logistic regression classifier.
+class YanClassifier(object):
+    """Classifier based on the Yan et al. (2010) EM algorithm.
 
-    a: Weights α. (n_dim,) NumPy array
-    b: Bias β. float
-    x: Data point x_i. (n_dim,) NumPy array
-    -> float in [0, 1]
+    Jointly learns an annotator model and a classification model.
     """
-    res = scipy.special.expit(numpy.dot(x, a.T) + b)
-    return res
 
+    def __init__(self, epsilon=1e-5, lr_init=True, n_restarts=5):
+        """
+        epsilon: Convergence threshold. Default 1e-5.
+        lr_init: Whether to initialise with logistic regression. Default True.
+        n_restarts: Number of random restarts. Default 5.
+        """
+        self.epsilon = epsilon
+        self.lr_init = lr_init
+        self.n_restarts = n_restarts
 
-def annotator_model(w, g, x, y, z):
-    """Yan et al. (2010) Bernoulli annotator model.
+    def fit(self, X, Y):
+        """Fits parameters.
 
-    w: Annotator weights w_t. (n_dim,) NumPy array
-    g: Annotator bias γ_t. (n_dim,) NumPy array
-    x: Data point x_i. (n_dim,) NumPy array
-    y: Label y_i^(t). int
-    z: "True" label z_i. int
-    -> float in [0, 1]
-    """
-    eta = logistic_regression(w, g, x)
-    label_difference = numpy.abs(y - z)
-    return (numpy.power(1 - eta, label_difference.T)
-            * numpy.power(eta, 1 - label_difference.T)).T
+        X: (n_samples, n_features) NumPy array of data.
+        Y: (n_labellers, n_samples) NumPy masked array of crowd labels.
+        """
+        if X.shape[0] != Y.shape[1]:
+            raise ValueError('X and Y have different numbers of samples.')
 
+        results = []
+        for trial in range(self.n_restarts):
+            logging.debug('Trial {}/{}'.format(trial + 1, self.n_restarts))
+            a, w = self._fit_params(X, Y)
+            self.a_, self.w_ = a, w
+            lh = self.score(X, Y)
+            results.append((lh, (a, w)))
 
-def unpack(params, n_dim, n_annotators):
-    """Unpacks an array of parameters in to a, b, w, and g."""
-    a = params[:n_dim]
-    b = params[n_dim]
-    w = params[n_dim+1:n_dim+1+n_annotators*n_dim].reshape(
-            (n_annotators, n_dim))
-    g = params[n_dim+1+n_annotators*n_dim:]
-    return a, b, w, g
+        a, w = max(results, key=lambda z: z[0])[1]
+        self.a_ = a
+        self.w_ = w
 
+    def _fit_params(self, X, Y):
+        """Fits parameters.
 
-def pack(a, b, w, g):
-    """Packs a, b, w, and g into an array of parameters."""
-    return numpy.hstack([a, [b], w.ravel(), g])
+        X: (n_samples, n_features) NumPy array of data.
+        Y: (n_labellers, n_samples) NumPy masked array of crowd labels.
+        """
+        X = numpy.hstack([X, numpy.ones((X.shape[0], 1))])
+        n_samples, n_dim = X.shape
+        n_annotators, n_samples_ = Y.shape
+        assert n_samples == n_samples_, \
+            'Label array has wrong number of labels.'
+        majority_y = compute_majority_vote(Y)
 
-
-def random_restarts(fun):
-    """Randomly runs function many times and returns the best results.
-
-    fun: Function of the form fun(x, y).
-        x: Data. (n_samples, n_dim) NumPy array
-        y: Labels. (n_annotators, n_samples) NumPy array
-    trials: Number of random restarts. Default 1.
-    """
-    results = []
-    def g(*args, **kwargs):
-        if 'trials' in kwargs:
-            trials = kwargs['trials']
-            del kwargs['trials']
+        logging.debug('Initialising Yan method...')
+        if self.lr_init:
+            # For our initial guess, we'll fit logistic regression to the
+            # majority vote.
+            lr_ab = sklearn.linear_model.LogisticRegression(fit_intercept=False)
+            lr_ab.fit(X, majority_y)
+            a = lr_ab.coef_.ravel()
         else:
-            trials = 1
+            a = numpy.random.normal(size=(n_dim,))
+        w = numpy.random.normal(size=(n_annotators, n_dim))
 
-        for trial in range(trials):
-            logging.debug('Trial {}/{}'.format(trial + 1, trials))
-            res = fun(*args, **kwargs)
-            majority_y = compute_majority_vote(args[1])
-            lr = sklearn.linear_model.LogisticRegression()
-            lr.fit(args[0], majority_y)
-            lr.coef_[:] = res[0]
-            lr.intercept_[:] = res[1]
-            # Balanced accuracy.
-            cm = sklearn.metrics.confusion_matrix(majority_y, lr.predict(args[0]))
-            tp = cm[1, 1]
-            n, p = cm.sum(axis=1)
-            tn = cm[0, 0]
-            ba = (tp / p + tn / n) / 2
-            results.append((ba, res))
+        logging.debug('Initial a: %s', a)
+        logging.debug('Initial w: %s', w)
+        logging.debug('Iterating Yan method until convergence...')
 
-        return max(results)[1]
+        iters = 0
+        while True:  # Until convergence (checked later).
+            iters += 1
+            logging.info('Iteration %d', iters)
 
-    return g
+            a_, w_ = self._em_step(n_samples, n_annotators, n_dim, a, w, X, Y)
 
+            # Check convergence.
+            dist = numpy.linalg.norm(a - a_) ** 2
+            logging.debug('Distance: {}'.format(dist))
+            if dist <= self.epsilon:
+                return a_, w_
 
-def compute_majority_vote(y,):
-    n_samples = y.shape[1]
-    majority_y = numpy.zeros((n_samples,))
-    for i in range(n_samples):
-        labels = y[:, i]
+            a, w = a_, w_
 
-        if labels.mask is False:
-            counter = collections.Counter(labels)
-        else:
-            counter = collections.Counter(labels[~labels.mask])
+    def _annotator_model(self, w, x, y, z):
+        """Yan et al. (2010) Bernoulli annotator model.
 
-        if counter:
-            majority_y[i] = max(counter, key=counter.get)
-        else:
-            # No labels for this data point.
-            majority_y[i] = numpy.random.randint(2)  # ¯\_(ツ)_/¯
-    return majority_y
+        w: Annotator weights w_t. (n_dim,) NumPy array
+        x: Data point x_i. (n_dim,) NumPy array
+        y: Label y_i^(t). int
+        z: "True" label z_i. int
+        -> float in [0, 1]
+        """
+        eta = logistic_regression(w, x)
+        label_difference = numpy.abs(y - z)
+        return (numpy.power(1 - eta, label_difference.T) *
+                numpy.power(eta, 1 - label_difference.T)).T
 
+    def _unpack(self, params, n_dim, n_annotators):
+        """Unpacks an array of parameters into a and w."""
+        a = params[:n_dim]
+        w = params[n_dim:].reshape((n_annotators, n_dim))
+        return a, w
 
-def Q(params, n_dim, n_annotators, n_samples, posteriors, posteriors_0, x, y):
-    """Maximisation step minimisation target."""
-    a, b, w, g = unpack(params, n_dim, n_annotators)
+    def _pack(self, a, w):
+        """Packs a and w into an array of parameters."""
+        return numpy.hstack([a, w.ravel()])
 
-    expectation = (
-            posteriors.dot((numpy.log(annotator_model(w, g, x, y, 1) + EPS) +
-                            numpy.log(logistic_regression(a, b, x) + EPS)).T) +
-            posteriors_0.dot((numpy.log(annotator_model(w, g, x, y, 0) + EPS) +
-                              numpy.log(1 - logistic_regression(a, b, x) + EPS)
-                             ).T)
-    ).sum()
+    def _Q(self, params, n_dim, n_annotators, n_samples, posteriors,
+           posteriors_0, x, y):
+        """Maximisation step minimisation target."""
+        a, w = self._unpack(params, n_dim, n_annotators)
 
-    # Also need the gradients.
-    dp = posteriors - posteriors_0
-    # logit_i = scipy.special.expit(x.dot(a) + b)
-    dQ_db = n_annotators * (
-            posteriors.dot(logistic_regression(-a, -b, x)) +
-            posteriors_0.dot(logistic_regression(-a, -b, x) - 1))
-    dQ_da = n_annotators * (
-            numpy.dot(posteriors * logistic_regression(-a, -b, x) +
-                      posteriors_0 * (logistic_regression(-a, -b, x) - 1),
-                      x))
+        expectation = (
+                posteriors.dot(
+                        (numpy.log(self._annotator_model(w, x, y, 1) + EPS) +
+                         numpy.log(logistic_regression(a, x) + EPS)).T) +
+                posteriors_0.dot(
+                        (numpy.log(self._annotator_model(w, x, y, 0) + EPS) +
+                         numpy.log(1 - logistic_regression(a, x) + EPS)).T)
+        ).sum()
 
-    # logit_t = scipy.special.expit(numpy.dot(w, x.T) + g.reshape((-1, 1)))
-    dQ_dw = numpy.zeros(w.shape)
-    # Inefficient, but unrolled for clarity.
-    for t in range(n_annotators):
-        dQ_dw[t] += sum(x[i] * posteriors[i] *
-                                (logistic_regression(-w[t], -g[t], x[i]) -
-                                 abs(y[t, i] - 1)) +
-                        x[i] * posteriors_0[i] *
-                                (logistic_regression(-w[t], -g[t], x[i]) -
-                                 abs(y[t, i] - 0))
-                        for i in range(n_samples))
-    dQ_dg = numpy.zeros(g.shape)
-    for t in range(n_annotators):
-        dQ_dg[t] += sum(posteriors[i] *
-                                (logistic_regression(-w[t], -g[t], x[i]) -
-                                 abs(y[t, i] - 1)) +
-                        posteriors_0[i] *
-                                (logistic_regression(-w[t], -g[t], x[i]) -
-                                 abs(y[t, i] - 0))
-                        for i in range(n_samples))
-    grad = pack(dQ_da, dQ_db, dQ_dw, dQ_dg)
+        # Also need the gradients.
+        dQ_da = n_annotators * (
+                numpy.dot(posteriors * logistic_regression(-a, x) +
+                          posteriors_0 * (logistic_regression(-a, x) - 1),
+                          x))
 
-    return -expectation, -grad
+        dQ_dw = numpy.zeros(w.shape)
+        # Inefficient, but unrolled for clarity.
+        # TODO(MatthewJA): Speed this up. (Numba?)
+        for t in range(n_annotators):
+            dQ_dw[t] += sum(
+                    x[i] * posteriors[i] *
+                    (logistic_regression(-w[t], x[i]) - abs(y[t, i] - 1)) +
+                    x[i] * posteriors_0[i] *
+                    (logistic_regression(-w[t], x[i]) - abs(y[t, i] - 0))
+                    for i in range(n_samples))
+        grad = self._pack(dQ_da, dQ_dw)
 
+        return -expectation, -grad
 
-def em_step(n_samples, n_annotators, n_dim, a, b, w, g, x, y):
-    # Expectation step.
-    # Posterior for each i. p(z_i = 1 | x_i, y_i).
-    lr = logistic_regression(a, b, x)
-    posteriors = lr.copy()
-    posteriors *= annotator_model(w, g, x, y, 1).prod(axis=0)
+    def _em_step(self, n_samples, n_annotators, n_dim, a, w, x, y):
+        # Expectation step.
+        # Posterior for each i. p(z_i = 1 | x_i, y_i).
+        lr = logistic_regression(a, x)
+        posteriors = lr.copy()
+        posteriors *= self._annotator_model(w, x, y, 1).prod(axis=0)
 
-    # Repeat for p(z_i = 0 | x_i, y_i).
-    posteriors_0 = 1 - lr
-    posteriors_0 *= annotator_model(w, g, x, y, 0).prod(axis=0)
+        # Repeat for p(z_i = 0 | x_i, y_i).
+        posteriors_0 = 1 - lr
+        posteriors_0 *= self._annotator_model(w, x, y, 0).prod(axis=0)
 
-    # We want to normalise. We want p(z = 1) + p(z = 0) == 1.
-    # Currently, p(z = 1) + p(z = 0) == q.
-    # :. Divide p(z = 1) and p(z = 0) by q.
-    total = posteriors + posteriors_0
-    posteriors /= total
-    posteriors_0 /= total
-    assert numpy.allclose(posteriors, 1 - posteriors_0), \
-            (posteriors, posteriors_0)
+        # We want to normalise. We want p(z = 1) + p(z = 0) == 1.
+        # Currently, p(z = 1) + p(z = 0) == q.
+        # :. Divide p(z = 1) and p(z = 0) by q.
+        total = posteriors + posteriors_0
+        posteriors /= total
+        posteriors_0 /= total
+        assert numpy.allclose(posteriors, 1 - posteriors_0), \
+                             (posteriors, posteriors_0)
 
-    # Maximisation step.
-    theta = pack(a, b, w, g)
-    theta_, fv, inf = scipy.optimize.fmin_l_bfgs_b(Q, x0=theta,
-            approx_grad=False, args=(n_dim, n_annotators, n_samples,
-                                     posteriors, posteriors_0, x, y))
-    logging.debug('Terminated with Q = %4f', fv)
-    logging.debug(inf['task'].decode('ascii'))
-    a_, b_, w_, g_ = unpack(theta_, n_dim, n_annotators)
+        # Maximisation step.
+        theta = self._pack(a, w)
+        theta_, fv, inf = scipy.optimize.fmin_l_bfgs_b(
+                self._Q, x0=theta, approx_grad=False,
+                args=(n_dim, n_annotators, n_samples, posteriors, posteriors_0,
+                      x, y))
+        logging.debug('Terminated with Q = %4f', fv)
+        logging.debug(inf['task'].decode('ascii'))
+        a_, w_, = self._unpack(theta_, n_dim, n_annotators)
 
-    logging.debug('Found new parameters - b: %f -> %f', b, b_)
+        return a_, w_
 
-    return a_, b_, w_, g_
+    def predict(self, x):
+        """Classify data points using logistic regression.
 
+        x: Data points. (n_samples, n_dim) NumPy array.
+        """
+        return numpy.round(self.predict_proba(x))
 
-def train(x, y, epsilon=1e-5, lr_init=False, skip_zeros=False):
-    """Expectation-maximisation algorithm from Yan et al. (2010).
+    def predict_proba(self, x):
+        """Predict probabilities of data points using logistic regression.
 
-    x: Data. (n_samples, n_dim) NumPy array
-    y: Labels. (n_annotators, n_samples) NumPy array
-    epsilon: Convergence threshold. Default 1e-5. float
-    lr_init: Initialised with logistic regression. Default False.
-    skip_zeros: Whether to detect and skip zero probabilities. Default False.
-    """
-    # TODO(MatthewJA): Restore skip_zeros functionality.
+        x: Data points. (n_samples, n_dim) NumPy array.
+        """
+        x = numpy.hstack([x, numpy.ones((x.shape[0], 1))])
+        return logistic_regression(self.a_, x)
 
-    n_samples, n_dim = x.shape
-    n_annotators, n_samples_ = y.shape
-    assert n_samples == n_samples_, 'Label array has wrong number of labels.'
+    def score(self, X, Y):
+        """Computes the likelihood of labels and data under the model.
 
-    # Compute majority vote labels (for debugging + logistic regression init).
-    majority_y = numpy.zeros((n_samples,))
-    for i in range(n_samples):
-        labels = y[:, i]
-        majority_y[i] = numpy.bincount(labels).argmax()
+        X: (n_samples, n_features) NumPy array of data.
+        Y: (n_labellers, n_samples) NumPy masked array of crowd labels.
+        """
+        X = numpy.hstack([X, numpy.ones((X.shape[0], 1))])
+        return self._likelihood(self.a_, self.w_, X, Y)
 
-    logging.info('Initialising...')
+    def _log_likelihood(self, *args, **kwargs):
+        return numpy.log(self._likelihood(*args, **kwargs) + EPS)
 
-    if lr_init:
-        # For our initial guess, we'll fit logistic regression to the majority
-        # vote.
-        lr_ab = sklearn.linear_model.LogisticRegression()
-        lr_ab.fit(x, majority_y)
-        a = lr_ab.coef_.ravel()
-        b = lr_ab.intercept_[0]
-    else:
-        a = numpy.random.normal(size=(n_dim,))
-        b = numpy.random.normal()
-    w = numpy.random.normal(size=(n_annotators, n_dim))
-    g = numpy.ones((n_annotators,))
+    @numba.jit
+    def _likelihood(self, a, w, X, Y):
+        """Computes the likelihood of labels and data under a model.
 
-    logging.debug('Initial a: %s', a)
-    logging.debug('Initial b: %s', b)
-    logging.debug('Initial w: %s', w)
-    logging.debug('Initial g: %s', g)
-    assert x.shape == (n_samples, n_dim)
-    assert y.shape == (n_annotators, n_samples)
+        X: (n_samples, n_features) NumPy array of data.
+        Y: (n_labellers, n_samples) NumPy masked array of crowd labels.
+        """
+        lh = 1
+        for i in range(X.shape[0]):
+            for t in range(Y.shape[0]):
+                if Y.mask[t, i]:
+                    continue
 
-    logging.info('Iterating until convergence...')
+                lr = logistic_regression(a, X[i])
+                p1 = self._annotator_model(w[t], X[i], Y[t, i], 1) * lr
+                p0 = self._annotator_model(w[t], X[i], Y[t, i], 0) * (1 - lr)
+                lh *= p1 + p0
 
-    iters = 0
-    while True:  # Until convergence (checked later).
-        iters += 1
-        logging.info('Iteration %d', iters)
-
-        a_, b_, w_, g_ = em_step(
-                n_samples, n_annotators, n_dim, a, b, w, g, x, y)
-
-        # Check convergence.
-        dist = numpy.linalg.norm(a - a_) ** 2 + (b - b_) ** 2
-        logging.debug('Distance: {:.02f}'.format(dist))
-        if dist <= epsilon:
-            return a_, b_, w_, g_
-
-        a, b, w, g = a_, b_, w_, g_
-
-
-def predict(a, b, x):
-    """Classify data points using logistic regression.
-
-    a: Weights α. (n_dim,) NumPy array
-    b: Bias β. float
-    x: Data points. (n_samples, n_dim) NumPy array.
-    """
-    return numpy.round(logistic_regression(a, b, x))
+        return lh

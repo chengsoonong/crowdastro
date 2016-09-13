@@ -12,26 +12,9 @@ import numpy
 import scipy.optimize
 import sklearn.linear_model
 
-EPS = 1e-10
+from crowdastro.crowd.util import majority_vote, logistic_regression
 
-
-def majority_vote(y):
-    _, n_samples = y.shape
-    mv = numpy.zeros((n_samples,))
-    for i in range(n_samples):
-        labels = y[:, i]
-
-        if labels.mask is False:
-            counter = collections.Counter(labels)
-        else:
-            counter = collections.Counter(labels[~labels.mask])
-
-        if counter:
-            mv[i] = max(counter, key=counter.get)
-        else:
-            # No labels for this data point.
-            mv[i] = numpy.random.randint(2)  # ¯\_(ツ)_/¯
-    return mv
+EPS = 1E-8
 
 
 class RaykarClassifier(object):
@@ -94,7 +77,7 @@ class RaykarClassifier(object):
             raise ValueError('x and y have different numbers of samples.')
 
         # Compute majority vote labels for initialisation.
-        mv = self._majority_vote(y)
+        mv = majority_vote(y)
         m = mv.copy()
         # Add a small random factor for variety.
         m[m == 1] -= numpy.abs(numpy.random.normal(scale=1e-2,
@@ -220,19 +203,6 @@ class RaykarClassifier(object):
         logging.debug('Percentage m == 1: {:.02%}'.format(m.round().mean()))
         return numpy.dot(y, m) / (m.sum() + EPS)
 
-    def _majority_vote(self, y):
-        """Computes majority vote of partially observed crowd labels."""
-        return majority_vote(y)
-
-    def _logistic_regression(self, w, x):
-        """Logistic regression classifier model.
-
-        w: Weights w. (n_features,) NumPy array
-        x: Data point x_i. (n_features,) NumPy array
-        -> float in [0, 1]
-        """
-        return scipy.special.expit(numpy.dot(x, w.T))
-
     def _max_beta_step(self, m, y, y_mask):
         """Computes β based on μ.
 
@@ -248,7 +218,7 @@ class RaykarClassifier(object):
 
     def predict_proba(self, X):
         X = numpy.hstack([X, numpy.ones((X.shape[0], 1))])
-        return self._logistic_regression(self.w_, X)
+        return logistic_regression(self.w_, X)
 
     def score(self, X, Y):
         """Computes the likelihood of labels and data under the model.
