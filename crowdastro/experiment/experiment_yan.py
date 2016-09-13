@@ -1,4 +1,4 @@
-"""Runs the Raykar algorithm on a simulated crowd classification task.
+"""Runs the Yan algorithm on a simulated crowd classification task.
 
 Matthew Alger
 The Australian National University
@@ -18,7 +18,7 @@ import sklearn.cross_validation
 
 from . import runners
 from .. import __version__
-from ..crowd.raykar import majority_vote
+from ..crowd.utils import majority_vote
 from ..plot import vertical_scatter_ba
 from .results import Results
 
@@ -44,8 +44,8 @@ def main(input_csv_path, results_h5_path, overwrite=False, plot=False,
         n_examples, n_params = features.shape
         n_params += 1  # Bias term.
         n_params += n_labellers * 2  # α and β.
-        methods = ['Raykar', 'LR']
-        model = '{} crowdastro.crowd.raykar.RaykarClassifier,'.format(
+        methods = ['Yan', 'LR']
+        model = '{} crowdastro.crowd.yan.YanClassifier,'.format(
                         __version__) + \
                 '{} sklearn.linear_model.LogisticRegression'.format(
                         sklearn.__version__)
@@ -75,12 +75,12 @@ def main(input_csv_path, results_h5_path, overwrite=False, plot=False,
         mv = majority_vote(crowd_labels)
 
         all_features = {
-            'Raykar': features,
+            'Yan': features,
             'LR': features,
         }
         targets = {
             'LR': mv,
-            'Raykar': crowd_labels,
+            'Yan': crowd_labels,
         }
 
         ss = sklearn.cross_validation.ShuffleSplit(n_examples, n_iter=n_splits,
@@ -94,8 +94,8 @@ def main(input_csv_path, results_h5_path, overwrite=False, plot=False,
                     runners.lr(results, method, split_id, all_features[method],
                                targets[method], sorted(test),
                                overwrite=overwrite)
-                elif method == 'Raykar':
-                    runners.raykar(results, method, split_id,
+                elif method == 'Yan':
+                    runners.yan(results, method, split_id,
                                    all_features[method], targets[method],
                                    sorted(test), overwrite=overwrite,
                                    n_restarts=5)
@@ -114,7 +114,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', default='data/breast_cancer_wisconsin.csv',
                         help='Input breast cancer data CSV')
-    parser.add_argument('--results', default='data/results_raykar.h5',
+    parser.add_argument('--results', default='data/results_yan.h5',
                         help='HDF5 results data file')
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite existing results')

@@ -12,6 +12,7 @@ import sklearn.ensemble
 import sklearn.linear_model
 
 from ..crowd.raykar import RaykarClassifier
+from ..crowd.yan import YanClassifier
 
 
 def lr_to_params(lr):
@@ -116,4 +117,33 @@ def raykar(results, method_name, split_id, features, targets, test_indices,
     results.store_trial(method_name, split_id,
             rc.predict_proba(features[test_indices]),
             indices=test_indices, params=rc.serialise())
+
+
+def yan(results, method_name, split_id, features, targets, test_indices,
+           overwrite=False, n_restarts=5):
+    """Run the Yan algorithm and store results.
+
+    results: Results object.
+    features: (n_examples, n_features) array of features.
+    targets: (n_labellers, n_examples) masked array of binary targets.
+    test_indices: List of integer testing indices.
+    method_name: Name of this method in the results.
+    split_id: ID of the split in the results.
+    overwrite: Whether to overwrite existing results (default False).
+    n_restarts: Number of random restarts. Default 5.
+    """
+    assert max(test_indices) < features.shape[0]
+    assert min(test_indices) >= 0
+
+    train_indices = make_train_indices(test_indices, features.shape[0])
+
+    if results.has_run(method_name, split_id) and not overwrite:
+        logging.info('Skipping trial {}:{}.'.format(method_name, split_id))
+        return
+
+    yc = YanClassifier(n_restarts=n_restarts)
+    yc.fit(features[train_indices], targets[:, train_indices])
+    results.store_trial(method_name, split_id,
+            yc.predict_proba(features[test_indices]),
+            indices=test_indices, params=yc.serialise())
 

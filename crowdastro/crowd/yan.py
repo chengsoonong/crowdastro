@@ -236,3 +236,7 @@ class YanClassifier(object):
                 lh *= p1 + p0
 
         return lh
+
+    def serialise(self):
+        """Converts the classifier to an array."""
+        return numpy.concatenate([self.a_.ravel(), self.w_.ravel()])
