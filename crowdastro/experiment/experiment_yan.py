@@ -18,7 +18,7 @@ import sklearn.cross_validation
 
 from . import runners
 from .. import __version__
-from ..crowd.utils import majority_vote
+from ..crowd.util import majority_vote
 from ..plot import vertical_scatter_ba
 from .results import Results
 
@@ -43,7 +43,7 @@ def main(input_csv_path, results_h5_path, overwrite=False, plot=False,
         mask_rate = 0.5  # Lower = less masked.
         n_examples, n_params = features.shape
         n_params += 1  # Bias term.
-        n_params += n_labellers * 2  # α and β.
+        n_params += n_labellers * n_params  # w.
         methods = ['Yan', 'LR']
         model = '{} crowdastro.crowd.yan.YanClassifier,'.format(
                         __version__) + \
