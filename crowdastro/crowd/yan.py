@@ -111,8 +111,9 @@ class YanClassifier(object):
         """
         eta = logistic_regression(w, x)
         label_difference = numpy.abs(y - z)
-        return (numpy.power(1 - eta, label_difference.T) *
+        anno = (numpy.power(1 - eta, label_difference.T) *
                 numpy.power(eta, 1 - label_difference.T)).T
+        assert all(anno >= 0)
 
     def _unpack(self, params, n_dim, n_annotators):
         """Unpacks an array of parameters into a and w."""
@@ -172,7 +173,7 @@ class YanClassifier(object):
         # We want to normalise. We want p(z = 1) + p(z = 0) == 1.
         # Currently, p(z = 1) + p(z = 0) == q.
         # :. Divide p(z = 1) and p(z = 0) by q.
-        total = posteriors + posteriors_0
+        total = posteriors + posteriors_0 + EPS
         posteriors /= total
         posteriors_0 /= total
         assert numpy.allclose(posteriors, 1 - posteriors_0), \
