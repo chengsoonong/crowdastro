@@ -14,6 +14,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy
 import sklearn
+import sklearn.cluster
 import sklearn.cross_validation
 
 from . import runners
@@ -38,7 +39,7 @@ def main(input_csv_path, results_h5_path, overwrite=False, plot=False,
         features = numpy.array(features)
         labels = numpy.array(labels)
 
-        n_splits = 20
+        n_splits = 3
         n_labellers = 5
         mask_rate = 0.5  # Lower = less masked.
         n_examples, n_params = features.shape
@@ -53,21 +54,21 @@ def main(input_csv_path, results_h5_path, overwrite=False, plot=False,
         results = Results(results_h5_path, methods, n_splits, n_examples,
                           n_params, model)
 
-        # Generate the crowd labels. For each labeller, assign a true positive
-        # rate and a false positive rate. Then flip labels based on these.
-        true_positive_rates = numpy.linspace(0.25, 0.75, n_labellers)
-        numpy.random.shuffle(true_positive_rates)
-        false_positive_rates = numpy.linspace(0.25, 0.75, n_labellers)
-        numpy.random.shuffle(false_positive_rates)
+        # Generate the crowd labels. Cluster the data into T clusters and assign
+        # each cluster to a labeller. That labeller is 100% accurate in that
+        # cluster and 75% accurate everywhere else.
+        km = sklearn.cluster.KMeans(n_clusters=n_labellers)
+        km.fit(features)
+        classes = km.predict(features)
         crowd_labels = numpy.tile(labels, (n_labellers, 1))
         for labeller in range(n_labellers):
             for i in range(n_examples):
-                if labels[i]:
-                    if numpy.random.random() > true_positive_rates[labeller]:
-                        crowd_labels[labeller, i] = 0
+                if classes[i] == labeller:
+                    crowd_labels[labeller, i] = labels[i]
+                elif numpy.random.random() < 0.25:
+                    crowd_labels[labeller, i] = 1 - labels[i]
                 else:
-                    if numpy.random.random() < false_positive_rates[labeller]:
-                        crowd_labels[labeller, i] = 1
+                    crowd_labels[labeller, i] = labels[i]
         # Randomly mask a percentage of the elements.
         mask = numpy.random.binomial(1, mask_rate, size=crowd_labels.shape)
         crowd_labels = numpy.ma.MaskedArray(crowd_labels, mask=mask)
@@ -105,7 +106,7 @@ def main(input_csv_path, results_h5_path, overwrite=False, plot=False,
         if plot:
             matplotlib.rcParams['font.family'] = 'serif'
             matplotlib.rcParams['font.serif'] = ['Palatino Linotype']
-            vertical_scatter_ba(results, labels, violin=True, minorticks=False)
+            vertical_scatter_ba(results, labels, violin=False, minorticks=False)
             plt.ylim((0, 1))
             plt.show()
 

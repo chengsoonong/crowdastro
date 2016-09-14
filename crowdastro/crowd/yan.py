@@ -113,7 +113,8 @@ class YanClassifier(object):
         label_difference = numpy.abs(y - z)
         anno = (numpy.power(1 - eta, label_difference.T) *
                 numpy.power(eta, 1 - label_difference.T)).T
-        assert all(anno >= 0)
+        assert (anno >= 0).all()
+        return anno
 
     def _unpack(self, params, n_dim, n_annotators):
         """Unpacks an array of parameters into a and w."""
@@ -173,7 +174,12 @@ class YanClassifier(object):
         # We want to normalise. We want p(z = 1) + p(z = 0) == 1.
         # Currently, p(z = 1) + p(z = 0) == q.
         # :. Divide p(z = 1) and p(z = 0) by q.
-        total = posteriors + posteriors_0 + EPS
+        total = posteriors + posteriors_0
+        # It's apparently possible for both of these to be 0. That's really
+        # strange, but if that happens we'll set them both to 0.5.
+        posteriors[total == 0] = 0.5
+        posteriors_0[total == 0] = 0.5
+        total[total == 0] = 1
         posteriors /= total
         posteriors_0 /= total
         assert numpy.allclose(posteriors, 1 - posteriors_0), \
