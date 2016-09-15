@@ -34,6 +34,7 @@ You need the following data files:
 - norris_2006_atlas_classifications_ra_dec_only.dat (pipe-separated RA/DEC from Norris et al. (2006) Table 6)
 - wise_allwise.wise_allwise_p3as_psd4511.tbl
 - fan_2015_swire_only.csv
+- CDFSmosaic_allch_8March2015.fits
 
 These files are currently not easily available. In the future, we will add download links.
 
