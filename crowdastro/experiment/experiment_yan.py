@@ -45,7 +45,7 @@ def main(input_csv_path, results_h5_path, overwrite=False, plot=False,
         n_examples, n_params = features.shape
         n_params += 1  # Bias term.
         n_params += n_labellers * n_params  # w.
-        methods = ['Yan', 'LR']
+        methods = ['Yan', 'LR', 'LR(Groundtruth)']
         model = '{} crowdastro.crowd.yan.YanClassifier,'.format(
                         __version__) + \
                 '{} sklearn.linear_model.LogisticRegression'.format(
@@ -78,10 +78,12 @@ def main(input_csv_path, results_h5_path, overwrite=False, plot=False,
         all_features = {
             'Yan': features,
             'LR': features,
+            'LR(Groundtruth)': features,
         }
         targets = {
             'LR': mv,
             'Yan': crowd_labels,
+            'LR(Groundtruth)': labels,
         }
 
         ss = sklearn.cross_validation.ShuffleSplit(n_examples, n_iter=n_splits,
@@ -91,7 +93,7 @@ def main(input_csv_path, results_h5_path, overwrite=False, plot=False,
             for method_id, method in enumerate(methods):
                 logging.info('Method {} ({}/{})'.format(method, method_id + 1,
                                                         len(methods)))
-                if method == 'LR':
+                if method.startswith('LR'):
                     runners.lr(results, method, split_id, all_features[method],
                                targets[method], sorted(test),
                                overwrite=overwrite)
