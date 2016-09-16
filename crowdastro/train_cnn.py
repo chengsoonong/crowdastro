@@ -6,10 +6,6 @@ The Australian National University
 """
 
 import argparse
-import logging
-import os.path
-
-import astropy.io.fits
 import h5py
 import numpy
 
@@ -49,7 +45,7 @@ def train(training_h5, model_json, weights_path, epochs, batch_size):
     zero_indices = (training_outputs == 0).nonzero()[0]
     one_indices = (training_outputs == 1).nonzero()[0]
     subset_zero_indices = numpy.random.choice(zero_indices,
-            size=(len(one_indices,)), replace=False)
+                                              size=(len(one_indices,)), replace=False)
     all_indices = numpy.hstack([subset_zero_indices, one_indices])
     all_indices.sort()
 
@@ -60,6 +56,22 @@ def train(training_h5, model_json, weights_path, epochs, batch_size):
     model.fit(training_inputs, training_outputs, batch_size=batch_size,
               nb_epoch=epochs)
     model.save_weights(weights_path, overwrite=True)
+
+
+def check_raw_data(training_h5):
+    """Sanity check the input data
+
+    training_h5: Training HDF5 file.
+    """
+    def HDF5_type(name, node):
+        if isinstance(node, h5py.Dataset):
+            print('Dataset: {}'.format(node.name))
+            print('         has shape {}'.format(node.shape))
+        else:
+            print('{} of type {}'.format((node.name, type(node))))
+    print('Peeking into HDF5 file')
+    training_h5.visititems(HDF5_type)
+    print('End file peeking')
 
 
 def _populate_parser(parser):
@@ -77,6 +89,7 @@ def _populate_parser(parser):
 
 def _main(args):
     with h5py.File(args.h5, 'r') as training_h5:
+        check_raw_data(training_h5)
         with open(args.model, 'r') as model_json:
             train(training_h5, model_json, args.output, int(args.epochs),
                   int(args.batch_size))
