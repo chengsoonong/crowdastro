@@ -6,6 +6,8 @@ The Australian National University
 """
 
 import argparse
+import logging
+
 import h5py
 import numpy
 
@@ -32,9 +34,9 @@ def train(training_h5, model_json, weights_path, epochs, batch_size):
     ir_survey = training_h5.attrs['ir_survey']
 
     if ir_survey == 'swire':
-        training_inputs = training_h5['features'].value[train_set, 6:]
+        training_inputs = training_h5['raw_features'].value[train_set, 6:]
     elif ir_survey == 'wise':
-        training_inputs = training_h5['features'].value[train_set, 7:]
+        training_inputs = training_h5['raw_features'].value[train_set, 7:]
 
     training_inputs = training_inputs.reshape(
             (-1, 1, PATCH_DIAMETER, PATCH_DIAMETER))
@@ -65,13 +67,13 @@ def check_raw_data(training_h5):
     """
     def HDF5_type(name, node):
         if isinstance(node, h5py.Dataset):
-            print('Dataset: {}'.format(node.name))
-            print('         has shape {}'.format(node.shape))
+            logging.info('Dataset: {}'.format(node.name))
+            logging.info('\thas shape {}'.format(node.shape))
         else:
-            print('{} of type {}'.format((node.name, type(node))))
-    print('Peeking into HDF5 file')
+            logging.info('\t{} of type {}'.format((node.name, type(node))))
+    logging.info('Peeking into HDF5 file')
     training_h5.visititems(HDF5_type)
-    print('End file peeking')
+    logging.info('End file peeking')
 
 
 def _populate_parser(parser):
