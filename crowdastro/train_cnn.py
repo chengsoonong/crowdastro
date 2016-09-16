@@ -34,7 +34,7 @@ def train(training_h5, model_json, weights_path, epochs, batch_size):
     if ir_survey == 'swire':
         training_inputs = training_h5['features'].value[train_set, 6:]
     elif ir_survey == 'wise':
-        training_inputs = training_h5['features'].value[train_set, 5:]
+        training_inputs = training_h5['features'].value[train_set, 7:]
 
     training_inputs = training_inputs.reshape(
             (-1, 1, PATCH_DIAMETER, PATCH_DIAMETER))
@@ -44,8 +44,8 @@ def train(training_h5, model_json, weights_path, epochs, batch_size):
     # Downsample for class balance.
     zero_indices = (training_outputs == 0).nonzero()[0]
     one_indices = (training_outputs == 1).nonzero()[0]
-    subset_zero_indices = numpy.random.choice(zero_indices,
-                                              size=(len(one_indices,)), replace=False)
+    subset_zero_indices = numpy.random.choice(
+        zero_indices, size=(len(one_indices,)), replace=False)
     all_indices = numpy.hstack([subset_zero_indices, one_indices])
     all_indices.sort()
 
