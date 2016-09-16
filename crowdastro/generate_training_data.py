@@ -75,7 +75,7 @@ def generate(f_h5, out_f_h5):
 
     # Save to HDF5.
     out_f_h5.create_dataset('labels', data=labels)
-    out_f_h5.create_dataset('features', data=features)
+    out_f_h5.create_dataset('raw_features', data=features)
     out_f_h5.create_dataset('positions', data=coords)
     out_f_h5.attrs['ir_survey'] = f_h5.attrs['ir_survey']
 

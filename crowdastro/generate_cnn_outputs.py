@@ -36,29 +36,24 @@ def generate(training_h5, cnn_model_json, cnn_weights_path):
     get_convolutional_features = (lambda p:
             get_convolutional_features_([p])[0].reshape((p.shape[0], -1)))
 
-    images = training_h5['features'][:, n_static:].reshape(
+    images = training_h5['raw_features'][:, n_static:].reshape(
             (-1, 1, PATCH_RADIUS * 2, PATCH_RADIUS * 2))
 
     test_out = get_convolutional_features(images[:1, :, :, :])
 
-    if '_features' in training_h5:
-        del training_h5['_features']
+    if 'features' in training_h5:
+        del training_h5['features']
 
-    out = training_h5.create_dataset('_features', dtype=float,
+    out = training_h5.create_dataset('features', dtype=float,
             shape=(len(images), n_static + test_out.shape[1]))
 
     # Copy the static features across. We'll fill in the rest with the CNN.
-    out[:, :n_static] = training_h5['features'][:, :n_static]
+    out[:, :n_static] = training_h5['raw_features'][:, :n_static]
 
     batch_size = 1000
     for i in range(0, len(images), batch_size):
         batch = images[i : i + batch_size]
         out[i : i + batch_size, n_static:] = get_convolutional_features(batch)
-
-    # Clean up - delete the original features and rename our new features.
-    del training_h5['features']
-    training_h5['features'] = training_h5['_features']
-    del training_h5['_features']
 
 
 def _populate_parser(parser):

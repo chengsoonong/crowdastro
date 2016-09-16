@@ -38,14 +38,6 @@ Generate the CNN outputs:
 crowdastro generate_cnn_outputs
 ```
 
-Note that this mutates the `features` dataset, replacing image features with the CNN outputs.
-
-Repack the H5 file:
-
-```bash
-crowdastro repack_h5 training.h5
-```
-
 Train a classifier:
 
 ```bash
