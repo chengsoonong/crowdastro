@@ -4,7 +4,7 @@ Matthew Alger
 The Australian National University
 2016
 """
-
+import os
 import argparse
 import csv
 import logging
@@ -31,6 +31,7 @@ PATCH_RADIUS = config['patch_radius']  # px
 ARCMIN = 1 / 60  # deg
 CANDIDATE_RADIUS = ARCMIN  # deg
 FITS_CONVENTION = 1
+
 
 def prep_h5(f_h5, ir_survey):
     """Creates hierarchy in HDF5 file."""
@@ -734,7 +735,15 @@ def _populate_parser(parser):
                         default='swire', help='which infrared survey to use')
 
 
+def check_raw_data():
+    """Check that all raw data files are there"""
+    for source, file_name in config['data_sources'].items():
+        if not os.path.exists(file_name):
+            print('{} expected at {} but not found'.format(source, file_name))
+
+
 def _main(args):
+    check_raw_data()
     with h5py.File(args.h5, 'w') as f_h5:
         prep_h5(f_h5, args.ir)
         import_atlas(f_h5, test=args.test)
