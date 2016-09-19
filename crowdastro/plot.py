@@ -101,16 +101,23 @@ def plot_classifications_row(atlas_vector, ir_matrix, classifier_labels,
                          base_size=base_size, noise=noise)
 
 
-def vertical_scatter(xs, ys, style='bx', rotation='horizontal'):
+def vertical_scatter(xs, ys, style='bx', rotation='horizontal',
+                     line=False):
     """Plots a vertical scatter plot.
 
     xs: List of x labels.
     ys: List of lists of points to scatter vertically.
     style: Plots point style. Default 'bx'.
     rotation: x label rotation. Default 'horizontal'.
+    line: Draw lines between corresponding points. Default False.
     """
     for x in range(len(xs)):
         plt.plot([x] * len(ys[x]), ys[x], style)
+    if line:
+        assert all(len(y) == len(ys[0]) for y in ys)
+        ys_t = list(zip(*ys))
+        for y in range(len(ys[0])):
+            plt.plot(range(len(xs)), ys_t[y])
     plt.xticks(range(len(xs)), xs, rotation=rotation)
     plt.xlim((-0.5, len(xs) - 0.5))  # Adds a little buffer.
 

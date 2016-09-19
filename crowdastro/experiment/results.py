@@ -126,7 +126,6 @@ class Results(object):
                     'run_flag: Expected shape {}, found {}.'.format(
                             run_flag_shape, f['run_flag'].shape)
 
-
     def store_trial(self, method, split, results, params, indices=None):
         """Stores results from one trial.
 
@@ -144,7 +143,7 @@ class Results(object):
                 f['results'][self.method_idx[method], split] = results
                 f['run_flag'][self.method_idx[method], split] = 1
             f['models'][self.method_idx[method],
-                    split, :params.shape[0]] = params
+                        split, :params.shape[0]] = params
 
     def has_run(self, method, split):
         """Returns whether a trial has run successfully.
@@ -194,3 +193,13 @@ class Results(object):
                 repr(self.h5_path),
                 sorted(self.method_idx, key=self.method_idx.get),
                 self.n_splits, self.n_examples, self.n_params)
+
+    def get_model(self, method, split):
+        """Get the serialised model associated with a method and split.
+
+        method: Method. str
+        split: Split ID. int
+        -> (n_params,) array
+        """
+        with h5py.File(self.h5_path, 'r') as f:
+            return f['models'][self.method_idx[method], split]
