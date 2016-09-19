@@ -5,8 +5,8 @@ The Australian National University
 2016
 """
 
-import collections
 import logging
+import time
 
 import numpy
 import scipy.optimize
@@ -76,6 +76,10 @@ class RaykarClassifier(object):
         if n_samples_ != n_samples:
             raise ValueError('x and y have different numbers of samples.')
 
+        self.n_samples_ = n_samples
+        self.n_labellers_ = n_labellers
+        self.n_dim_ = n_dim
+
         # Compute majority vote labels for initialisation.
         mv = majority_vote(y)
         m = mv.copy()
@@ -94,6 +98,7 @@ class RaykarClassifier(object):
         w = None
 
         while True:
+            then = time.time()
             # Maximisation step.
             a = self._max_alpha_step(m, y, y_mask)
             b = self._max_beta_step(m, y, y_mask)
@@ -105,16 +110,22 @@ class RaykarClassifier(object):
             logging.debug('Current value of delta mu: %f',
                           numpy.linalg.norm(m_ - m))
 
-            if numpy.linalg.norm(m_ - m) < self.epsilon:
+            dm = numpy.linalg.norm(m_ - m)
+            if dm < self.epsilon:
                 logging.debug('a: {}'.format(a))
                 logging.debug('b: {}'.format(b))
                 return a, b, w
 
             m = m_
 
+            # Estimate time remaining.
+            now = time.time()
+            dt = now - then
+            logging.debug('Raykar iteration took {} s.'.format(dt))
+
     def _exp_m_step(self, a, b, w, x, y, y_mask):
         """Computes expectation value of μ."""
-        lr = self._logistic_regression(w, x)
+        lr = logistic_regression(w, x)
         exp_a = numpy.ones((x.shape[0],))
         exp_b = numpy.ones((x.shape[0],))
         for t in range(a.shape[0]):
@@ -164,7 +175,7 @@ class RaykarClassifier(object):
         return w
 
         # for i in range(self.max_inner_iters):
-        #     lr = self._logistic_regression(w, x)
+        #     lr = logistic_regression(w, x)
         #     g = numpy.dot(m - lr, x)
 
         #     H = numpy.zeros((n_features, n_features))
@@ -201,7 +212,18 @@ class RaykarClassifier(object):
         logging.debug('Percentage y == m == 1: {:.02%}'.format(
                 numpy.logical_and(y == 1, y == m.round()).mean()))
         logging.debug('Percentage m == 1: {:.02%}'.format(m.round().mean()))
-        return numpy.dot(y, m) / (m.sum() + EPS)
+
+        a = numpy.zeros((y.shape[0],))
+        divisor = numpy.zeros((y.shape[0],))
+        for t in range(y.shape[0]):
+            for i in range(y.shape[1]):
+                if y_mask[t, i]:
+                    continue
+
+                a[t] += m[i] * y[t, i]
+                divisor[t] += m[i]
+
+        return a / (divisor + EPS)
 
     def _max_beta_step(self, m, y, y_mask):
         """Computes β based on μ.
@@ -211,7 +233,17 @@ class RaykarClassifier(object):
         y_mask: Mask of unobserved crowd labels.
         -> β
         """
-        return numpy.dot(1 - y - y_mask, 1 - m) / ((1 - m).sum() + EPS)
+        b = numpy.zeros((y.shape[0],))
+        divisor = numpy.zeros((y.shape[0],))
+        for t in range(y.shape[0]):
+            for i in range(y.shape[1]):
+                if y_mask[t, i]:
+                    continue
+
+                b[t] += (1 - m[i]) * (1 - y[t, i])
+                divisor[t] += (1 - m[i])
+
+        return b / (divisor + EPS)
 
     def predict(self, X):
         return self.predict_proba(X).round()
@@ -241,7 +273,7 @@ class RaykarClassifier(object):
         Y: (n_labellers, n_samples) NumPy masked array of crowd labels.
         """
         n_examples = X.shape[0]
-        exp_p = self._logistic_regression(w, X)
+        exp_p = logistic_regression(w, X)
         exp_a = numpy.ones((n_examples,))
         exp_b = numpy.ones((n_examples,))
         exp_a = numpy.power(a, Y_0).prod(axis=0)
@@ -269,7 +301,19 @@ class RaykarClassifier(object):
     def serialise(self):
         """Returns a NumPy array representing the optimised parameters."""
         return numpy.concatenate([
+                [self.n_labellers_],
                 self.a_.ravel(),
                 self.b_.ravel(),
                 self.w_.ravel(),
         ])
+
+    @classmethod
+    def unserialise(cls, array):
+        """Converts a NumPy array into a RaykarClassifier."""
+        rc = cls()
+        n_annotators = int(array[0])
+        array = array[1:]
+        rc.a_ = array[:n_annotators]
+        rc.b_ = array[n_annotators:n_annotators * 2]
+        rc.w_ = array[n_annotators * 2:]
+        return rc
