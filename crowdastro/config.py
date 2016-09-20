@@ -50,6 +50,7 @@ config['surveys']['atlas']['web_to_click'] = numpy.array(
      config['surveys']['atlas']['web_to_click_y']],
     dtype=float)
 
-# Wrapper function to neatly retrieve values.
+
 def get(*args, **kwargs):
+    # Wrapper function to neatly retrieve values.
     return config.get(*args, **kwargs)
