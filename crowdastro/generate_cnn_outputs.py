@@ -27,7 +27,7 @@ def generate(training_h5, cnn_model_json, cnn_weights_path):
     """
     # Have to import Keras here because it dumps to stdout...
     import keras
-    n_static = 6 if training_h5.attrs['ir_survey'] == 'swire' else 7
+    n_static = config['surveys'][training_h5.attrs['ir_survey']]['n_features']
     cnn = keras.models.model_from_json(cnn_model_json.read())
     cnn.load_weights(cnn_weights_path)
     cnn.compile(loss='binary_crossentropy', optimizer='adadelta')

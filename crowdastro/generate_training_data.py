@@ -35,13 +35,14 @@ def generate(f_h5, out_f_h5):
     f_h5: crowdastro input HDF5 file.
     out_f_h5: Training data output HDF5 file.
     """
-    if f_h5.attrs['ir_survey'] == 'swire':
+    ir_survey = f_h5.attrs['ir_survey']
+    if ir_survey == 'swire':
         swire = f_h5['/swire/cdfs/numeric']
-        astro_features = swire[:, 2:7]
-        distances = swire[:, 7].reshape((-1, 1))
-        images = swire[:, 8:]
+        astro_features = swire[:, 2:8]
+        distances = swire[:, 8].reshape((-1, 1))
+        images = swire[:, 9:]
         coords = swire[:, :2]
-    elif f_h5.attrs['ir_survey'] == 'wise':
+    elif ir_survey == 'wise':
         wise = f_h5['/wise/cdfs/numeric']
         magnitudes = wise[:, 2:6]
         distances = wise[:, 6].reshape((-1, 1))
@@ -57,10 +58,13 @@ def generate(f_h5, out_f_h5):
         linearised_magnitudes = numpy.power(10, -0.4 * magnitudes)
         w1_w2 = numpy.power(10, -0.4 * w1_w2)
         w2_w3 = numpy.power(10, -0.4 * w2_w3)
-        astro_features = numpy.concatenate([linearised_magnitudes,
-                w1_w2.reshape((-1, 1)),
-                w2_w3.reshape((-1, 1))], axis=1)
+        astro_features = numpy.concatenate(
+                [linearised_magnitudes,
+                 w1_w2.reshape((-1, 1)),
+                 w2_w3.reshape((-1, 1))], axis=1)
 
+    n_features = config['surveys'][ir_survey]['n_features']
+    assert astro_features.shape[1] + distances.shape[1] == n_features
 
     # We now need to find the labels for each.
     truths = set(f_h5['/atlas/cdfs/consensus_objects'][:, 1])
@@ -77,7 +81,7 @@ def generate(f_h5, out_f_h5):
     out_f_h5.create_dataset('labels', data=labels)
     out_f_h5.create_dataset('raw_features', data=features)
     out_f_h5.create_dataset('positions', data=coords)
-    out_f_h5.attrs['ir_survey'] = f_h5.attrs['ir_survey']
+    out_f_h5.attrs['ir_survey'] = ir_survey
 
     # These testing sets are used for training the CNN. For training/testing
     # models, use crowdastro.generate_test_sets.

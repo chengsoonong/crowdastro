@@ -43,11 +43,13 @@
             "mosaic_scale_y": 0.4
         },
         "swire": {
-            "n_features": 5,
+            "n_features": 7,
+            "n_raw_features": 7,
             "distance_cutoff": 0.05
         },
         "wise": {
-            "n_features": 4,
+            "n_features": 7,
+            "n_raw_features": 5,
             "distance_cutoff": 0.05
         }
     },
