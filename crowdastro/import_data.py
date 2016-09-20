@@ -4,11 +4,11 @@ Matthew Alger
 The Australian National University
 2016
 """
-import os
 import argparse
 import csv
+import hashlib
 import logging
-import warnings
+import os
 
 from astropy.coordinates import SkyCoord
 import astropy.io.fits
@@ -31,6 +31,31 @@ PATCH_RADIUS = config['patch_radius']  # px
 ARCMIN = 1 / 60  # deg
 CANDIDATE_RADIUS = ARCMIN  # deg
 FITS_CONVENTION = 1
+
+
+def hash_file(f):
+    """Finds the MD5 hash of a file.
+
+    File must be opened in bytes mode.
+    """
+    h = hashlib.md5()
+    chunk_size = 65536  # 64 KiB
+    for chunk in iter(lambda: f.read(chunk_size), b''):
+        h.update(chunk)
+    return h.hexdigest()
+
+
+def checksum_file(filename, h):
+    """Checks files hash to expected hashes.
+
+    filename: str.
+    h: Hex hash string to compare against.
+
+    -> True iff file matches hash.
+    """
+    with open(filename, 'rb') as f:
+        h_ = hash_file(f)
+        return h_ == h
 
 
 def prep_h5(f_h5, ir_survey):
@@ -736,11 +761,22 @@ def _populate_parser(parser):
 
 
 def check_raw_data():
-    """Check that all raw data files are there"""
-    for source, file_name in config['data_sources'].items():
-        if not os.path.exists(file_name):
-            print('{} expected at {} but not found'.format(source, file_name))
+    """Validates existence and correctness of raw data files."""
+    for source, filename in config['data_sources'].items():
+        if source == 'radio_galaxy_zoo_db':
+            # Skip the MongoDB name.
+            continue
 
+        if not os.path.exists(filename):
+            logging.error(
+                    '{} expected at {} but not found'.format(source, filename))
+
+        if source in config['data_checksums']:
+            valid = checksum_file(filename, config['data_checksums'][source])
+            if not valid:
+                logging.error('{} has incorrect hash'.format(filename))
+            else:
+                logging.debug('{} has correct hash'.format(filename))
 
 def _main(args):
     check_raw_data()

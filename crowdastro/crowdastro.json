@@ -11,6 +11,16 @@
         "wise_catalogue": "data/wise_allwise.wise_allwise_p3as_psd4511.tbl"
     },
 
+    "data_checksums": {
+        "atlas_catalogue": "e78f502277772756ff6be5bd7b4b75cc",
+        "atlas_image": "581805112b1e1d2773c2bd130363e59a",
+        "norris_coords": "b8dd557d5c2ec6e31a1b51415162a02e",
+        "fan_swire": "8dcda8121c549374ea47a30095031675",
+        "rgz_to_atlas": "defbc6545c43429cc5c1c2927bc8febc",
+        "swire_catalogue": "d175f8ad33749a09c2470122c1067f22",
+        "wise_catalogue": "28a546e272d9d9521afe3e2eec74eab2"
+    },
+
     "mongo": {
         "host": "localhost",
         "port": 27017
