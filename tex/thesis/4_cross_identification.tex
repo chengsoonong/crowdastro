@@ -6,8 +6,21 @@
 
   In this chapter, I develop a machine learning approach to the radio cross-identification problem. First, I will discuss different ways to train and use a classifier for the task, in particular framing the cross-identification problem as an object localisation problem. Then, I will discuss the available training data and how I chose to process it. Finally, I will present results against a dataset of expert labels, and compare these results to those found by other methods.
 
-\section{Cross-identification as Binary Classification}
-\label{sec:framing-as-classification}
+\section{Formalism}
+\label{sec:cross-identification-formalism}
+  
+  \todo{Rewrite below into this section.}
+
+  \todo{Explain why we're ignoring the radio part of this problem.}
+
+  \subsection{Cross-identification as Object Localisation}
+  \label{sec:object-localisation}
+
+  \subsection{The Galaxy Classification Task}
+  \label{sec:galaxy-classification-task}
+
+% \section{Cross-identification as Binary Classification}
+% \label{sec:framing-as-classification}
   
   When we look at the sky with radio telescopes, we see the radio emissions from the jets of AGNs. \todo{Add backlink.} Given an image of these radio emissions, we want to locate the host galaxy containing the associated AGN. In general, there may be multiple hosts associated with one radio object (such as in Figure \ref{fig:two-hosts}), but we make the assumption that there is only one. This is the same assumption made by Radio Galaxy Zoo \todo{cite:rgz-analysis-github(?)} and greatly simplifies the problem.
 
@@ -135,12 +148,13 @@
 %   \subsection{Norris Labels}
 %   \label{sec:norris}
 
-\section{Features}
+\section{Feature Selection}
 \label{sec:features}
 
   Each candidate host galaxy has an associated set of features. Some of these features are extracted from the radio image patch centred on the galaxy, and some of these features come directly from the infrared survey.
 
   \subsection{Astronomical Features}
+  \label{sec:astro-features}
 
     The WISE catalogue (Section \ref{sec:wise}) contains colour information for each contained object. There are four such columns --- the W1, W2, W3, and W4 magnitudes --- each representing the amount of light emitted by the object in a different range of wavelengths. Since magnitudes fall on a logarithmic scale, the differences between these values are the ratios between the raw fluxes \todo{Verify}, and these ratios are indicators of physical galactic properties such as star formation and dust \todo{Find a source on this}. Since the magnitudes and their differences carry physical meaning, I chose to use both the magnitudes and their differences as features representing a candidate host galaxy.
 
@@ -148,10 +162,17 @@
 
     Both WISE and SWIRE catalogues contain the positions of each object. The distance from each object to the centre of the closest radio object is used as a feature representing that object. This noticeably improves classification performance \todo{make an experiment showing this, and probably also showing that the other features are good}.
 
-  \subsection{Radio Image Features}
+  \subsection{Image Features}
+  \label{sec:image-features}
+
+    \subsubsection{Building a Model for Feature Extraction}
+    \label{sec:feature-extraction-model}
+
+    \subsubsection{Filters}
+    \label{sec:image-filters}
 
 \section{Choosing a Binary Classifier}
-\label{sec:binary-classifier}
+\label{sec:binary-classifiers}
   
   \begin{figure}[!ht]
     \centering
@@ -165,11 +186,13 @@
 
 \section{Handling Crowd Labels}
 \label{sec:rgz-crowd-labels}
-  
+
   While we want to train a classifier on the crowdsourced labels from the Radio Galaxy Zoo, it is unclear how we should aggregate the labels. Some methods for aggregation are described in Section \ref{sec:crowd-labels}. Which method will perform best on a dataset is dependent on the dataset itself, so we tested both variants of the \citeauthor{raykar10} algorithm and majority vote on the galaxy classification task.
 
+  \todo{Compare majority vote and Raykar.}
+
 \section{Results}
-\label{sec:passive-results}
+\label{sec:rgz-results}
   
   \subsection{Classifying Galaxies}
 
@@ -197,3 +220,6 @@
       \includegraphics[width=\textwidth]{images/experiments/passive.pdf}
       \caption{Performance of logistic regression on the galaxy classification task, trained on different amounts of the \citeauthor{norris06} label set.}
     \end{figure}
+
+\section{Discussion}
+\label{sec:rgz-discussion}

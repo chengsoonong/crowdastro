@@ -1,5 +1,6 @@
 %!tex root=thesis.tex
 \chapter{Machine Learning on Crowds}
+\label{cha:ml}
 
 \todo{Add a nice chapter summary.} In this chapter, I will introduce some
 concepts from machine learning that I will use for the rest of this thesis. I
@@ -8,16 +9,35 @@ feature extraction using convolutional neural networks, survey some methods to
 combat label noise, and discuss the use of active learning to improve labelling
 efficiency.
 
-\section{Discuss some machine learning here}
+\section{Classification}
+\label{sec:classification}
 
-\section{Crowdsourced Labelling}
+    \subsection{Logistic Regression}
+    \label{sec:logistic-regression}
+
+    \subsection{Random Forests}
+    \label{sec:random-forests}
+
+\section{Feature Extraction from Images}
+\label{sec:image-features}
+
+\section{Crowdsourcing Labels}
+\label{sec:crowdsourcing}
+
+    \subsection{Motivation}
+    \label{sec:crowdsourcing-motivation}
+
+    \subsection{Examples}
+    \label{sec:crowdsourcing-examples}
+
+    \subsection{Problems}
+    \label{sec:crowdsourcing-problems}
+
+\section{Aggregating Crowd Labels}
 \label{sec:crowd-labels}
 
-    \subsection{Notation}
-
-        \todo{add a notation section (maybe even not here)}
-
-    \subsection{Crowdsourced Labels}
+    % \subsection{Crowdsourced Labels}
+        \todo{Rewrite this into the above sections.}
         
         For standard supervised learning tasks, the labels are generally
         provided by some \emph{expert}, carrying the assumption that these
@@ -62,12 +82,17 @@ efficiency.
 
         The idea is that the majority of labels are correct, so with sufficiently large amounts of relabelling we expect the label noise to be reduced. How large ``sufficiently large'' is is unclear and domain-dependent, and is outside the scope of this thesis, though papers like \citet{sheng08} and \citet{lin16} provide some information on how to choose relabelling rates. Of course, this fails in situations where the majority of labellers are not correct, which may be due to intrinsic difficulty or malicious labelling, or where there is no clear majority.
 
-    \subsection{Modelling Labeller Reliability}
+        \todo{Discuss weighted majority vote.}
+
+    \subsection{Raykar et al. Model}
+    \label{sec:raykar}
+
+        \todo{Restructure this.}
 
         In crowd learning scenarios, it is common to have multiple labels for a data point with no known groundtruth. One way to deal with this is to jointly model both the reliability of each labeller (the \emph{labeller model}) and the groundtruth itself (the \emph{classification model}). Methods following this approach are developed in \citet{raykar10} and \citet{yan10}. These methods make different assumptions on the labellers. I describe these methods in detail here.
 
-        \subsubsection{Raykar et al. Method}
-            \label{sec:raykar}
+        % \subsubsection{Raykar et al. Method}
+        %     \label{sec:raykar}
 
             \citet{raykar10} propose modelling the $t$th labeller by two parameters $\alpha_t$ and $\beta_t$. $\alpha_t$ is the \emph{sensitivity} and $\beta_t$ is the \emph{specificity} of labeller $t$, i.e.
             \begin{align*}
@@ -94,7 +119,7 @@ efficiency.
             \begin{align*}
                 p(\mathcal D \mid \vec \theta) &= \prod_{i = 1}^N \prod_{t = 1}^T p(y_{t, i} \mid \vec x_i, \vec w, \alpha_t, \beta_t)\\
                 &\begin{aligned}= \prod_{i = 1}^N \prod_{t = 1}^T &\bigg[p(y_{t, i} \mid z_i = 1, \alpha_t) p(z_i = 1 \mid \vec x_i, \vec w)\\
-                                                                  &+ p(y_{t, i} \mid z_i = 0, \beta_t) p(z_i = 0 \mid \vec x_i, \vec w)\bigg].\end{aligned}
+                    &+ p(y_{t, i} \mid z_i = 0, \beta_t) p(z_i = 0 \mid \vec x_i, \vec w)\bigg].\end{aligned}
             \end{align*}
             Since there are unknown values $z$, the maximum likelihood problem must be solved using expectation-maximisation. This has closed-form solutions for $\vec \alpha$ (Equation \ref{eq:raykar-alpha}) and $\vec \beta$ (Equation \ref{eq:raykar-beta}), but gradient methods must be used for finding $\vec w$.
 
@@ -126,25 +151,27 @@ efficiency.
                 \label{fig:raykar}
             \end{figure}
 
-        \subsubsection{Yan et al. Method}
-            \label{sec:yan}
+    \subsection{Yan et al. Model}
+    \label{sec:yan}
 
-            \citet{yan10} propose modelling the $t$th labeller by a Bernoulli distribution of a data-dependent function $\eta_t(\vec x)$, parametrised as a logistic regression function $\eta_t(\vec x) = \sigma(\vec \omega_t^T \vec x + \gamma_t)$. The labeller model is thus
-            \begin{equation*}
-                p(y_t \mid \vec x, z, \vec \omega_t, \gamma_t) = \eta_t(\vec x)^{1 - |y_t - z|} (1 - \eta_t(\vec x))^{|y_t - z|}.
-            \end{equation*}
-            For ease of notation, let $\Omega = (\vec \omega_1^T, \dots, \vec \omega_T^T)$ and let $\vec \gamma = (\gamma_1, \dots, \gamma_T)$. This model can be obtained from the \citeauthor{raykar10} model by requiring $\alpha_t = \beta_t = \eta_t(\vec x)$ and allowing these parameters be data-dependent.
+        \todo{Clear this up with respect to the above examples.}
 
-            As with \citeauthor{raykar10}, the classification model can be any classifier and \citeauthor{yan10} choose to use logistic regression (Equation \ref{eq:raykar-logreg}). The parameters $\vec \theta = \{\Omega, \vec \gamma, \vec w\}$ can be found by maximising the likelihood with expectation-maximisation. Under the assumptions that examples are independently sampled and that the labellers are independent, the likelihood is given by
-            \begin{align*}
-                p(\mathcal D \mid \vec \theta) &= \prod_{i = 1}^N \prod_{t = 1}^T p(y_{t, i} \mid \vec x_i, \vec w, \Omega, \vec \gamma)\\ &= \prod_{i = 1}^N \prod_{t = 1}^T \sum_{z = 0}^1 p(y_t \mid \vec x_i, z, \vec \omega_t, \gamma_t) p(z \mid \vec x_i, \vec w).
-            \end{align*}
-            The expectation steps requires us to compute
-            \[
-                \mu_i \propto \prod_{t = 1}^{T} p(y_{t, i} \mid \vec x_i, z_i = 1, \vec \omega_t, \gamma_t) p(z_i = 1 \mid \vec x_i, \vec w).
-            \]
-            The maximisation step requires us to maximise
-            \begin{equation*}
-                \sum_{i = 1}^N \sum_{t = 1}^T \sum_{z_i = 0}^1 p(z_i \mid \vec x_i, \vec w) (\log p(y_{t, i} \mid \vec x_i, z, \vec \omega_t, \gamma_t) + \log p(z \mid \vec x_i, \vec w))
-            \end{equation*}
-            with respect to $\vec w, \Omega,$ and $\vec \gamma$, where $p(z_i \mid \vec x_i, \vec w)$ is fixed to use the previous value of $\vec w$.
+        \citet{yan10} propose modelling the $t$th labeller by a Bernoulli distribution of a data-dependent function $\eta_t(\vec x)$, parametrised as a logistic regression function $\eta_t(\vec x) = \sigma(\vec \omega_t^T \vec x + \gamma_t)$. The labeller model is thus
+        \begin{equation*}
+            p(y_t \mid \vec x, z, \vec \omega_t, \gamma_t) = \eta_t(\vec x)^{1 - |y_t - z|} (1 - \eta_t(\vec x))^{|y_t - z|}.
+        \end{equation*}
+        For ease of notation, let $\Omega = (\vec \omega_1^T, \dots, \vec \omega_T^T)$ and let $\vec \gamma = (\gamma_1, \dots, \gamma_T)$. This model can be obtained from the \citeauthor{raykar10} model by requiring $\alpha_t = \beta_t = \eta_t(\vec x)$ and allowing these parameters be data-dependent.
+
+        As with \citeauthor{raykar10}, the classification model can be any classifier and \citeauthor{yan10} choose to use logistic regression (Equation \ref{eq:raykar-logreg}). The parameters $\vec \theta = \{\Omega, \vec \gamma, \vec w\}$ can be found by maximising the likelihood with expectation-maximisation. Under the assumptions that examples are independently sampled and that the labellers are independent, the likelihood is given by
+        \begin{align*}
+            p(\mathcal D \mid \vec \theta) &= \prod_{i = 1}^N \prod_{t = 1}^T p(y_{t, i} \mid \vec x_i, \vec w, \Omega, \vec \gamma)\\ &= \prod_{i = 1}^N \prod_{t = 1}^T \sum_{z = 0}^1 p(y_t \mid \vec x_i, z, \vec \omega_t, \gamma_t) p(z \mid \vec x_i, \vec w).
+        \end{align*}
+        The expectation steps requires us to compute
+        \[
+            \mu_i \propto \prod_{t = 1}^{T} p(y_{t, i} \mid \vec x_i, z_i = 1, \vec \omega_t, \gamma_t) p(z_i = 1 \mid \vec x_i, \vec w).
+        \]
+        The maximisation step requires us to maximise
+        \begin{equation*}
+            \sum_{i = 1}^N \sum_{t = 1}^T \sum_{z_i = 0}^1 p(z_i \mid \vec x_i, \vec w) (\log p(y_{t, i} \mid \vec x_i, z, \vec \omega_t, \gamma_t) + \log p(z \mid \vec x_i, \vec w))
+        \end{equation*}
+        with respect to $\vec w, \Omega,$ and $\vec \gamma$, where $p(z_i \mid \vec x_i, \vec w)$ is fixed to use the previous value of $\vec w$.
