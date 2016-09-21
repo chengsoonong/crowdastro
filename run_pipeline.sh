@@ -1,4 +1,4 @@
-crowdastro import_data
+crowdastro import_data --ir wise
 crowdastro consensuses
 crowdastro generate_training_data
 crowdastro compile_cnn

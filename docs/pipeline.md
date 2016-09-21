@@ -5,6 +5,10 @@ Import data sources:
 ```bash
 crowdastro import_data
 ```
+This by default uses the SWIRE catalogue. For using the WISE catalogue:
+```bash
+crowdastro import_data --ir wise
+```
 
 Process the consensuses:
 
