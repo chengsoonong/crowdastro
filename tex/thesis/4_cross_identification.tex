@@ -163,6 +163,11 @@
 
   To generate the test sets, I first selected at random half of all ATLAS objects. I then added all WISE objects within $1'$ of a selected ATLAS object to the test set. This was repeated for each test set. The motivation for first selecting ATLAS objects rather than drawing WISE objects directly is that WISE objects have overlapping features since radio features are taken from a patch of sky centred on each object, and WISE objects tend to be close together. Objects from the test sets were then removed at random until all test sets were the same size. Each test set contained $13605$ WISE objects.
 
+\section{Handling Crowd Labels}
+\label{sec:rgz-crowd-labels}
+  
+  While we want to train a classifier on the crowdsourced labels from the Radio Galaxy Zoo, it is unclear how we should aggregate the labels. Some methods for aggregation are described in Section \ref{sec:crowd-labels}. Which method will perform best on a dataset is dependent on the dataset itself, so we tested both variants of the \citeauthor{raykar10} algorithm and majority vote on the galaxy classification task.
+
 \section{Results}
 \label{sec:passive-results}
   

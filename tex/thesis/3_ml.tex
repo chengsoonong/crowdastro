@@ -11,12 +11,13 @@ efficiency.
 \section{Discuss some machine learning here}
 
 \section{Crowdsourced Labelling}
+\label{sec:crowd-labels}
 
-    \section{Notation}
+    \subsection{Notation}
 
         \todo{add a notation section (maybe even not here)}
 
-    \section{Crowdsourced Labels}
+    \subsection{Crowdsourced Labels}
         
         For standard supervised learning tasks, the labels are generally
         provided by some \emph{expert}, carrying the assumption that these
@@ -48,6 +49,7 @@ efficiency.
         in giving incorrect labels.
 
     \subsection{Majority Vote}
+    \label{sec:majority-vote}
 
         One way to reduce label noise is to allow multiple labellers to label the same examples, and then for each example take the \emph{majority vote} to find a ``consensus'' label. If the label provided by the $t$th labeller is denoted $y_t$ and there are $T$ labellers, then the consensus label is given by
         \begin{equation*}
@@ -125,6 +127,7 @@ efficiency.
             \end{figure}
 
         \subsubsection{Yan et al. Method}
+            \label{sec:yan}
 
             \citet{yan10} propose modelling the $t$th labeller by a Bernoulli distribution of a data-dependent function $\eta_t(\vec x)$, parametrised as a logistic regression function $\eta_t(\vec x) = \sigma(\vec \omega_t^T \vec x + \gamma_t)$. The labeller model is thus
             \begin{equation*}

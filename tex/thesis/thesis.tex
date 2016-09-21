@@ -1,6 +1,7 @@
 %!TeX program=xelatex
 \documentclass[11pt]{book}
 
+\usepackage{caption}
 \usepackage[palatino]{anuthesis}
 \usepackage{graphicx}
 \usepackage{thesis}
@@ -80,7 +81,7 @@
 \mainmatter
 
 %% Chapters
-\input{0_misc}
+% \input{0_misc}
 \input{1_intro}
 \input{2_astro}
 \input{3_ml}
@@ -100,8 +101,8 @@
 \todo{Verify that I didn't break anything by using natbib.}
 
 \nocite{*}
-\bibliographystyle{acmnew-xref}
-% \bibliographystyle{plainnat}
+% \bibliographystyle{acmnew-xref}
+\bibliographystyle{plainnat}
 \bibliography{../papers}
 
 \printindex

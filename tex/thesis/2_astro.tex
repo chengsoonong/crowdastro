@@ -2,13 +2,16 @@
 \chapter{Galaxies and Active Galactic Nuclei}
 \label{cha:astro}
 
-    Modern astronomy relies on observations of deep space. Telescopes image the sky in different wavelengths, with different wavelengths carrying different physical meanings. Infrared surveys detect star formation and dust in distant galaxies, and radio surveys detect massive objects called active galactic nuclei. In this section, I introduce the physics of what we see when we look at the sky in these wavelengths, as well as introducing specific radio and infrared surveys relevant to this thesis. I will also discuss the motivation behind cross-identifying active galactic nuclei with their host galaxies as well as the inherent difficulty in doing so, and hence the motivation behind this thesis.
-
-    % \section{Galaxies}
-
-    % \section{Supermassive Black Holes and Active Galactic Nuclei}
-
-        % Black holes are compact, dense objects of extraordinarily large mass. Due to their density, black holes have extremely strong gravitational fields, and any object that gets close enough will be unable to escape \citep{wald10}. This even includes light, which is effectively absorbed by black holes, giving them their name.
+    Modern astronomy relies on observations of deep space. Telescopes image the
+    sky in different wavelengths, with different wavelengths carrying different
+    physical meanings. Infrared surveys detect star formation and dust in
+    distant galaxies, and radio surveys detect massive objects called active
+    galactic nuclei. In this section, I introduce the physics of what we see
+    when we look at the sky in these wavelengths, as well as introducing
+    specific radio and infrared surveys relevant to this thesis. I will also
+    discuss the motivation behind cross-identifying active galactic nuclei with
+    their host galaxies, as well as the inherent difficulty in doing so, and
+    hence provide the motivation behind this thesis.
 
         % \todo{Talk about how black holes are predicted by GR.}
 
@@ -16,18 +19,25 @@
 
         % \todo{Talk about how we can observe black holes?}
 
-    \section{Active Galactic Nuclei}
+    \section{Radio Active Galactic Nuclei}
 
-        Many galaxies contain a supermassive black hole in their centre. These black holes accrete matter from the surrounding galaxy in an accretion disk \todo{figure}. The accretion process emits huge amounts of light through different physical processes. These light-emitting black holes are called active galactic nuclei (AGNs). AGNs can be extremely bright, emitting up to $10^{39}$ J of energy every second --- nearly a thousand times more energy than our entire galaxy emits \citep{begelman84}. AGNs are found throughout the universe: The closest known AGN is Centaurus A (shown in Figure \ref{fig:centaurus-a}, with $z \approx 0.0018$, and AGNs have been detected up to redshifts of $z \approx 7$ \todo{citation needed}.
+        \begin{figure}[!ht]
+            \centering
+            \includegraphics[width=0.8\textwidth]{images/accretion_disk_artist_impression.jpg}
+            \caption{An artist's impression of the accretion disk of an active galactic nucleus. \emph{Image: NASA/JPL-Caltech}}
+            \label{fig:accretion-disk}
+        \end{figure}
+
+        Many galaxies contain a supermassive black hole in their centre. These black holes accrete matter from the surrounding galaxy in an \emph{accretion disk} (Figure \ref{fig:accretion-disk}). The accretion process emits huge amounts of light through different physical processes. These light-emitting black holes are called active galactic nuclei (AGNs). AGNs can be extremely bright, emitting up to $10^{39}$ J of energy every second --- nearly a thousand times more energy than our entire galaxy emits \citep{begelman84}. AGNs are found throughout the universe: The closest known AGN is Centaurus A (shown in Figure \ref{fig:centaurus-a}), with $z \approx 0.0018$, and AGNs have been detected up to redshifts of $z \approx 7$ \todo{citation needed}.
 
         \begin{figure}[!ht]
             \centering
             \includegraphics[width=0.5\textwidth]{images/ESO_Centaurus_A_LABOCA.jpg}
-            \caption{Centaurus A, a relatively close radio active galactic nuclei. \emph{Image: ESO/WFI (Optical); MPIfR/ESO/APEX/A.Weiss et al. (Submillimetre); NASA/CXC/CfA/R.Kraft et al. (X-ray)}}
+            \caption{Centaurus A, a relatively close radio active galactic nucleus. \emph{Image: ESO/WFI (Optical); MPIfR/ESO/APEX/A.Weiss et al. (Submillimetre); NASA/CXC/CfA/R.Kraft et al. (X-ray)}}
             \label{fig:centaurus-a}
         \end{figure}
 
-        Many AGNs produce \emph{jets} from their accretion disk. Jets are long, thin streams of matter such as the one shown in Figure \ref{fig:m87}. These jets can be very long, with ``giant'' AGNs emitting jets up to 1 Mpc in length \todo{citation needed --- maybe \citet{banfield16}?}. The process through which jets are emitted is currently unknown \todo{citation needed}.
+        AGNs produce \emph{jets} from their accretion disk. Jets are long, thin streams of matter such as the one shown in Figure \ref{fig:m87}. These jets can be very long, with ``giant'' AGNs emitting jets up to 1 Mpc in length \todo{citation needed --- maybe \citet{banfield16}?}. The process through which jets are emitted is currently unknown \todo{citation needed}.
         %--- for example, the jet in Figure \ref{fig:m87} is $1.5$ kpc in length \citep{rees87}.
 
         \begin{figure}[!ht]
@@ -37,7 +47,7 @@
             \label{fig:m87}
         \end{figure}
 
-        Electrons in jets produce \emph{synchrotron radiation}, a form of radiation emitted by charged particles as they accelerate at relativistic speeds in a magnetic field \todo{citation needed}. This radiation is emitted in radio wavelengths, and so AGNs emitting this kind of radiation are called \emph{radio AGNs}. It is radio AGNs that are the focus of this thesis, and from this point on, ``AGN'' will refer only to radio AGNs.
+        Electrons in jets can produce \emph{synchrotron radiation}, a form of radiation emitted by charged particles as they accelerate at relativistic speeds in a magnetic field \todo{citation needed}. This radiation is emitted in radio wavelengths, and so AGNs emitting this kind of radiation are called \emph{radio AGNs}. As radio AGNs are the focus of this thesis, from this point on ``AGN'' will refer only to radio AGNs.
 
         While we cannot observe the black holes of AGNs directly, we can observe the radio emissions from their jets. \todo{Keep motivating! Read those articles Julie suggested.}
 
@@ -50,7 +60,7 @@
 
     \section{Astronomical Observations}
 
-        When observing the sky, we can think about the sky as a spherical surface surrounding the earth. All objects we see with telescopes are flat on the sky, and we only have limited tools to determine their distances and scales. In this section, I will describe the coordinate systems used to describe these objects, and outline some of the challenges associated with astronomical observations.
+        When observing the sky, we can think about the sky as a spherical surface surrounding the earth. All objects we see with telescopes are flat on the sky, and we only have limited tools to determine their distances and scales. In this section, I will describe the coordinate systems used to describe these objects, discuss some of the measurements we are able to make, and outline some of the challenges associated with astronomical observations.
 
         \subsection{Astronomical Coordinates}
 
@@ -71,7 +81,29 @@
 
         \subsection{Redshift}
 
-        \subsection{Magnitudes}
+            The \emph{redshift} $z$ of an object is a measure of the distance to that object based on the expansion of the universe. \todo{Finish this.}
+
+        \subsection{Flux and Magnitude}
+
+            The \emph{flux density} $f$ of an object is its energy output per unit time per unit area, and is measured in $\text{W m}^{-2}$. The flux density is given by
+            \[
+                f = \frac{1}{A}\frac{\text{d}E}{\text{d}t}
+            \]
+            We cannot usually measure the flux over all frequencies, so usually flux is observed over a specific frequency range $\Delta \nu$. The \emph{spectral flux density} is then the limit of this as the frequency range approaches zero, i.e.
+            \[
+                f_\nu = \frac{1}{A}\frac{\text{d}^2E}{\text{d}\nu\text{d}t}
+            \]
+            where $E$ is the energy received from the object, $A$ is the area of the object on the sky, and $\nu$ is the frequency. The spectral flux density is measured in janskys (Jy), an astronomical unit equal to $10^{-26} \text{W m}^{-2} \text{ Hz}^{-1}$ \citep{francis08}.
+
+            The \emph{apparent magitude} $m$ of an object is a logarithmic measure of its apparent brightness seen from Earth, relative to the star Vega \citep{francis08}. The difference between the magnitudes of two objects represents the ratio of their flux densities
+            \[
+                m_2 - m_1 = -2.5 \log_{10} \left(\frac{f_2}{f_1}\right)
+            \]
+            and so the apparent magnitude is given by
+            \[
+                m = -2.5 \log_{10} \left(\frac{f}{f_{\text{Vega}}}\right)
+            \]
+            where $f$ is the flux density of the object and $f_{\text{Vega}}$ is the flux density of Vega, measured at the same frequency.
 
     \section{ATLAS: The Australia Telescope Large Area Survey}
 
