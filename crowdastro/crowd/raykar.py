@@ -223,7 +223,8 @@ class RaykarClassifier(object):
                 a[t] += m[i] * y[t, i]
                 divisor[t] += m[i]
 
-        return a / (divisor + EPS)
+        divisor[divisor == 0] = EPS
+        return a / divisor
 
     def _max_beta_step(self, m, y, y_mask):
         """Computes β based on μ.
@@ -243,7 +244,8 @@ class RaykarClassifier(object):
                 b[t] += (1 - m[i]) * (1 - y[t, i])
                 divisor[t] += (1 - m[i])
 
-        return b / (divisor + EPS)
+        divisor[divisor == 0] = EPS
+        return b / divisor
 
     def predict(self, X):
         return self.predict_proba(X).round()
