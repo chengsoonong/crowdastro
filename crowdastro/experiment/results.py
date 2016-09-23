@@ -44,11 +44,15 @@ class Results(object):
         # We could store a reference to the actual file, but then there's no
         # guarantee we'll close it safely later.
 
+    def set_model(self, model):
+        """Sets the model."""
+        self.model = model
+        with h5py.File(self.h5_path, 'r+') as f:
+            f.attrs['model'] = model
+
     @classmethod
     def from_path(cls, path):
-        """
-        Loads a Results object from a path.
-        """
+        """Loads a Results object from a path."""
         if not path.endswith('.h5'):
             path += '.h5'
         with h5py.File(path, 'r') as f:
