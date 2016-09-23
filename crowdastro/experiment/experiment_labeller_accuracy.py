@@ -35,7 +35,7 @@ def main(crowdastro_h5_path):
                     norris_labels, masked_labels[t])
             if ba:
                 alphas.append(cm[1, 1] / (cm[1, 1] + cm[1, 0]))
-                betas.append(1 - cm[0, 1] / (cm[0, 1] + cm[0, 0]))
+                betas.append(cm[0, 0] / (cm[0, 1] + cm[0, 0]))
                 accuracies.append(ba)
 
         print('Average accuracy: ({} +- {})%'.format(
