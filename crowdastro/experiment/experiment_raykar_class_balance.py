@@ -20,30 +20,9 @@ import sklearn.datasets
 from . import runners
 from .. import __version__
 from ..crowd.raykar import RaykarClassifier
+from ..crowd.util import crowd_label
 from ..plot import vertical_scatter_ba
 from .results import Results
-
-
-def crowd_label(y, alphas, betas):
-    """Simulates a crowd performing a labelling task."""
-    n_labellers = len(alphas)
-    assert n_labellers == len(betas)
-    n_examples = len(y)
-    labels = numpy.zeros((n_labellers, n_examples))
-    for i, true_label in enumerate(y):
-        for t in range(n_labellers):
-            if true_label == 0:
-                if numpy.random.random() <= betas[t]:
-                    labels[t, i] = 0
-                else:
-                    labels[t, i] = 1
-            else:
-                if numpy.random.random() <= alphas[t]:
-                    labels[t, i] = 1
-                else:
-                    labels[t, i] = 0
-    mask = numpy.zeros(labels.shape)  # Fully observed labels.
-    return numpy.ma.MaskedArray(labels, mask=mask)
 
 
 def main(results_h5_path, overwrite=False, plot=False, n_trials=5,

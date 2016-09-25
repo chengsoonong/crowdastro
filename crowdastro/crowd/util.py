@@ -35,6 +35,33 @@ def balanced_accuracy(y_true, y_pred):
     return ba
 
 
+def crowd_label(y, alphas, betas):
+    """Simulates a crowd performing a labelling task.
+
+    y: (n_examples,) array of true labels.
+    alphas: (n_labellers,) array of labeller true positive rates.
+    betas: (n_labellers,) array of labeller true negative rates.
+    """
+    n_labellers = len(alphas)
+    assert n_labellers == len(betas)
+    n_examples = len(y)
+    labels = numpy.zeros((n_labellers, n_examples))
+    for i, true_label in enumerate(y):
+        for t in range(n_labellers):
+            if true_label == 0:
+                if numpy.random.random() <= betas[t]:
+                    labels[t, i] = 0
+                else:
+                    labels[t, i] = 1
+            else:
+                if numpy.random.random() <= alphas[t]:
+                    labels[t, i] = 1
+                else:
+                    labels[t, i] = 0
+    mask = numpy.zeros(labels.shape)  # Fully observed labels.
+    return numpy.ma.MaskedArray(labels, mask=mask)
+
+
 def majority_vote(y):
     """Computes the majority vote of a set of crowd labels.
 
