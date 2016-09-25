@@ -37,6 +37,9 @@ def _top_n_accurate_targets(crowdastro_h5, y_true, n_annotators=5,
     for t in range(labels.shape[0]):
         cm = sklearn.metrics.confusion_matrix(y_true[~labels[t].mask],
                                               labels[t][~labels[t].mask])
+        if cm.shape[0] == 1:
+            continue
+
         tp = cm[1, 1]
         n, p = cm.sum(axis=1)
         tn = cm[0, 0]
