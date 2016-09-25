@@ -209,10 +209,6 @@ class RaykarClassifier(object):
         y_mask: Mask of unobserved crowd labels.
         -> α
         """
-        logging.debug('Percentage y == m == 1: {:.02%}'.format(
-                numpy.logical_and(y == 1, y == m.round()).mean()))
-        logging.debug('Percentage m == 1: {:.02%}'.format(m.round().mean()))
-
         a = numpy.zeros((y.shape[0],))
         divisor = numpy.zeros((y.shape[0],))
         for t in range(y.shape[0]):
