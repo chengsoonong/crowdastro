@@ -23,22 +23,15 @@ class RaykarClassifier(object):
     Jointly learns an annotator model and a classification model.
     """
 
-    def __init__(self, n_restarts=5, epsilon=1e-5, inner_epsilon=1e-4,
-                 inner_step=1e-4, max_inner_iters=5000, lr_init=True):
+    def __init__(self, n_restarts=5, epsilon=1e-5, lr_init=True):
         """
         n_restarts: Number of times to run the algorithm. Higher numbers improve
             chances of finding a global maximum likelihood solution.
         epsilon: Convergence threshold.
-        inner_epsilon: Convergence threshold for maximisation step.
-        inner_step: Step size for maximisation step.
-        max_inner_iters: Maximum number of iterations for maximisation step.
         lr_init: Whether to initialise w using logistic regression.
         """
         self.n_restarts = n_restarts
         self.epsilon = epsilon
-        self.inner_epsilon = inner_epsilon
-        self.inner_step = inner_step
-        self.max_inner_iters = max_inner_iters
         self.lr_init = lr_init
 
     def fit(self, X, Y):
@@ -257,9 +250,6 @@ class RaykarClassifier(object):
         return {
             'n_restarts': self.n_restarts,
             'epsilon': self.epsilon,
-            'inner_epsilon': self.inner_epsilon,
-            'inner_step': self.inner_step,
-            'max_inner_iters': self.max_inner_iters,
             'lr_init': self.lr_init,
         }
 
