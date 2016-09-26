@@ -50,7 +50,6 @@ class RaykarClassifier(object):
             raise ValueError('X and Y have different numbers of samples.')
 
         results = []
-        x_with_bias = numpy.hstack([X, numpy.ones((X.shape[0], 1))])
         for trial in range(self.n_restarts):
             logging.debug('Trial {}/{}'.format(trial + 1, self.n_restarts))
             a, b, w = self._fit_params(X, Y)
@@ -65,7 +64,7 @@ class RaykarClassifier(object):
 
     def _fit_params(self, x, y):
         """
-        x: (n_samples, n_features) NumPy array of data.
+        x: (n_samples, n_features) NumPy array of data (with no bias term).
         y: (n_labellers, n_samples) NumPy masked array of crowd labels.
         """
         # Add a bias feature.
@@ -173,33 +172,6 @@ class RaykarClassifier(object):
                                            b.reshape((-1, 1)), x, y_0, y_1),
                                      disp=False)
         return w
-
-        # for i in range(self.max_inner_iters):
-        #     lr = logistic_regression(w, x)
-        #     g = numpy.dot(m - lr, x)
-
-        #     H = numpy.zeros((n_features, n_features))
-        #     for i in range(n_samples):
-        #         H += -lr[i] * (1 - lr[i]) * numpy.outer(x[i], x[i])
-
-        #     # Need to find H^{-1} g. Since there may be many features, this is
-        #     # fastest if we minimise ||Hx - g|| for x.
-        #     invHg = scipy.optimize.fmin_bfgs(self._hessian_inverse_multiply,
-        #             numpy.random.normal(size=w.shape), args=(H, g), disp=False)
-
-        #     w_ = w - self.inner_step * invHg
-
-        #     dw = numpy.linalg.norm(w_ - w)
-
-        #     logging.debug('Current value of delta w: %f', dw)
-
-        #     if dw < self.inner_epsilon:
-        #         return w
-
-        #     w = w_
-
-        # logging.warning('Optimisation of w failed to converge, delta w: %f', dw)
-        # return w
 
     def _max_alpha_step(self, m, y, y_mask):
         """Computes α based on μ.
