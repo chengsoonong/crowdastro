@@ -9,6 +9,7 @@ import logging
 
 import astropy.io.fits
 import astropy.wcs
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
 import numpy
@@ -21,6 +22,7 @@ FITS_CONVENTION = 1
 IMAGE_DIAMETER = config['surveys']['atlas']['fits_width']
 
 wcs = None
+
 
 def _init_wcs():
     """Initialise the ATLAS image WCS. Sets global variable wcs."""
@@ -102,7 +104,7 @@ def plot_classifications_row(atlas_vector, ir_matrix, classifier_labels,
 
 
 def vertical_scatter(xs, ys, style='bx', rotation='horizontal',
-                     line=False):
+                     line=False, x_tick_offset=0):
     """Plots a vertical scatter plot.
 
     xs: List of x labels.
@@ -110,6 +112,7 @@ def vertical_scatter(xs, ys, style='bx', rotation='horizontal',
     style: Plots point style. Default 'bx'.
     rotation: x label rotation. Default 'horizontal'.
     line: Draw lines between corresponding points. Default False.
+    x_tick_offset: How far to offset the x tick labels. Default 0.
     """
     for x in range(len(xs)):
         plt.plot([x] * len(ys[x]), ys[x], style)
@@ -118,19 +121,29 @@ def vertical_scatter(xs, ys, style='bx', rotation='horizontal',
         ys_t = list(zip(*ys))
         for y in range(len(ys[0])):
             plt.plot(range(len(xs)), ys_t[y])
-    plt.xticks(range(len(xs)), xs, rotation=rotation)
+    plt.xticks([i + x_tick_offset for i in range(len(xs))], xs,
+               rotation=rotation)
     plt.xlim((-0.5, len(xs) - 0.5))  # Adds a little buffer.
 
 
-def violinplot(xs, ys, rotation='horizontal', points=100):
+def violinplot(xs, ys, rotation='horizontal', points=100,
+               facecolour='lightgreen', edgecolour='green'):
     """Plots a vertical scatter plot.
 
     xs: List of x labels.
     ys: List of lists of points to scatter vertically.
     rotation: x label rotation. Default 'horizontal'.
     points: Number of points to use in the density estimate.
+    facecolour: Colour of the violin plots. Default light green.
+    edgecolour: Colour of the violin lines. Default green.
     """
-    plt.violinplot(ys, showmeans=True, points=points)
+    vp = plt.violinplot(ys, showmeans=True, showextrema=False, points=points)
+    # plt.violinplot has no arguments that let us set colours, so we have to do
+    # it ourselves. http://stackoverflow.com/a/26291582/1105803
+    for pc in vp['bodies']:
+        pc.set_facecolor(facecolour)
+        pc.set_edgecolor(edgecolour)
+    vp['cmeans'].set_color(edgecolour)
     plt.xticks([1 + i for i in range(len(xs))], xs, rotation=rotation)
     plt.xlim((0.5, len(xs) + 0.5))  # Adds a little buffer.
 
@@ -179,3 +192,20 @@ def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), violin=False,
     if minorticks:
         plt.minorticks_on()
     plt.ylabel('Balanced accuracy (%)')
+
+
+def fillbetween(xs, ys, facecolour='lightgreen', edgecolour='green',
+                marker='x', **kwargs):
+    """Plots a line plot with error represented by filled-between lines.
+
+    xs: List of x values.
+    ys: List of lists of y values.
+    facecolour: Colour of the filled-between lines. Default light green.
+    edgecolour: Colour of the central line. Default green.
+    marker: Point marker. Default 'x'.
+    kwargs: Keyword arguments passed to plot.
+    """
+    means = numpy.mean(ys, axis=1)
+    stds = numpy.std(ys, axis=1)
+    plt.plot(xs, means, color=edgecolour, marker=marker, **kwargs)
+    plt.fill_between(xs, means - stds, means + stds, color=facecolour)

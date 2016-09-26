@@ -27,7 +27,7 @@ from ..plot import vertical_scatter_ba
 
 
 def main(crowdastro_h5_path, training_h5_path, results_h5_path,
-         overwrite=False, plot=False):
+         overwrite=False, plot=False, n_annotators=10):
     with h5py.File(crowdastro_h5_path, 'r') as crowdastro_h5, \
             h5py.File(training_h5_path, 'r') as training_h5:
 
@@ -47,7 +47,8 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
                           n_params, model)
 
         features = training_h5['features'].value
-        targets = top_n_accurate_targets(crowdastro_h5, n_annotators=10)
+        targets = top_n_accurate_targets(crowdastro_h5,
+                                         n_annotators=n_annotators)
 
         alphas_all_trials = {
             'Downsampled negatives': [],
@@ -127,6 +128,8 @@ if __name__ == '__main__':
                         help='Overwrite existing results')
     parser.add_argument('--verbose', '-v', action='store_true',
                         help='Verbose output')
+    parser.add_argument('--annotators', type=int, help='Number of annotators',
+                        default=10)
     parser.add_argument('--plot', action='store_true', help='Generate a plot')
     args = parser.parse_args()
 
@@ -136,4 +139,4 @@ if __name__ == '__main__':
         logging.root.setLevel(logging.INFO)
 
     main(args.crowdastro, args.training, args.results, overwrite=args.overwrite,
-         plot=args.plot)
+         plot=args.plot, n_annotators=args.annotators)

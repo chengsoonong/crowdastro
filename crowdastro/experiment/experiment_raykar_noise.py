@@ -21,7 +21,7 @@ from . import runners
 from .. import __version__
 from ..crowd.raykar import RaykarClassifier
 from ..crowd.util import balanced_accuracy, crowd_label
-from ..plot import violinplot
+from ..plot import fillbetween, violinplot
 from .results import Results
 
 
@@ -110,41 +110,42 @@ def main(results_h5_path, overwrite=False, plot=False, n_trials=5,
 
         # alpha vs ba
         plt.subplot(2, 2, 1)
-        alphas = []
-        bas = []
-        for alpha, bas_ in alpha_to_bas.items():
-            alphas.extend([alpha] * len(bas_))
-            bas.extend(bas_)
-        plt.scatter(alphas, bas, color='b', marker='+')
-        plt.xlabel('$\\alpha$')
+        fillbetween(
+            sorted(alpha_to_bas),
+            [alpha_to_bas[a] for a in sorted(alpha_to_bas)],
+            facecolour='lightblue', edgecolour='blue')
+        plt.ylim((0.5, 1.0))
         plt.ylabel('Balanced accuracy')
 
         # beta vs ba
         plt.subplot(2, 2, 2)
-        betas = []
-        bas = []
-        for beta, bas_ in beta_to_bas.items():
-            betas.extend([beta] * len(bas_))
-            bas.extend(bas_)
-        plt.scatter(betas, bas, color='b', marker='+')
-        plt.xlabel('$\\beta$')
+        fillbetween(
+            sorted(beta_to_bas),
+            [beta_to_bas[b] for b in sorted(beta_to_bas)],
+            facecolour='lightblue', edgecolour='blue')
+        plt.ylim((0.5, 1.0))
         plt.ylabel('Balanced accuracy')
 
         # alpha vs est alpha
         plt.subplot(2, 2, 3)
-        violinplot(
+        fillbetween(
             sorted(alpha_to_ests),
-            [est for _, est in sorted(alpha_to_ests.items())])
+            [alpha_to_ests[a] for a in sorted(alpha_to_ests)],
+            facecolour='lightgreen', edgecolour='green')
         plt.xlabel('$\\alpha$')
         plt.ylabel('Estimated $\\alpha$')
 
         # beta vs est beta
         plt.subplot(2, 2, 4)
-        violinplot(
+        fillbetween(
             sorted(beta_to_ests),
-            [est for _, est in sorted(beta_to_ests.items())])
+            [beta_to_ests[a] for a in sorted(beta_to_ests)],
+            facecolour='lightgreen', edgecolour='green')
         plt.xlabel('$\\beta$')
         plt.ylabel('Estimated $\\beta$')
+
+        # Space out the plots a little so the titles don't overlap.
+        plt.subplots_adjust(wspace=0.25)
 
         plt.show()
 

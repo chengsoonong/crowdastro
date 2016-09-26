@@ -20,8 +20,8 @@ import sklearn.datasets
 from . import runners
 from .. import __version__
 from ..crowd.raykar import RaykarClassifier
-from ..crowd.util import crowd_label
-from ..plot import vertical_scatter_ba
+from ..crowd.util import balanced_accuracy, crowd_label
+from ..plot import vertical_scatter_ba, violinplot
 from .results import Results
 
 
@@ -45,6 +45,7 @@ def main(results_h5_path, overwrite=False, plot=False, n_trials=5,
 
     alphas = collections.defaultdict(list)
     betas = collections.defaultdict(list)
+    bas = collections.defaultdict(list)
     for trial in range(n_trials):
         for mr_method, method in zip(mr_methods, methods):
             # Generate some toy data.
@@ -70,25 +71,29 @@ def main(results_h5_path, overwrite=False, plot=False, n_trials=5,
             rc = RaykarClassifier.unserialise(model)
             alphas[method].extend(rc.a_)
             betas[method].extend(rc.b_)
+            ba = balanced_accuracy(y, rc.predict(x))
+            bas[method].append(ba)
 
     if plot:
         # violinplot takes a list of lists of observations.
-        alpha_data = [alphas[m] for m in methods]
-        beta_data = [betas[m] for m in methods]
-
         matplotlib.rcParams['font.family'] = 'serif'
         matplotlib.rcParams['font.serif'] = ['Palatino Linotype']
 
-        plt.subplot(1, 2, 1)
-        plt.violinplot(alpha_data, showmeans=True)
+        violinplot(methods, [bas[m] for m in methods])
+        plt.ylim((0.5, 1))
+        plt.ylabel('Balanced accuracy')
+        plt.xlabel('Negative:positive ratio')
+        plt.show()
+
+        plt.subplot(2, 1, 1)
+        violinplot(methods, [alphas[m] for m in methods])
         plt.ylim((0, 1))
         plt.ylabel('$\\alpha$')
-        plt.xticks([1 + i for i in range(len(methods))], methods)
-        plt.subplot(1, 2, 2)
-        plt.violinplot(beta_data, showmeans=True)
+        plt.subplot(2, 1, 2)
+        violinplot(methods, [betas[m] for m in methods])
         plt.ylim((0, 1))
         plt.ylabel('$\\beta$')
-        plt.xticks([1 + i for i in range(len(methods))], methods)
+        plt.xlabel('Negative:positive ratio')
         plt.show()
 
 
