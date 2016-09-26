@@ -88,13 +88,16 @@ class RaykarClassifier(object):
         y = y_0 = y.filled(0)
 
         w = None
+        a = self._max_alpha_step(m, y, y_mask)
+        b = self._max_beta_step(m, y, y_mask)
 
         while True:
             then = time.time()
             # Maximisation step.
+            # w first, so the optimisation uses the old parameters.
+            w = self._max_w_step(a, b, m, x, y_0, y_1, mv, init_w=w)
             a = self._max_alpha_step(m, y, y_mask)
             b = self._max_beta_step(m, y, y_mask)
-            w = self._max_w_step(a, b, m, x, y_0, y_1, mv, init_w=w)
 
             # Expectation step.
             m_ = self._exp_m_step(a, b, w, x, y, y_mask)
@@ -244,7 +247,7 @@ class RaykarClassifier(object):
         exp_b *= numpy.power(b, 1 - Y_1).prod(axis=0)
         exp_b *= numpy.power(1 - b, Y_0).prod(axis=0)
 
-        return (exp_a * exp_p + exp_b * (1 - exp_p)).prod()
+        return (exp_a * exp_p.T + exp_b * (1 - exp_p).T).prod()
 
     def get_params(self, deep=True):
         return {
