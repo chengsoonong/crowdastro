@@ -157,25 +157,93 @@
 \section{Feature Selection}
 \label{sec:features}
 
-  Each candidate host galaxy has an associated set of features. Some of these features are extracted from the radio image patch centred on the galaxy, and some of these features come directly from the infrared survey.
+  To train a machine learning method to solve the galaxy classification task,
+  we must find a representation of galaxies in a feature space $\mathbb{R}^D$.
+  In this section we describe and motivate our choice of galaxy features,
+  extracted from both infrared and radio surveys.
 
-  \subsection{Astronomical Features}
-  \label{sec:astro-features}
+  \subsection{Infrared Features}
+  \label{sec:ir-features}
 
-    The WISE catalogue (Section \ref{sec:wise}) contains colour information for each contained object. There are four such columns --- the W1, W2, W3, and W4 magnitudes --- each representing the amount of light emitted by the object in a different range of wavelengths. Since magnitudes fall on a logarithmic scale, the differences between these values are the ratios between the raw fluxes \todo{Verify}, and these ratios are indicators of physical galactic properties such as star formation and dust \todo{Find a source on this}. Since the magnitudes and their differences carry physical meaning, I chose to use both the magnitudes and their differences as features representing a candidate host galaxy.
+    The WISE catalogue (Section \ref{sec:wise}) contains magnitude information
+    for each object. There are four such magnitudes --- $w1$, $w2$, $w3$, and $w4$ ---
+    each representing the amount of light emitted by the object in a different
+    range of wavelengths.
 
-    The SWIRE catalogue (Section \ref{sec:swire}) also contains colour information for each contained object, but only fluxes rather than magnitudes. \todo{Read the SWIRE colour-colour diagram and continue this.}
+    We chose to use all four magnitudes as features. Since the features are
+    magnitudes, they are on a logarithmic scale, and we found that in practice
+    classification performance improved when the magnitudes were converted to
+    fluxes. We performed this conversion with the formula
+    \[
+      f = 10^{-0.4m}
+    \]
+    where $f$ is the flux and $m$ is the magnitude. This is the inverse of Equation \ref{eq:apparent-magnitude}, and gives the flux in arbitrary, but linear, units.
 
-    Both WISE and SWIRE catalogues contain the positions of each object. The distance from each object to the centre of the closest radio object is used as a feature representing that object. This noticeably improves classification performance \todo{make an experiment showing this, and probably also showing that the other features are good}.
+    \begin{figure}[!ht]
+      \centering
+      \includegraphics[width=0.5\textwidth]{images/wise_colour-colour}
+      \caption{WISE colour-colour diagram showing the colours of various
+        astronomical objects. The horizontal axis is $w2 - w3$ and the vertical
+        axis is $w1 - w2$. Reproduced from \citep{wright10}.}
+      \label{fig:wise-colour-colour}
+    \end{figure}
 
-  \subsection{Image Features}
+    The ratios between infrared fluxes are indicators of physical galactic
+    properties such as star formation and dust \todo{Find a source on this ---
+    Probably the WISE paper wright10}. In practice, the $w1 - w2$ and $w2 - w3$
+    ratios are most commonly used (such as in Figure \ref{fig:wise-colour-
+    colour}), so we chose to use these ratios as features. Once again, we used
+    a linear scale, computing the ratios using equation \ref{eq:magnitude-
+    difference}.
+
+    Also available were the unprocessed infrared images captured in the survey.
+    Under the assumption that the large scale infrared structure of a galaxy is
+    unchanged by an AGN, we chose to ignore the images themselves and focus on
+    features obtained from the catalogue. This greatly simplified feature
+    selection with minimal expected impact on the classification performance.
+    Future work may investigate the effectiveness of features extracted from
+    infrared images on classification performance, but this is out of the scope
+    of this thesis.
+
+    \todo{Discuss SWIRE features.}
+
+    % The SWIRE catalogue (Section \ref{sec:swire}) also contains colour information for each contained object, but only fluxes rather than magnitudes. \todo{Read the SWIRE colour-colour diagram and continue this.}
+
+    % Both WISE and SWIRE catalogues contain the positions of each object. The distance from each object to the centre of the closest radio object is used as a feature representing that object. This noticeably improves classification performance \todo{make an experiment showing this, and probably also showing that the other features are good}.
+
+  \subsection{Radio Features}
   \label{sec:image-features}
+
+    While the infrared catalogues include measurements on individual galaxies,
+    the ATLAS radio catalogue does not. This is because galaxies are not
+    visible in radio, so while galaxies are directly represented in an infrared
+    catalogue they are not in a radio catalogue. Galactic features must thus be
+    extracted from the radio images directly. We chose to use a convolutional
+    neural network, as described in Section \ref{sec:image-features}.
 
     \subsubsection{Building a Model for Feature Extraction}
     \label{sec:feature-extraction-model}
 
+      We chose to use a convolutional neural network (CNN) with two
+      convolutional and max pooling layers, shown in Figure \ref{fig:radio-
+      cnn}. This resulted in an 800-dimensional feature vector. For training
+      this network, we added a 64-dimensional dense layer mapping to a
+      1-dimensional output, and trained the entire network to match the
+      consensus Radio Galaxy Zoo labels.
+
+      \begin{figure}[!ht]
+         \centering
+         \input{images/cnn}
+         \caption{Convolutional neural network for radio feature extraction.}
+         \label{fig:radio-cnn}
+       \end{figure}
+
+       This introduced a degree of peeking, as the network was effectively trained on the galaxy classification task. This is mitigated in two ways: Firstly, there are many more degrees of freedom in the dense layer as in the classifier we used later, so the CNN could at best partially learn the classification task in the short time it was trained for. Secondly, the dense layer was not included in the final feature extractor, and the CNN was not fine-tuned --- features output by the CNN were fixed as inputs to the classifier. A better approach would be to use a convolutional autoencoder, which would eliminate the peeking entirely and allow training on radio data with no labels at all, but this was computationally infeasible for this project.
+
     \subsubsection{Filters}
     \label{sec:image-filters}
+
+      
 
 \section{Choosing a Binary Classifier}
 \label{sec:binary-classifiers}

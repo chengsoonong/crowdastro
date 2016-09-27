@@ -19,8 +19,8 @@ extraction using convolutional neural networks, and methods to combat label nois
     modelling the conditional distribution $p(z \mid x)$. Some examples of
     classification include labelling images of digits, where $\mathcal X$ is a
     set of images and $\mathcal Y = \{0, \dots, 9\}$ \citep{lecun98}; and
-    diagnosing breast cancer in patients, where $\mathcal X$ is a set of sets of
-    medical observations and $\mathcal Y$ is the set $\{\text{malignant},
+    diagnosing breast cancer in patients, where $\mathcal X$ is a set of sets
+    of medical observations and $\mathcal Y$ is the set $\{\text{malignant},
     \text{benign}\}$ \citep{wolberg90}.
 
     Modelling $p(z \mid x)$ requires some set of \emph{training data} $\mathcal
@@ -31,9 +31,9 @@ extraction using convolutional neural networks, and methods to combat label nois
 
     \emph{Binary classification} is classification where each instance must be
     assigned one of two labels, i.e. $\mathcal Y \sim \{0, 1\}$. Instances with
-    a true label of $0$ are called \emph{negative instances}, and instances with
-    a true label of $1$ are called \emph{positive instances}. For this thesis, I
-    will focus entirely on binary classification.
+    a true label of $0$ are called \emph{negative instances}, and instances
+    with a true label of $1$ are called \emph{positive instances}. For this
+    thesis, I will focus entirely on binary classification.
 
     Instances are usually represented by a vector of \emph{features}, denoted
     $\vec x$. Choosing features is an important and non-trivial part of
