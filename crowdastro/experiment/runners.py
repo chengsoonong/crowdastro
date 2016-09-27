@@ -150,7 +150,7 @@ def raykar(results, method_name, split_id, features, targets, test_indices,
         logging.info('Skipping trial {}:{}.'.format(method_name, split_id))
         return
 
-    rc = RaykarClassifier(max_inner_iters=5, n_restarts=n_restarts)
+    rc = RaykarClassifier(n_restarts=n_restarts)
     rc.fit(features[train_indices], targets[:, train_indices])
     results.store_trial(
         method_name, split_id,
