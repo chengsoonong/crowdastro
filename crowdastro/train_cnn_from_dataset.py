@@ -1,4 +1,4 @@
-"""Trains a convolutional neural network.
+"""Trains a convolutional neural network from dataset.h5.
 
 Matthew Alger
 The Australian National University
@@ -17,29 +17,25 @@ PATCH_RADIUS = config['patch_radius']
 PATCH_DIAMETER = PATCH_RADIUS * 2
 
 
-def train(training_h5, model_json, weights_path, epochs, batch_size):
+def train(dataset_h5, model_json, weights_path, epochs, batch_size):
     """Trains a CNN.
 
-    training_h5: Training HDF5 file.
+    training_h5: Dataset HDF5 file.
     model_json: JSON model file.
     weights_path: Output weights HDF5 file.
     epochs: Number of training epochs.
     batch_size: Batch size.
     """
+    import keras.callbacks
     import keras.models
     model = keras.models.model_from_json(model_json.read())
     model.compile(loss='binary_crossentropy', optimizer='adadelta')
 
-    train_set = training_h5['is_ir_train'].value
-    ir_survey = training_h5.attrs['ir_survey']
-
-    n_nonimage_features = config['surveys'][ir_survey]['n_features']
-    training_inputs = training_h5['raw_features'].value[
-            train_set, n_nonimage_features:]
-
+    n_nonimage_features = 5
+    training_inputs = dataset_h5['features'].value[:, n_nonimage_features:]
     training_inputs = training_inputs.reshape(
             (-1, 1, PATCH_DIAMETER, PATCH_DIAMETER))
-    training_outputs = training_h5['labels'].value[train_set]
+    training_outputs = dataset_h5['labels'].value
     assert training_inputs.shape[0] == training_outputs.shape[0]
 
     # Downsample for class balance.
@@ -61,31 +57,25 @@ def train(training_h5, model_json, weights_path, epochs, batch_size):
         logging.warning('Couldn\'t load weights file. Creating new file...')
         pass
 
+    # TODO(MatthewJA): Clean this up!
+    callbacks = [
+        keras.callbacks.ModelCheckpoint(
+                'weights_progress.h5',
+                monitor='val_loss',
+                verbose=1,
+                save_best_only=False,
+                save_weights_only=True,
+                mode='auto')
+    ]
     model.fit(training_inputs, training_outputs, batch_size=batch_size,
-              nb_epoch=epochs)
+              nb_epoch=epochs, callbacks=callbacks)
     model.save_weights(weights_path, overwrite=True)
-
-
-def check_raw_data(training_h5):
-    """Sanity check the input data
-
-    training_h5: Training HDF5 file.
-    """
-    def HDF5_type(name, node):
-        if isinstance(node, h5py.Dataset):
-            logging.info('Dataset: {}'.format(node.name))
-            logging.info('\thas shape {}'.format(node.shape))
-        else:
-            logging.info('\t{} of type {}'.format((node.name, type(node))))
-    logging.info('Peeking into HDF5 file')
-    training_h5.visititems(HDF5_type)
-    logging.info('End file peeking')
 
 
 def _populate_parser(parser):
     parser.description = 'Trains a convolutional neural network.'
-    parser.add_argument('--h5', default='data/training.h5',
-                        help='HDF5 training data file')
+    parser.add_argument('--h5', default='data/dataset.h5',
+                        help='HDF5 dataset file')
     parser.add_argument('--model', default='data/model.json',
                         help='JSON model file')
     parser.add_argument('--output', default='data/weights.h5',
@@ -96,10 +86,9 @@ def _populate_parser(parser):
 
 
 def _main(args):
-    with h5py.File(args.h5, 'r') as training_h5:
-        check_raw_data(training_h5)
+    with h5py.File(args.h5, 'r') as dataset_h5:
         with open(args.model, 'r') as model_json:
-            train(training_h5, model_json, args.output, int(args.epochs),
+            train(dataset_h5, model_json, args.output, int(args.epochs),
                   int(args.batch_size))
 
 
