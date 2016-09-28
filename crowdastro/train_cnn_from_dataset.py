@@ -7,6 +7,7 @@ The Australian National University
 
 import argparse
 import logging
+import subprocess
 
 import h5py
 import numpy
@@ -17,7 +18,7 @@ PATCH_RADIUS = config['patch_radius']
 PATCH_DIAMETER = PATCH_RADIUS * 2
 
 
-def train(dataset_h5, model_json, weights_path, epochs, batch_size):
+def train(dataset_h5, model_json, weights_path, epochs, batch_size, s3):
     """Trains a CNN.
 
     training_h5: Dataset HDF5 file.
@@ -50,6 +51,20 @@ def train(dataset_h5, model_json, weights_path, epochs, batch_size):
     training_outputs = training_outputs[all_indices]
     assert (training_outputs == 1).sum() == (training_outputs == 0).sum()
 
+    class DumpToS3(keras.callbacks.Callback):
+        def on_train_begin(self):
+            self.epochs = 0
+
+        def on_epoch_end(self, epoch, logs={}):
+            self.epochs += 1
+            if self.epochs % 50 == 0:
+                # Every 50 epochs...
+                print('Dumping to S3...')
+                res = subprocess.check_call(
+                    ['aws', 's3', 'cp', 'weights_progress.h5',
+                     's3://' + s3 + '/', '--region', 'us-east-1'])
+                print('Dumped to S3: {}'.format(res))
+
     try:
         model.load_weights(weights_path)
         logging.info('Loaded weights.')
@@ -65,7 +80,8 @@ def train(dataset_h5, model_json, weights_path, epochs, batch_size):
                 verbose=1,
                 save_best_only=False,
                 save_weights_only=True,
-                mode='auto')
+                mode='auto'),
+        DumpToS3(),
     ]
     model.fit(training_inputs, training_outputs, batch_size=batch_size,
               nb_epoch=epochs, callbacks=callbacks)
@@ -83,13 +99,14 @@ def _populate_parser(parser):
     parser.add_argument('--epochs', default=10,
                         help='number of epochs to train for')
     parser.add_argument('--batch_size', default=100, help='batch size')
+    parser.add_argument('--s3', help='S3 bucket name')
 
 
 def _main(args):
     with h5py.File(args.h5, 'r') as dataset_h5:
         with open(args.model, 'r') as model_json:
             train(dataset_h5, model_json, args.output, int(args.epochs),
-                  int(args.batch_size))
+                  int(args.batch_size), args.s3)
 
 
 if __name__ == '__main__':
