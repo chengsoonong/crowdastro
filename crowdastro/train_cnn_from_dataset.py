@@ -52,7 +52,7 @@ def train(dataset_h5, model_json, weights_path, epochs, batch_size, s3):
     assert (training_outputs == 1).sum() == (training_outputs == 0).sum()
 
     class DumpToS3(keras.callbacks.Callback):
-        def on_train_begin(self):
+        def on_train_begin(self, logs={}):
             self.epochs = 0
 
         def on_epoch_end(self, epoch, logs={}):
