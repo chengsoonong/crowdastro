@@ -276,12 +276,28 @@
   \begin{figure}[!ht]
     \centering
     \includegraphics[width=\textwidth]{images/experiments/lr_rf}
-    \caption{Comparison of logistic regression and random forests on the galaxy classification task, trained on the \citet{norris06} and \citet{fan15} label sets, and tested against the \citet{norris06} label set.}
+    \caption{Comparison of logistic regression and random forests on the galaxy
+      classification task, trained on the \citet{norris06} and \citet{fan15}
+      label sets, and tested against the \citet{norris06} label set.}
   \end{figure}
 
-  To compare the performance of logistic regression with random forests on the galaxy classification task, I performed the following experiment. First, I generated five test sets of WISE objects. Then, using all other WISE objects as a training set, I trained a logistic regression classifier for each test set, first using labels from \citet{norris06}, and then, separately, using labels from \citet{fan15}. I then computed the balanced accuracy for each classifier. Finally, I repeated the experiment for random forests.
+  To compare the performance of logistic regression with random forests on the
+  galaxy classification task, I performed the following experiment. First, I
+  generated five test sets of WISE objects. Then, using all other WISE objects
+  as a training set, I trained a logistic regression classifier for each test
+  set, first using labels from \citet{norris06}, and then, separately, using
+  labels from \citet{fan15}. I then computed the balanced accuracy for each
+  classifier. Finally, I repeated the experiment for random forests.
 
-  To generate the test sets, I first selected at random half of all ATLAS objects. I then added all WISE objects within $1'$ of a selected ATLAS object to the test set. This was repeated for each test set. The motivation for first selecting ATLAS objects rather than drawing WISE objects directly is that WISE objects have overlapping features since radio features are taken from a patch of sky centred on each object, and WISE objects tend to be close together. Objects from the test sets were then removed at random until all test sets were the same size. Each test set contained $13605$ WISE objects.
+  To generate the test sets, I first selected at random half of all ATLAS
+  objects. I then added all WISE objects within $1'$ of a selected ATLAS object
+  to the test set. This was repeated for each test set. The motivation for first
+  selecting ATLAS objects rather than drawing WISE objects directly is that WISE
+  objects have overlapping features since radio features are taken from a patch
+  of sky centred on each object, and WISE objects tend to be close together.
+  Objects from the test sets were then removed at random until all test sets
+  were the same size. Each test set contained $13605$ WISE objects.
+  \todo{Check numbers.}
 
 \section{Handling Crowd Labels}
 \label{sec:rgz-crowd-labels}

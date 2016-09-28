@@ -143,6 +143,79 @@ extraction using convolutional neural networks, and methods to combat label nois
 
         \todo{Rewrite and extend}
 
+\section{Simulating a Crowd Labelling Task}
+\label{sec:crowd-simulation}
+    
+    In Section \ref{sec:crowd-labels}, we will discuss some ways of mitigating
+    the problems with crowdsourced labels. To test these methods, we will need a
+    reproducible way of obtaining crowd labels. Since the crowd is inherently
+    unpredictable, we cannot use an existing crowd-labelled dataset for testing,
+    so we must instead simulate a crowd labelling task based on a dataset with
+    known groundtruth. In this section, we describe our method for simulating a
+    crowd labelling task, which we then employ to test methods in Section
+    \ref{sec:crowd-labels}.
+
+    \subsection{The Breast Cancer Wisconsin Dataset}
+    \label{sec:breast-dataset}
+
+        The breast cancer Wisconsin dataset, first used by
+        \citeauthor{wolberg90}, presents a classification task commonly used for
+        testing classification methods. The dataset can be obtained from the UCI
+        Machine Learning Repository \citep{lichman13}
+        \footnote{\url{https://archive.ics.uci.edu/ml/%
+                       datasets/Breast+Cancer+Wisconsin+\%28Original\%29}}.
+        The classification task is, given medical observations of a patient,
+        determine if their cancer is benign or malignant. Each instance is a
+        10-dimensional feature vector, and there are 699 instances. There is
+        some missing data, which we chose to set to 0.
+
+    \subsection{Simulated Labeller Representation}
+    \label{sec:simulated-labellers}
+
+        We simulate $T$ labellers. Each labeller is indexed by a number $t$. The
+        $t$th labeller is represented by their \emph{sensitivity} or \emph{true
+        positive rate} $\alpha_t$, and their \emph{specificity} or \emph{true
+        negative rate} $\beta_t$, i.e.
+        \begin{align*}
+            \alpha_t &= p(y_t = 1 \mid z = 1)\\
+            \beta_t &= p(y_t = 0 \mid z = 0)
+        \end{align*}
+        where $y_t$ is the label assigned by the $t$th labeller to an instance
+        with groundtruth $z$.
+
+    \subsection{Obtaining the Simulated Labels}
+    \label{sec:obtaining-simulated-labels}
+
+        To generate crowd labels from our $T$ simulated labellers, we follow Algorithm \ref{alg:simulated-crowd}.
+
+        \begin{algorithm}[H]
+            \KwData{\\\quad{}A set of groundtruth labels $\{z_1, \dots, z_N\}$\\\quad{}A set of labellers $\{(\alpha_1, \beta_1), \dots, (\alpha_T, \beta_T)\}$.}
+            \KwResult{A set of crowd labels $\{y_{1, 1}, \dots, y_{T, N}\}$.}
+
+            \For{$i \in 1, \dots, N$}{
+                \For{$t \in 1, \dots, T$}{
+                    \eIf{$z_i = 1$}{
+                        \WithProb{$\alpha_t$}{
+                            $y_{t, i} \leftarrow 1$\;
+                        }
+                        \Else{
+                            $y_{t, i} \leftarrow 0$\;
+                        }
+                    }{
+                        \WithProb{$\beta_t$}{
+                            $y_{t, i} \leftarrow 0$\;
+                        }
+                        \Else{
+                            $y_{t, i} \leftarrow 1$\;
+                        }
+                    }
+                }
+            }
+            \KwRet{$\{y_{1, 1}, \dots, y_{T, N}\}$}
+            \caption{Simulating a crowd labelling task.}
+            \label{alg:simulated-crowd}
+        \end{algorithm}
+
 \section{Aggregating Crowd Labels}
 \label{sec:crowd-labels}
 
@@ -205,12 +278,7 @@ extraction using convolutional neural networks, and methods to combat label nois
         \citet{raykar10} proposed such a joint model, which we describe here.
 
         The accuracy of the $t$th labeller is modelled by by two parameters
-        $\alpha_t$ and $\beta_t$. $\alpha_t$ is the \emph{sensitivity} and
-        $\beta_t$ is the \emph{specificity} of labeller $t$, i.e.
-        \begin{align*}
-            \alpha_t &= p(y_t = 1 \mid z = 1)\\
-            \beta_t &= p(y_t = 0 \mid z = 0).
-        \end{align*}
+        $\alpha_t$ and $\beta_t$, as described in Section \ref{sec:simulated-labellers}.
         This model assumes that labeller reliability is independent of the
         example $x$, but dependent on the groundtruth label $z$. Note that under
         this model, the probability that labeller $t$ will assign a given label
@@ -298,11 +366,7 @@ extraction using convolutional neural networks, and methods to combat label nois
             I first used the implementation to perform a simple, simulated crowd
             labelling problem. Five simulated labellers were assigned true positive
             and false positive rates uniformly distributed in the range $[0.25,
-            0.75]$. Each simulated labeller labelled 50\% of the breast cancer
-            dataset \citep{wolberg90} which can be obtained from the UCI Machine
-            Learning Repository
-            \citep{lichman13}\footnote{\url{https://archive.ics.uci.edu/m
-            l/datasets/Breast+Cancer+Wisconsin+\%28Original\%29}}. Random samples of
+            0.75]$. Each simulated labeller labelled 50\% of the breast cancer dataset \todo{backref}. Random samples of
             75\% of the examples were drawn 20 times and used to train both the
             \citeauthor{raykar10} classifier and a logistic regression classifier
             (using majority vote for the labels). These classifiers were tested
