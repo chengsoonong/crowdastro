@@ -177,7 +177,9 @@
     \[
       f = 10^{-0.4m}
     \]
-    where $f$ is the flux and $m$ is the magnitude. This is the inverse of Equation \ref{eq:apparent-magnitude}, and gives the flux in arbitrary, but linear, units.
+    where $f$ is the flux and $m$ is the magnitude. This is the inverse of
+    Equation \ref{eq:apparent-magnitude}, and gives the flux in arbitrary, but
+    linear, units.
 
     \begin{figure}[!ht]
       \centering
@@ -191,10 +193,10 @@
     The ratios between infrared fluxes are indicators of physical galactic
     properties such as star formation and dust \todo{Find a source on this ---
     Probably the WISE paper wright10}. In practice, the $w1 - w2$ and $w2 - w3$
-    ratios are most commonly used (such as in Figure \ref{fig:wise-colour-
-    colour}), so we chose to use these ratios as features. Once again, we used
-    a linear scale, computing the ratios using equation \ref{eq:magnitude-
-    difference}.
+    ratios are most commonly used (such as in Figure
+    \ref{fig:wise-colour-colour}), so we chose to use these ratios as features.
+    Once again, we used a linear scale, computing the ratios using equation
+    \ref{eq:magnitude-difference}.
 
     Also available were the unprocessed infrared images captured in the survey.
     Under the assumption that the large scale infrared structure of a galaxy is
@@ -225,25 +227,48 @@
     \label{sec:feature-extraction-model}
 
       We chose to use a convolutional neural network (CNN) with two
-      convolutional and max pooling layers, shown in Figure \ref{fig:radio-
-      cnn}. This resulted in an 800-dimensional feature vector. For training
-      this network, we added a 64-dimensional dense layer mapping to a
-      1-dimensional output, and trained the entire network to match the
-      consensus Radio Galaxy Zoo labels.
+      convolutional and max pooling layers, shown in Figure \ref{fig:radio-cnn}.
+      This resulted in an 800-dimensional feature vector. For training this
+      network, we added a 64-dimensional dense layer mapping to a 1-dimensional
+      output, and trained the entire network to match the consensus Radio Galaxy
+      Zoo labels.
 
       \begin{figure}[!ht]
          \centering
-         \input{images/cnn}
+         \includegraphics[width=\textwidth]{images/cnn.pdf}
          \caption{Convolutional neural network for radio feature extraction.}
          \label{fig:radio-cnn}
        \end{figure}
 
-       This introduced a degree of peeking, as the network was effectively trained on the galaxy classification task. This is mitigated in two ways: Firstly, there are many more degrees of freedom in the dense layer as in the classifier we used later, so the CNN could at best partially learn the classification task in the short time it was trained for. Secondly, the dense layer was not included in the final feature extractor, and the CNN was not fine-tuned --- features output by the CNN were fixed as inputs to the classifier. A better approach would be to use a convolutional autoencoder, which would eliminate the peeking entirely and allow training on radio data with no labels at all, but this was computationally infeasible for this project.
+       This introduced a degree of peeking, as the network was effectively
+       trained on the galaxy classification task. This is mitigated in two ways:
+       Firstly, there are many more degrees of freedom in the dense layer as in
+       the classifier we used later, so the CNN could at best partially learn
+       the classification task in the short time it was trained for. Secondly,
+       the dense layer was not included in the final feature extractor, and the
+       CNN was not fine-tuned --- features output by the CNN were fixed as
+       inputs to the classifier. A better approach would be to use a
+       convolutional autoencoder, which would eliminate the peeking entirely and
+       allow training on radio data with no labels at all, but this was
+       computationally infeasible for this project.
 
     \subsubsection{Filters}
     \label{sec:image-filters}
 
-      
+      \todo{Write about and show the filters and their effect on input images.}
+
+      \begin{figure}[!ht]
+        \centering
+        \includegraphics[width=\textwidth]{images/cnn_outputs.pdf}
+        \caption{The effects of convolutional layers on an input image. Left: A
+          radio image. Middle: Image passed through the first convolutional
+          layer. Right: Image passed through the second convolutional layer.}
+      \end{figure}
+
+  \subsection{Feature Analysis}
+  \label{sec:feature-analysis}
+
+    \todo{Feature ablation experiment.}
 
 \section{Choosing a Binary Classifier}
 \label{sec:binary-classifiers}
