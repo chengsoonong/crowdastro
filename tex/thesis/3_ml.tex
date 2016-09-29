@@ -91,8 +91,49 @@ extraction using convolutional neural networks, and methods to combat label nois
     \subsection{Random Forests}
     \label{sec:random-forests}
 
+        \todo{Write this section.}
+
 \section{Feature Extraction from Images}
 \label{sec:image-features}
+    
+    For instances to be input to a classification model, they must be
+    represented by vectors of features. Feature selection is generally a hard
+    problem, but it may be straightforward if instances are simple vectors of
+    measurements (such as in the breast cancer dataset described in Section
+    \ref{sec:breast-dataset}). If the instances are provided in the form of
+    images, however, feature selection becomes considerably harder.
+
+    \subsection{The Na\"ive Approach}
+    \label{sec:naive-approach-image-features}
+
+        Images can be thought of as vectors of pixels, where the value of each
+        pixel is treated as an independent feature. If the image is a colour
+        image, then each channel (red, blue, and green) of each pixel can be
+        treated as an independent feature. This is a very simple way to obtain
+        features from images, but these features fail to accurately capture the
+        image. The main reason for this is that the pixels are assumed
+        independent when this is not the case --- neighbouring pixels are likely
+        to be correlated, shapes and structure within the image introduce
+        further correlations, and so on. This is shown in Figure
+        \ref{fig:shuffled-face}. If we are only looking at certain kinds of
+        images, then the pixel location may also matter --- for example, we
+        might have as inputs photographs of landscapes, where the sky tends to
+        be blue and tends to be at the top of the image.
+
+        \begin{figure}[!ht]
+            \centering
+            \includegraphics[width=\textwidth]{images/face.png}
+            \caption{If we ignore the location of pixels when interpreting an
+                image as a vector, these two images have identical feature
+                vectors, despite the left image clearly containing information
+                not present in the right image.}
+            \label{fig:shuffled-face}
+        \end{figure}
+
+    \subsection{Convolutions}
+    \label{sec:convolutions}
+
+        A common way to resolve
 
 \section{Crowdsourcing Labels}
 \label{sec:crowdsourcing}
@@ -230,11 +271,6 @@ extraction using convolutional neural networks, and methods to combat label nois
 
     \todo{extend}
 
-    \subsection{Simulating a Crowd Labelling Task}
-
-        \todo{Add preliminaries to make explanation of later experiments
-        easier.}
-
     \subsection{Using Raw Labels}
     \label{sec:raw-labels}
 
@@ -277,12 +313,12 @@ extraction using convolutional neural networks, and methods to combat label nois
 
         \citet{raykar10} proposed such a joint model, which we describe here.
 
-        The accuracy of the $t$th labeller is modelled by by two parameters
-        $\alpha_t$ and $\beta_t$, as described in Section \ref{sec:simulated-labellers}.
-        This model assumes that labeller reliability is independent of the
-        example $x$, but dependent on the groundtruth label $z$. Note that under
-        this model, the probability that labeller $t$ will assign a given label
-        to a positive example is given by
+        The accuracy of the $t$th labeller is modelled by the sensitivity
+        $\alpha_t$ and the specificity $\beta_t$, as described in Section
+        \ref{sec:simulated-labellers}. This model assumes that labeller
+        reliability is independent of the example $x$, but dependent on the
+        groundtruth label $z$. Note that under this model, the probability that
+        labeller $t$ will assign a given label to a positive example is given by
         \begin{equation*}
             p(y_t \mid z = 1, \alpha_t) =
                 (\alpha_t)^{y_t} (1 - \alpha_t)^{1 - y_t}
