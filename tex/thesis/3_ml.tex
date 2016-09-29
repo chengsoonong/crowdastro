@@ -110,19 +110,37 @@ extraction using convolutional neural networks, and methods to combat label nois
         pixel is treated as an independent feature. If the image is a colour
         image, then each channel (red, blue, and green) of each pixel can be
         treated as an independent feature. This is a very simple way to obtain
-        features from images, but these features fail to accurately capture the
-        image. The main reason for this is that the pixels are assumed
+        features from images, with two considerable problems.
+
+        The first problem with this approach is that images tend to be large.
+        Taking each pixel as a feature leads to high dimensional feature spaces.
+        This is not ideal as many algorithms perform poorly in high dimensional
+        spaces. This can be resolved using \emph{pooling}, which we describe in
+        Section \ref{sec:pooling}.
+
+        The second problem is that using pixels directly as independent features
+        fails to accurately capture the image. The pixels are assumed
         independent when this is not the case --- neighbouring pixels are likely
         to be correlated, shapes and structure within the image introduce
-        further correlations, and so on. This is shown in Figure
-        \ref{fig:shuffled-face}. If we are only looking at certain kinds of
-        images, then the pixel location may also matter --- for example, we
+        further correlations, and so on. If we are only looking at certain kinds
+        of images, then the pixel location may also matter --- for example, we
         might have as inputs photographs of landscapes, where the sky tends to
-        be blue and tends to be at the top of the image.
+        be at the top of the image --- and this information is also lost. These
+        effects are shown in Figure \ref{fig:shuffled-face}. In Section
+        \ref{sec:convolutions}, we describe a common approach for resolving this
+        problem.
 
         \begin{figure}[!ht]
             \centering
-            \includegraphics[width=\textwidth]{images/face.png}
+            \begin{subfigure}[t]{0.5\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/face.png}
+            \end{subfigure}%
+            ~
+            \begin{subfigure}[t]{0.5\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/face_shuffled.png}
+            \end{subfigure}
             \caption{If we ignore the location of pixels when interpreting an
                 image as a vector, these two images have identical feature
                 vectors, despite the left image clearly containing information
@@ -130,10 +148,132 @@ extraction using convolutional neural networks, and methods to combat label nois
             \label{fig:shuffled-face}
         \end{figure}
 
+    \subsection{Pooling}
+    \label{sec:pooling}
+
+        Pooling is a class of operations that reduce the dimensionality of an
+        image, parameterised by a \emph{pool size} $p$\footnote{Another
+        parameter is the \emph{stride} $s$, which we ignore here for simplicity,
+        setting $s = p$.}. Nonoverlapping $p \times p$ squares of pixels are
+        condensed into one value, which becomes the corresponding pixel in the
+        output. In this way, the size of the image is reduced from $m \times n$
+        to $\frac{m}{p} \times \frac{n}{p}$. We are free to choose whatever
+        aggregation operation we like to condense squares of pixels; common
+        choices are $\max$ (called \emph{max pooling}) and $\mbox{mean}$ (called
+        \emph{average pooling}). Some pooling examples are shown in Figure
+        \ref{fig:pooling}.
+        
+        \begin{figure}[!ht]
+            \centering
+            \begin{subfigure}[t]{0.5\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/face.png}
+                \caption{Original image.}
+                \label{fig:pooling-face-original}
+            \end{subfigure}%
+            ~
+            \begin{subfigure}[t]{0.5\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/face_max_pooled.png}
+                \caption{Max pooling.}
+                \label{fig:pooling-face-max}
+            \end{subfigure}
+            \begin{subfigure}[t]{0.5\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/face_min_pooled.png}
+                \caption{Min pooling.}
+                \label{fig:pooling-face-min}
+            \end{subfigure}%
+            ~
+            \begin{subfigure}[t]{0.5\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/face_average_pooled.png}
+                \caption{Average pooling.}
+                \label{fig:pooling-face-average}
+            \end{subfigure}%
+            \caption{Examples of max, min, and average pooling applied to an
+                image.}
+            \label{fig:pooling}
+        \end{figure}
+
     \subsection{Convolutions}
     \label{sec:convolutions}
 
-        A common way to resolve
+        \begin{figure}[!ht]
+            \centering
+            \begin{subfigure}[t]{0.5\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/face.png}
+                \caption{Original image.}
+                \label{fig:convolution-face-original}
+            \end{subfigure}%
+            ~
+            \begin{subfigure}[t]{0.5\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/face_convolved.png}
+                \caption{Convolved image.}
+                \label{fig:convolution-face-convolved}
+            \end{subfigure}
+            %
+            \begin{subfigure}[t]{0.3\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]
+                    {images/convolutional_filter.png}
+                \caption{Convolutional filter.}
+                \label{fig:convolution-face-filter}
+            \end{subfigure}
+            \caption{Convolving an image with a $3 \times 3$ filter gives a new
+                image. This filter acts as a kind of vertical edge detector.}
+            \label{fig:convolved-face}
+        \end{figure}
+
+        A common way to make use of neighbourhood information in images is by
+        using \emph{convolutions}. A convolution is an operation that transforms
+        an image by applying an $n \times n$ \emph{filter} to each $n \times n$
+        square of pixels. The filter is a matrix in $\mathbb{C}^{n \times n}$,
+        and it is applied to a square of pixels by treating that square as a
+        matrix, performing an elementwise multiplication between the filter
+        matrix and the pixel matrix, and summing the result. Applying the filter
+        to a square of pixels gives a single pixel value, so by applying the
+        filter across the image, a new image is generated \citep{ludwig15}.
+
+        One ambiguity here is how to apply a filter to the edges of an image.
+        There are multiple possible ways to do this. The most common method is
+        to only apply the filter to squares of pixels fully contained within the
+        image, making the output image smaller than the input. Another method is
+        to apply the filter to the edges and assume that pixels outside the
+        image have a constant value (usually 0), making the output image the
+        same size as the input. These methods are commonly known as ``valid''
+        and ``same'' respectively in libraries such as SciPy and Keras.
+
+        The effect of a simple convolutional filter on an image is shown in
+        Figure \ref{fig:convolved-face}, and an algorithm for performing a
+        convolution is shown in Algorithm \ref{alg:convolution}.
+
+        \begin{algorithm}[!ht]
+            \KwData{\\\quad{}An image $X \in \mathbb{R}^{m \times n}$%
+                    \\\quad{}A filter $F \in \mathbb{C}^{d \times d}$}
+            \KwResult{An image $\in \mathbb{R}^{(m - d + d \text{ mod } 2) \times (n - d + d \text{ mod } 2)}$}
+
+            Initialise output image $Y \in \mathbb{R}^{(m - d + d \text{ mod } 2) \times (n - d + d \text{ mod } 2)}$\;
+            \For{$y \in \lfloor d/2 \rfloor, \dots, m - \lfloor d/2 \rfloor$}{
+                \For{$x \in \lfloor d/2 \rfloor, \dots, n - \lfloor d/2 \rfloor$}{
+                    $H \leftarrow$ $d \times d$ square of pixels centred on $(x, y)$\;
+                    $Y_{y, x} \leftarrow (\vec 1^T (H \odot F) \vec 1) / (\vec 1^T F \vec 1)$\;
+                }
+            }
+
+            \KwRet{$Y$}
+            \caption{One method of performing a convolution. Here, we choose to
+                use the ``valid'' method of handling edges, resulting in a
+                smaller output than the input. $\odot$ is the elementwise
+                matrix product.}
+            \label{alg:convolution}
+        \end{algorithm}
+
+        By repeatedly applying convolutions, we can extract features from images
+        that would not have been present using the na\"ive approach of Section
+        \ref{sec:naive-approach-image-features}.
 
 \section{Crowdsourcing Labels}
 \label{sec:crowdsourcing}
