@@ -271,9 +271,19 @@ extraction using convolutional neural networks, and methods to combat label nois
             \label{alg:convolution}
         \end{algorithm}
 
-        By repeatedly applying convolutions, we can extract features from images
-        that would not have been present using the na\"ive approach of Section
-        \ref{sec:naive-approach-image-features}.
+        By repeatedly applying convolutions and pooling, we can extract features
+        from images that would not have been present using the na\"ive approach
+        of Section \ref{sec:naive-approach-image-features}.
+
+    \subsection{Convolutional Neural Networks}
+    \label{sec:convolutional-neural-networks}
+
+        It is not clear what convolutions we should choose to extract features
+        from our images. In fact, there are no convolutions that work well in
+        general, so convolutions must be chosen on a domain-dependent basis.
+        This raises the question: What convolutions should we choose?
+
+        One way to answer this question is simply to not choose at all, and then learn the appropriate convolutions as part of a larger classification model. This gives rise to the concept of a \emph{convolutional neural network}.
 
 \section{Crowdsourcing Labels}
 \label{sec:crowdsourcing}
