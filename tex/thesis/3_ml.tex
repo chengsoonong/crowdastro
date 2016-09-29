@@ -88,6 +88,11 @@ extraction using convolutional neural networks, and methods to combat label nois
                 \sum_{\vec x, z \in \mathcal D} \left(z - y(\vec x)\right).
         \]
 
+    \subsection{Neural Networks}
+    \label{sec:neural-networks}
+
+        \todo{Write this section.}
+
     \subsection{Random Forests}
     \label{sec:random-forests}
 
@@ -283,7 +288,23 @@ extraction using convolutional neural networks, and methods to combat label nois
         general, so convolutions must be chosen on a domain-dependent basis.
         This raises the question: What convolutions should we choose?
 
-        One way to answer this question is simply to not choose at all, and then learn the appropriate convolutions as part of a larger classification model. This gives rise to the concept of a \emph{convolutional neural network}.
+        One way to answer this question is simply to not choose at all, and then
+        learn the appropriate convolutions as part of a larger classification
+        model. This gives rise to the concept of a \emph{convolutional neural
+        network} (CNN). A CNN is a type of feed-forward neural network. Rather
+        than approximating features using linear functions, we approximate them
+        with convolutions instead. Layers using convolutions are called
+        \emph{convolutional layers}, and may contain any number of separate
+        filters. Convolutional layers are generally interspersed layers that
+        pool the inputs of the previous layer, called \emph{pooling layers}. The
+        final layer of the network is logistic regression, mapping the convolved
+        features to the output.
+
+        CNNs can be used for feature extraction from images. As input, they take
+        images to extract features from, and they are tasked with mapping these
+        to some meaningful value or the intended output of the greater
+        classification problem. The convolutional and pooling layers can then be
+        removed, forming a network that extracts features from images.
 
 \section{Crowdsourcing Labels}
 \label{sec:crowdsourcing}
