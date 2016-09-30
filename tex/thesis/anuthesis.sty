@@ -28,6 +28,7 @@
 \DeclareOption{cm}{\def\thesisfont{cm}}
 \DeclareOption{lucida}{\def\thesisfont{lucida}}
 \DeclareOption{palatino}{\def\thesisfont{palatino}}
+\DeclareOption{newcent}{\def\thesisfont{newcent}}
 \DeclareOption{times}{\def\thesisfont{times}}
 \DeclareOption{draft}{\def\thesisqualifier{DRAFT}}
 \DeclareOption{exam}{\def\thesisqualifier{CURRENTLY UNDER EXAMINATION}}
@@ -47,6 +48,7 @@
 \ifthenelse{\equal{\thesisfont}{cm}}{\RequirePackage{latexsym}\def\aboutthesis{\footnotesize Typeset in Computer Modern by \TeX\ and \LaTeXe{}.}}{}
 \ifthenelse{\equal{\thesisfont}{lucida}}{\RequirePackage[nolucidascale]{lucbr}\renewcommand{\ttdefault}{hlct}\def\aboutthesis{\footnotesize Typeset in Lucida by \TeX\ and \LaTeXe{}.}}{}
 \ifthenelse{\equal{\thesisfont}{palatino}}{\RequirePackage{mathpple}\RequirePackage{palatino}\def\aboutthesis{\footnotesize Typeset in Palatino by \TeX\ and \LaTeXe{}.}}{}
+\ifthenelse{\equal{\thesisfont}{newcent}}{\RequirePackage{newcent}\def\aboutthesis{\footnotesize Typeset in New Century Schoolbook by \TeX\ and \LaTeXe{}.}}{}
 \ifthenelse{\equal{\thesisfont}{times}}{\RequirePackage{mathptmx}\RequirePackage{times}\def\aboutthesis{\footnotesize Typeset in Times by \TeX\ and \LaTeXe{}.}}{}
 %%
 %% Use English (Australian) style dates

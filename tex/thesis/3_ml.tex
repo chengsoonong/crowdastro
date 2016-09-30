@@ -258,7 +258,9 @@ extraction using convolutional neural networks, and methods to combat label nois
         \begin{algorithm}[!ht]
             \KwData{\\\quad{}An image $X \in \mathbb{R}^{m \times n}$%
                     \\\quad{}A filter $F \in \mathbb{C}^{d \times d}$}
-            \KwResult{An image $\in \mathbb{R}^{(m - d + d \text{ mod } 2) \times (n - d + d \text{ mod } 2)}$}
+            \KwResult{An image $\in
+                \mathbb{R}^{(m - d + d \text{ mod } 2) \times
+                            (n - d + d \text{ mod } 2)}$}
 
             Initialise output image $Y \in \mathbb{R}^{(m - d + d \text{ mod } 2) \times (n - d + d \text{ mod } 2)}$\;
             \For{$y \in \lfloor d/2 \rfloor, \dots, m - \lfloor d/2 \rfloor$}{
@@ -304,7 +306,26 @@ extraction using convolutional neural networks, and methods to combat label nois
         images to extract features from, and they are tasked with mapping these
         to some meaningful value or the intended output of the greater
         classification problem. The convolutional and pooling layers can then be
-        removed, forming a network that extracts features from images.
+        removed, forming a network that extracts features from images. An
+        example of a convolutional neural network applied to an image is shown
+        in Figure \ref{fig:face-cnn}.
+
+        \todo{Diagram of VGG-16}
+
+        \begin{figure}[!ht]
+            \centering
+            \includegraphics[width=\textwidth]{images/face_cnn.png}
+            \caption{A convolutional neural network applied to the top-left
+                image. The other images are the outputs of intermediate
+                convolutional layers of the neural network, from left to right,
+                top to bottom. Colours represent convolutions with different
+                filters. The output, bottom-right, is a higher-level
+                representation of the input image, and its values can be used as
+                inputs for classification. This figure uses
+                \citeauthor{baraldi15}'s implementation of the VGG-16 CNN
+                \citep{simoyan14}.}
+            \label{fig:face-cnn}
+        \end{figure}
 
 \section{Crowdsourcing Labels}
 \label{sec:crowdsourcing}
