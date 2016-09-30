@@ -32,7 +32,7 @@ def generate(training_h5, cnn_model_json, cnn_weights_path):
     cnn.load_weights(cnn_weights_path)
     cnn.compile(loss='binary_crossentropy', optimizer='adadelta')
     get_convolutional_features_ = keras.backend.function(
-            [cnn.layers[0].input], [cnn.layers[5].output])
+            [cnn.layers[0].input], [cnn.layers[7].output])
     get_convolutional_features = (lambda p:
             get_convolutional_features_([p])[0].reshape((p.shape[0], -1)))
 

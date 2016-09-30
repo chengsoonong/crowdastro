@@ -27,6 +27,9 @@ def main(n_filters, conv_size, pool_size, dropout, hidden_layer_size,
                                  border_mode='valid',))
     model.add(core.Activation('relu'))
     model.add(conv.MaxPooling2D(pool_size=(pool_size, pool_size)))
+    model.add(conv.Convolution2D(n_filters, conv_size, conv_size,
+                                 border_mode='valid',))
+    model.add(core.Activation('relu'))
     model.add(core.Dropout(dropout))
     model.add(core.Flatten())
     model.add(core.Dense(hidden_layer_size))

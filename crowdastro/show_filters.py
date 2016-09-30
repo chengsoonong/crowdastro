@@ -22,6 +22,7 @@ def main(model_path, weights_path, training_h5_path):
     model.load_weights(weights_path)
     conv_layer_0 = model.get_weights()[0]
     conv_layer_1 = model.get_weights()[2]
+    conv_layer_2 = model.get_weights()[4]
 
     # n_filters = conv_layer_0.shape[0]
     # plt.figure(figsize=[8, 4])
@@ -48,30 +49,48 @@ def main(model_path, weights_path, training_h5_path):
     encoded_0 = keras.backend.function([model.layers[0].input],
                                        [model.layers[0].output])
     encoded_1 = keras.backend.function([model.layers[0].input],
-                                       [model.layers[2].output])
+                                       [model.layers[3].output])
+    encoded_2 = keras.backend.function([model.layers[0].input],
+                                       [model.layers[5].output])
     print('Weights shapes:', [i.shape for i in model.get_weights()])
+    print([(i, l) for i, l in enumerate(model.layers)])
 
     with h5py.File(training_h5_path, 'r') as f_h5:
         n_raw_features = config['surveys'][
             f_h5.attrs['ir_survey']]['n_features']
         for i in numpy.random.randint(f_h5['raw_features'].shape[0],
-                                      size=10):
+                                      size=2):
             img = f_h5['raw_features'][i, n_raw_features:].reshape(
                 (1, 1, 32, 32))
+
+            # # Print shapes out.
+            # for j, layer in enumerate(model.layers):
+            #     f = keras.backend.function([model.layers[0].input],
+            #                                [layer.output])
+            #     print(layer)
+            #     print(j)
+            #     print(f([img])[0].shape)
+
             out_0 = encoded_0([img])[0].reshape((32, 29, 29))
-            out_1 = encoded_1([img])[0].reshape((32, 14, 14))
+            out_1 = encoded_1([img])[0].reshape((32, 11, 11))
+            out_2 = encoded_2([img])[0].reshape((32, 5, 5))
 
-            plt.figure(figsize=[2 + 4 + 4, 8])
+            plt.figure(figsize=[2 + 4 + 4 + 4, 8])
 
-            ax = plt.subplot2grid((8, 2 + 4 + 4), (3, 0), colspan=2, rowspan=2)
+            ax = plt.subplot2grid((8, 2 + 4 + 4 + 4), (3, 0), colspan=2,
+                                  rowspan=2)
             ax.pcolor(img[0, 0], cmap='viridis')
             ax.axis('off')
             for j, convolved in enumerate(out_0):
-                ax = plt.subplot2grid((8, 2 + 4 + 4), (j // 4, 2 + j % 4))
+                ax = plt.subplot2grid((8, 2 + 4 + 4 + 4), (j // 4, 2 + j % 4))
                 plt.axis('off')
                 plt.pcolor(convolved, cmap='viridis')
             for j, convolved in enumerate(out_1):
-                ax = plt.subplot2grid((8, 2 + 4 + 4), (j // 4, 6 + j % 4))
+                ax = plt.subplot2grid((8, 2 + 4 + 4 + 4), (j // 4, 6 + j % 4))
+                plt.axis('off')
+                plt.pcolor(convolved, cmap='viridis')
+            for j, convolved in enumerate(out_2):
+                ax = plt.subplot2grid((8, 2 + 4 + 4 + 4), (j // 4, 10 + j % 4))
                 plt.axis('off')
                 plt.pcolor(convolved, cmap='viridis')
             plt.show()
