@@ -2,10 +2,12 @@
 \chapter{Machine Learning on Crowds}
 \label{cha:ml}
 
-\todo{Add a nice chapter summary.} In this chapter, I will introduce some
-concepts from machine learning that I will use for the rest of this thesis. I
-will discuss some common classification methods and techniques, image feature
-extraction using convolutional neural networks, and methods to combat label noise.
+In this chapter, we will introduce some concepts from machine learning that I
+will use for the rest of this thesis. We will introduce the classification
+problem and some common methods for modelling it, explain how convolutional
+neural networks can be used for image feature extraction, discuss the benefits
+and drawbacks of crowdsourcing labelling tasks, and introduce some methods to
+combat label noise from crowds.
 
 \section{Classification}
 \label{sec:classification}
@@ -41,8 +43,8 @@ extraction using convolutional neural networks, and methods to combat label nois
     model to classify instances. The dimensionality of the feature space is
     denoted $D$ and we assume that $\mathcal X = \mathbb{R}^D$.
 
-    In this section, I will introduce two common ways of modelling binary
-    classification: logistic regression, and random forests.
+    In this section, I will introduce three common ways of modelling binary
+    classification: logistic regression, neural networks, and random forests.
 
     \subsection{Logistic Regression}
     \label{sec:logistic-regression}
@@ -91,7 +93,69 @@ extraction using convolutional neural networks, and methods to combat label nois
     \subsection{Neural Networks}
     \label{sec:neural-networks}
 
-        \todo{Write this section.}
+        One key limitation of logistic regression is that it is a linear model. This means that the decision boundary is a hyperplane in the feature space, and thus logistic regression can only classify data with classes that are linearly separated. In general, classes may not be linearly separated, so logistic regression may not be able to accurately model the classification task. One way to improve logistic regression performance on nonlinearly separated classes is to introduce a nonlinear \emph{feature map} $\vec\phi : \mathbb{R}^D \to \mathbb{R}^F$ to transform the inputs. Logistic regression then becomes
+        \[
+            y(\vec x) = \sigma(\vec w^T \vec\phi(\vec x)).
+        \]
+        By judicious choice of feature transformations, the features may be transformed into a space where the classes are linearly separable. This raises a question: What feature map should we choose?
+
+        We can approximate the feature map by a simple linear function, i.e.
+        \[
+            \vec\phi(\vec x) = \vec\sigma(A \vec x),
+        \]
+        where $\vec\sigma(\vec v)$ is $\sigma$ applied elementwise to $\vec v$. The weights $A$ can then be learned by gradient methods along with $\vec w$. This approximation itself has drawbacks --- perhaps a linear function is not powerful enough to approximate a good choice of feature map --- but we can resolve this by applying another nonlinear transformation to $\vec x$, arbitrarily many times. This leads to a new model:
+        \begin{align*}
+            y(\vec x) &= \sigma(\vec w^T \vec\phi_1(\vec x))\\
+            \vec\phi_1(\vec x) &= \vec\sigma(A_1 \phi_2(\vec x))\\
+            &\vdots\\
+            \vec\phi_K(\vec x) &= \vec\sigma(A_K \vec x).
+        \end{align*}
+        This is a \emph{$K$-layer neural network}, so called as it resembles
+        the structure of neurons in the brain. Such a network is able to
+        approximate any function with sufficiently large dimensionality of the
+        matrices $A_i$ \citep{gybenko89}.
+
+        While we have viewed neural networks here as a very natural extension
+        to logistic regression, the class of neural network models is far more
+        varied. Interpreting each element in $\vec x, \vec \phi_K, \dots, \vec
+        \phi_1$ as a node and the elements of $A_K, \dots, A_1, \vec w$ as
+        weighted edges, we can interpret the above neural network as a directed
+        acyclic graph (Figure \ref{fig:nn-as-dag}). In this context, each
+        column of the graph is called a \emph{layer}. If the layer is fully
+        connected to its inputs and outputs, then it is called a \emph{dense
+        layer}. We may also introduce different kinds of layers performing
+        arbitrary nonlinear functions; some examples of these will be covered in Section \ref{sec:convolutional-neural-networks}.
+
+        \begin{figure}[!ht]
+            \centering
+            \begin{tikzpicture}[scale=0.5, node distance=2.5cm]
+                \tikzstyle{neuron}=[circle, draw, minimum size=20pt, inner sep=0pt]
+                \tikzstyle{connector}=[->, arrows={-latex}, black!50]
+                \foreach \name / \y in {1, ..., 5}
+                    \node [neuron] (I-\name) at (0, -\y*2) {$x_\y$};
+
+                \foreach \name / \y in {1, ..., 6}
+                    \node [neuron] (P1-\name) at (5, -\y*2 + 1) {$\phi_{2, \y}$};
+
+                \foreach \name / \y in {1, ..., 3}
+                    \node [neuron] (P2-\name) at (10, -\y*2 - 2) {$\phi_{1, \y}$};
+
+                \node [neuron] (y) at (15, -6) {$y$};
+
+                \foreach \source in {1, ..., 5}
+                    \foreach \dest in {1, ..., 6}
+                        \path [connector] (I-\source) edge (P1-\dest);
+
+                \foreach \source in {1, ..., 6}
+                    \foreach \dest in {1, ..., 3}
+                        \path [connector] (P1-\source) edge (P2-\dest);
+
+                \foreach \source in {1, ..., 3}
+                    \path [connector] (P2-\source) edge (y);
+            \end{tikzpicture}
+            \caption{A 2-layer neural network represented as a directed acyclic graph.}
+            \label{fig:nn-as-dag}
+        \end{figure}
 
     \subsection{Random Forests}
     \label{sec:random-forests}
@@ -290,23 +354,21 @@ extraction using convolutional neural networks, and methods to combat label nois
         general, so convolutions must be chosen on a domain-dependent basis.
         This raises the question: What convolutions should we choose?
 
-        One way to answer this question is simply to not choose at all, and then
-        learn the appropriate convolutions as part of a larger classification
-        model. This gives rise to the concept of a \emph{convolutional neural
-        network} (CNN). A CNN is a type of feed-forward neural network. Rather
-        than approximating features using linear functions, we approximate them
-        with convolutions instead. Layers using convolutions are called
-        \emph{convolutional layers}, and may contain any number of separate
-        filters. Convolutional layers are generally interspersed layers that
-        pool the inputs of the previous layer, called \emph{pooling layers}. The
-        final layer of the network is logistic regression, mapping the convolved
-        features to the output.
+        One way to answer this question is simply to not choose at all, and
+        then learn the appropriate convolutions as part of a larger
+        classification model. This gives rise to the concept of a
+        \emph{convolutional neural network} (CNN). A CNN is a neural network
+        with layers that convolve their inputs and layers that pool their
+        inputs, called \emph{convolutional layers} and \emph{pooling layers},
+        respectively. Convolutional layers may contain any number of separate
+        filters. They are generally interspersed with pooling layers. The final
+        layers of the CNN are usually dense layers.
 
-        CNNs can be used for feature extraction from images. As input, they take
-        images to extract features from, and they are tasked with mapping these
-        to some meaningful value or the intended output of the greater
-        classification problem. The convolutional and pooling layers can then be
-        removed, forming a network that extracts features from images. An
+        CNNs can be used for feature extraction from images. As input, they
+        take images to extract features from, and they are tasked with mapping
+        these to some meaningful value or the intended output of the greater
+        classification problem. The convolutional and pooling layers can then
+        be isolated, forming a network that extracts features from images. An
         example of a convolutional neural network applied to an image is shown
         in Figure \ref{fig:face-cnn}.
 
