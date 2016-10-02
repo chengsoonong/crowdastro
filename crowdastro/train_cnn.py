@@ -7,6 +7,7 @@ The Australian National University
 
 import argparse
 import logging
+import subprocess
 
 import h5py
 import numpy
@@ -17,7 +18,8 @@ PATCH_RADIUS = config['patch_radius']
 PATCH_DIAMETER = PATCH_RADIUS * 2
 
 
-def train(training_h5, model_json, weights_path, epochs, batch_size):
+def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
+          s3_bucket=None):
     """Trains a CNN.
 
     training_h5: Training HDF5 file.
@@ -25,12 +27,20 @@ def train(training_h5, model_json, weights_path, epochs, batch_size):
     weights_path: Output weights HDF5 file.
     epochs: Number of training epochs.
     batch_size: Batch size.
+    s3: Whether to periodically dump to Amazon S3. Default False.
+    s3_bucket: Name of the bucket to dump to. Must be specified iff s3 is True.
     """
+    if s3 and not s3_bucket:
+        raise ValueError('Must specify s3_bucket to dump to S3.')
+    if not s3 and s3_bucket:
+        raise ValueError('s3_bucket was specified but s3 is False.')
+
+    import keras.callbacks
     import keras.models
     model = keras.models.model_from_json(model_json.read())
     model.compile(loss='binary_crossentropy', optimizer='adadelta')
 
-    train_set = training_h5['is_ir_train'].value
+    train_set = training_h5['cnn_train_set'].value
     ir_survey = training_h5.attrs['ir_survey']
 
     n_nonimage_features = config['surveys'][ir_survey]['n_features']
@@ -54,6 +64,26 @@ def train(training_h5, model_json, weights_path, epochs, batch_size):
     training_outputs = training_outputs[all_indices]
     assert (training_outputs == 1).sum() == (training_outputs == 0).sum()
 
+    class DumpToS3(keras.callbacks.Callback):
+        def __init__(self, weights_path, bucket, period=50):
+            super().__init__()
+            self.weights_path = weights_path
+            self.bucket = bucket
+            self.period = period
+
+        def on_train_begin(self, logs={}):
+            self.epochs = 0
+
+        def on_epoch_end(self, epoch, logs={}):
+            self.epochs += 1
+            if self.epochs % self.period == 0:
+                # Every 50 epochs...
+                logging.debug('Dumping to S3...')
+                res = subprocess.check_call(
+                    ['aws', 's3', 'cp', self.weights_path,
+                     's3://' + self.bucket + '/', '--region', 'us-east-1'])
+                logging.info('Dumped to S3: {}'.format(res))
+
     try:
         model.load_weights(weights_path)
         logging.info('Loaded weights.')
@@ -61,8 +91,21 @@ def train(training_h5, model_json, weights_path, epochs, batch_size):
         logging.warning('Couldn\'t load weights file. Creating new file...')
         pass
 
+    callbacks = [
+        keras.callbacks.ModelCheckpoint(
+                weights_path,
+                monitor='val_loss',
+                verbose=1,
+                save_best_only=False,
+                save_weights_only=True,
+                mode='auto'),
+    ]
+
+    if s3:
+        callbacks.append(DumpToS3(weights_path, s3_bucket))
+
     model.fit(training_inputs, training_outputs, batch_size=batch_size,
-              nb_epoch=epochs)
+              nb_epoch=epochs, callbacks=callbacks)
     model.save_weights(weights_path, overwrite=True)
 
 
@@ -93,6 +136,8 @@ def _populate_parser(parser):
     parser.add_argument('--epochs', default=10,
                         help='number of epochs to train for')
     parser.add_argument('--batch_size', default=100, help='batch size')
+    parser.add_argument('--s3', help='dump to Amazon S3', action='store_true')
+    parser.add_argument('--s3_bucket', help='name of S3 bucket', default='')
 
 
 def _main(args):
@@ -100,7 +145,7 @@ def _main(args):
         check_raw_data(training_h5)
         with open(args.model, 'r') as model_json:
             train(training_h5, model_json, args.output, int(args.epochs),
-                  int(args.batch_size))
+                  int(args.batch_size), s3=args.s3, bucket=args.s3_bucket)
 
 
 if __name__ == '__main__':
