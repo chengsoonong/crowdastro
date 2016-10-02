@@ -156,6 +156,8 @@ def _populate_parser(parser):
         '--cnn_train_set',
         help='HDF5 CNN training set override (default no override)',
         default='')
+    parser.add_argument('--dataset', help='training file is the Zenodo dataset',
+                        action='store_true')
 
 
 def _main(args):
@@ -167,11 +169,12 @@ def _main(args):
                     train(training_h5, model_json, args.output,
                           int(args.epochs), int(args.batch_size), s3=args.s3,
                           bucket=args.s3_bucket,
-                          cnn_train_set_h5=cnn_train_set_h5)
+                          cnn_train_set_h5=cnn_train_set_h5,
+                          using_dataset=args.dataset)
             else:
                 train(training_h5, model_json, args.output,
                       int(args.epochs), int(args.batch_size), s3=args.s3,
-                      bucket=args.s3_bucket)
+                      bucket=args.s3_bucket, using_dataset=args.dataset)
 
 
 if __name__ == '__main__':
