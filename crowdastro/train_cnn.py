@@ -152,14 +152,26 @@ def _populate_parser(parser):
     parser.add_argument('--batch_size', default=100, help='batch size')
     parser.add_argument('--s3', help='dump to Amazon S3', action='store_true')
     parser.add_argument('--s3_bucket', help='name of S3 bucket', default='')
+    parser.add_argument(
+        '--cnn_train_set',
+        help='HDF5 CNN training set override (default no override)',
+        default='')
 
 
 def _main(args):
     with h5py.File(args.h5, 'r') as training_h5:
         check_raw_data(training_h5)
         with open(args.model, 'r') as model_json:
-            train(training_h5, model_json, args.output, int(args.epochs),
-                  int(args.batch_size), s3=args.s3, bucket=args.s3_bucket)
+            if args.cnn_train_set:
+                with h5py.File(args.cnn_train_set, 'r') as cnn_train_set_h5:
+                    train(training_h5, model_json, args.output,
+                          int(args.epochs), int(args.batch_size), s3=args.s3,
+                          bucket=args.s3_bucket,
+                          cnn_train_set_h5=cnn_train_set_h5)
+            else:
+                train(training_h5, model_json, args.output,
+                      int(args.epochs), int(args.batch_size), s3=args.s3,
+                      bucket=args.s3_bucket)
 
 
 if __name__ == '__main__':
