@@ -19,7 +19,7 @@ PATCH_DIAMETER = PATCH_RADIUS * 2
 
 
 def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
-          s3_bucket=None):
+          s3_bucket=None, using_dataset=False, cnn_train_set_h5=None):
     """Trains a CNN.
 
     training_h5: Training HDF5 file.
@@ -29,6 +29,10 @@ def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
     batch_size: Batch size.
     s3: Whether to periodically dump to Amazon S3. Default False.
     s3_bucket: Name of the bucket to dump to. Must be specified iff s3 is True.
+    using_dataset: Whether the given training file is the Zenodo crowdastro
+        dataset. Default False (i.e. we are using the generated training file).
+    cnn_train_set_h5: HDF5 file specifying the CNN training set. Overrides the
+        training file if specified. Default None (i.e. not specified).
     """
     if s3 and not s3_bucket:
         raise ValueError('Must specify s3_bucket to dump to S3.')
@@ -40,12 +44,22 @@ def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
     model = keras.models.model_from_json(model_json.read())
     model.compile(loss='binary_crossentropy', optimizer='adadelta')
 
-    train_set = training_h5['cnn_train_set'].value
-    ir_survey = training_h5.attrs['ir_survey']
+    if not cnn_train_set_h5:
+        train_set = training_h5['cnn_train_set'].value
+    else:
+        train_set = cnn_train_set_h5['cnn_train_set'].value
 
-    n_nonimage_features = config['surveys'][ir_survey]['n_features']
-    training_inputs = training_h5['raw_features'].value[
-            train_set, n_nonimage_features:]
+    if not using_dataset:
+        ir_survey = training_h5.attrs['ir_survey']
+        n_nonimage_features = config['surveys'][ir_survey]['n_features']
+        features_name = 'raw_features'
+    else:
+        ir_survey = 'wise'
+        n_nonimage_features = 5
+        features_name = 'features'
+
+    training_inputs = training_h5[features_name].value[
+        train_set, n_nonimage_features:]
 
     training_inputs = training_inputs.reshape(
             (-1, 1, PATCH_DIAMETER, PATCH_DIAMETER))
