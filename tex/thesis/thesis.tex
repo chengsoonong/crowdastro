@@ -19,6 +19,13 @@
 \usepackage{subcaption}
 \usepackage{tikz}
 
+\usepackage{fontspec}
+% The Palatino package gives a pretty terrible look to the PDF when compiling on
+% Windows, so we need to use fontspec instead. Palatino Linotype exists on
+% Windows but not on Mac (where Palatino exists instead). So... we'll come back
+% to this once we begin the document.
+\def\myfontlist{Palatino Linotype, Palatino}
+
 \usetikzlibrary{arrows}
 
 % hyperref setup taken from Aladair Tran's thesis:
@@ -44,6 +51,21 @@
 
 \makeindex
 \begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Font setup.
+% This has to be done from the document, or the font isn't loaded yet.
+% http://tex.stackexchange.com/a/53461/46613
+\makeatletter
+ \count255=\interactionmode
+  \batchmode
+\@for\next:=\myfontlist\do{%
+    \expandafter\newfontfamily\csname\next\endcsname{\next}
+    \setbox0=\hbox{\csname\next\endcsname A}
+    \ifdim\ht0=0pt\else\setmainfont{\next}\\\fi
+ }
+\interactionmode=\count255
+\makeatother
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Title page.
