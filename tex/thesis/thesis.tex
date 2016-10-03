@@ -19,12 +19,29 @@
 \usepackage{subcaption}
 \usepackage{tikz}
 
+\usepackage[T1]{fontenc}
 \usepackage{fontspec}
+\usepackage{xparse}
 % The Palatino package gives a pretty terrible look to the PDF when compiling on
 % Windows, so we need to use fontspec instead. Palatino Linotype exists on
-% Windows but not on Mac (where Palatino exists instead). So... we'll come back
-% to this once we begin the document.
-\def\myfontlist{Palatino Linotype, Palatino}
+% Windows but not on Mac (where Palatino exists instead). So...
+\suppressfontnotfounderror1
+\def\myfont{Palatino}
+\def\myfallback{Palatino Linotype}
+\count255=\interactionmode
+\batchmode
+\font\foo="\myfont"\space at 10pt
+\ifx\foo\nullfont
+  \font\foo = "\myfallback"\space at 10pt
+  \ifx\foo\nullfont
+    \errorstopmode
+    \errmessage{no suitable font found}
+  \else
+    \let\myfont=\myfallback
+  \fi
+\fi
+\interactionmode=\count255
+\setmainfont{\myfont}
 
 \usetikzlibrary{arrows}
 
@@ -51,21 +68,6 @@
 
 \makeindex
 \begin{document}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Font setup.
-% This has to be done from the document, or the font isn't loaded yet.
-% http://tex.stackexchange.com/a/53461/46613
-\makeatletter
- \count255=\interactionmode
-  \batchmode
-\@for\next:=\myfontlist\do{%
-    \expandafter\newfontfamily\csname\next\endcsname{\next}
-    \setbox0=\hbox{\csname\next\endcsname A}
-    \ifdim\ht0=0pt\else\setmainfont{\next}\\\fi
- }
-\interactionmode=\count255
-\makeatother
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Title page.
