@@ -168,13 +168,13 @@ def _main(args):
                 with h5py.File(args.cnn_train_set, 'r') as cnn_train_set_h5:
                     train(training_h5, model_json, args.output,
                           int(args.epochs), int(args.batch_size), s3=args.s3,
-                          bucket=args.s3_bucket,
+                          s3_bucket=args.s3_bucket,
                           cnn_train_set_h5=cnn_train_set_h5,
                           using_dataset=args.dataset)
             else:
                 train(training_h5, model_json, args.output,
                       int(args.epochs), int(args.batch_size), s3=args.s3,
-                      bucket=args.s3_bucket, using_dataset=args.dataset)
+                      s3_bucket=args.s3_bucket, using_dataset=args.dataset)
 
 
 if __name__ == '__main__':
