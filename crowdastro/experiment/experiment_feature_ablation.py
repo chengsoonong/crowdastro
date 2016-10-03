@@ -35,6 +35,7 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
             n_astro_features = config['surveys']['wise']['n_features']
 
             features = {
+                'None': all_features[:],
                 'CNN': all_features[:, :n_astro_features],
                 'w1': all_features[:, 1:],
                 'w2': numpy.hstack([
@@ -89,9 +90,10 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
             if plot:
                 matplotlib.rcParams['font.family'] = 'serif'
                 matplotlib.rcParams['font.serif'] = ['Palatino Linotype']
+                plt.figure(figsize=[11, 6])
                 vertical_scatter_ba(
                     results, crowdastro_h5['/wise/cdfs/norris_labels'].value,
-                    ylim=(0.5, 1.0))
+                    ylim=(0.5, 1.0), violin=True)
                 plt.show()
 
 

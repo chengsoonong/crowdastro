@@ -159,38 +159,28 @@
     \subsubsection{Building a Model for Feature Extraction}
     \label{sec:feature-extraction-model}
 
-      We chose to use a convolutional neural network (CNN) with two
+      We chose to use a convolutional neural network (CNN) with three
       convolutional and max pooling layers, shown in Figure \ref{fig:radio-cnn}.
-      This resulted in an 800-dimensional feature vector. For training this
+      This resulted in an 128-dimensional feature vector. For training this
       network, we added a 64-dimensional dense layer mapping to a 1-dimensional
-      output, and trained the entire network to match the consensus Radio Galaxy
-      Zoo labels.
+      output. 10\% of ATLAS objects were selected at random and reserved for
+      training the CNN, to ensure later testing data would not overlap the
+      training set. The entire network was then trained to match the consensus
+      Radio Galaxy Zoo labels of the galaxies nearest the reserved training set.
 
       \begin{figure}[!ht]
          \centering
-         \includegraphics[width=\textwidth]{images/cnn.pdf}
+         \includegraphics[width=\textwidth]{images/cnn_new.pdf}
          \caption{Convolutional neural network for radio feature extraction.}
          \label{fig:radio-cnn}
        \end{figure}
 
-      \todo{Update the figure to match the new architecture.}
+      A better approach would be to use a convolutional autoencoder, which would
+      allow training on all the radio data, and data with no labels at all, but
+      this was computationally infeasible for this project.
 
-      This introduced a degree of peeking, as the network was effectively
-      trained on the galaxy classification task. This is mitigated in two ways:
-      Firstly, there are many more degrees of freedom in the dense layer as in
-      the classifier we used later, so the CNN could at best partially learn the
-      classification task in the short time it was trained for. Secondly, the
-      dense layer was not included in the final feature extractor, and the CNN
-      was not fine-tuned --- features output by the CNN were fixed as inputs to
-      the classifier. A better approach would be to use a convolutional
-      autoencoder, which would eliminate the peeking entirely and allow training
-      on radio data with no labels at all, but this was computationally
-      infeasible for this project.
-
-    \subsubsection{Filters}
-    \label{sec:image-filters}
-
-      \todo{Write about and show the filters and their effect on input images.}
+      An example of the neural network applied to a radio image is shown in
+      Figure \ref{fig:rgz-cnn}.
 
       \begin{figure}[!ht]
         \centering
@@ -198,12 +188,53 @@
         \caption{The effects of convolutional layers on an input image. The
           left-most image is the original radio image. The other images are the
           32 images output from each of the three convolutional layers.}
+        \label{fig:rgz-cnn}
       \end{figure}
 
   \subsection{Feature Analysis}
   \label{sec:feature-analysis}
 
-    \todo{Feature ablation experiment.}
+    To determine the effect of each set of features on classification
+    performance, we performed a feature ablation experiment. We trained a
+    logistic regression classifier on the \citeauthor{norris06} label set,
+    holding out different features each time. The lower the resulting balanced
+    accuracy, the more important the held out features. This was repeated ten
+    times with different $50\%$ subsets of the training set. The features we
+    chose to hold out were all features derived from magnitudes, all features
+    extracted by the CNN, the distance feature, and each magnitude feature
+    individually. These results are plotted in Figure \ref{fig:feature-ablation}
+    and the means and standard deviations of the balanced accuracies are tabled
+    in Table \ref{tab:feature-ablation}.
+
+    \begin{figure}[!ht]
+      \centering
+      \includegraphics[width=\textwidth]{%
+        images/experiments/feature_ablation.pdf}
+      \caption{Balanced accuracy of logistic regression trained on the
+        \citeauthor{norris06} label set with different features removed. The
+        horizontal axis indicates which features were removed for the results
+        in that column.}
+      \label{fig:feature-ablation}
+    \end{figure}
+
+    \begin{table}[!ht]
+      \centering
+      \begin{tabular}{r|c}
+        \textbf{Feature/s Removed} & \textbf{Mean Balanced Accuracy}\\\hline
+        All magnitudes & $(88.66 \pm 0.81)\%$\\
+        CNN & $(71.67 \pm 1.71)\%$\\
+        Distance & $(88.84 \pm 0.76)\%$\\
+        $w1$ & $(88.82 \pm 0.78)\%$\\
+        $w1 - w2$ & $(88.78 \pm 0.85)\%$\\
+        $w2$ & $(88.79 \pm 0.80)\%$\\
+        $w2 - w3$ & $(88.82 \pm 0.70)\%$\\
+        $w3$ & $(88.79 \pm 0.77)\%$\\
+        $w4$ & $(88.74 \pm 0.77)\%$
+      \end{tabular}
+      \caption{Balanced accuracy of logistic regression trained on the
+        \citeauthor{norris06} label set with different features removed.}
+      \label{tab:feature-ablation}
+    \end{table}
 
 \section{Choosing a Binary Classifier}
 \label{sec:binary-classifiers}
