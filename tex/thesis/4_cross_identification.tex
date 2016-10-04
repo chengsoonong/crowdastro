@@ -79,7 +79,31 @@
 \section{Evaluating Performance Without Groundtruth}
 \label{sec:norris-as-groundtruth}
   
-  \todo{Write about Norris intersection Fan labels.}
+  Our training labels for the classification task will come from the Radio
+  Galaxy Zoo. While these labels can be aggregated in a number of ways to
+  approximate the groundtruth (Section \ref{sec:rgz-crowd-labels}), these
+  aggregates are \emph{not} the groundtruth and may contain high noise. This
+  becomes a problem when we want to assess the performance of a trained
+  classifier --- we want our classifier to be capable of finding the best
+  approximation to the groundtruth, not to the noisy inputs, and evaluation
+  should reflect that. We therefore cannot use aggregated crowd labels for
+  evaluation.
+
+  In general, though, we \emph{don't} have groundtruth for this problem, and
+  while the groundtruth exists (a galaxy either has an AGN or does not), it is
+  impossible for us to measure this accurately. Even expert catalogues, such as
+  those provided by \citeauthor{norris06} (Section \ref{sec:norris}), are noisy
+  --- \citep{norris06} estimate that their cross-identifications have a $9.02\%$
+  false positive rate.
+
+  To attempt to mitigate this problem, we chose a test set with as little noise
+  as possible by combining the \citeauthor{fan15} catalogue (Section
+  \ref{sec:fan}) with the \citeauthor{norris06} catalogue (Section
+  \ref{sec:norris}) to find all galaxies for which the two catalogues agree.
+  Test sets were drawn from only these galaxies. This does mean that the test
+  instances will be ``easier'' than a test set drawn from the entire data set,
+  but any tests performed against these test sets should be more reliable than
+  would otherwise be the case.
 
 \section{Feature Selection}
 \label{sec:features}
@@ -221,6 +245,7 @@
       \centering
       \begin{tabular}{r|c}
         \textbf{Feature/s Removed} & \textbf{Mean Balanced Accuracy}\\\hline
+        None & $(88.74 \pm 0.78)\%$\\
         All magnitudes & $(88.66 \pm 0.81)\%$\\
         CNN & $(71.67 \pm 1.71)\%$\\
         Distance & $(88.84 \pm 0.76)\%$\\
