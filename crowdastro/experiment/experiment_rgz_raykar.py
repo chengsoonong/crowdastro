@@ -89,7 +89,7 @@ def top_n_prolific_targets(crowdastro_h5, n_annotators=5):
 
 
 def main(crowdastro_h5_path, training_h5_path, results_h5_path,
-         overwrite=False, plot=False):
+         overwrite=False, plot=False, n_annotators=10):
     with h5py.File(crowdastro_h5_path, 'r') as crowdastro_h5, \
             h5py.File(training_h5_path, 'r') as training_h5:
 
@@ -97,14 +97,14 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
         n_examples, n_params = training_h5['features'].shape
         n_params += 1  # Bias term.
         n_params += 1  # Number of annotators.
-        n_params += crowdastro_h5['/wise/cdfs/rgz_raw_labels'].shape[0] * 2
+        n_params += n_annotators * 2  # Alpha and beta.
         methods = [
-            'Raykar(Top-10-prolific)',
-            'LR(Top-10-prolific-MV)',
-            'Raykar(Top-10-accurate)',
-            'LR(Top-10-accurate-MV)',
-            'Raykar(Top-10-est-accurate)',
-            'LR(Top-10-est-accurate-MV)',
+            'Raykar(Top-{}-prolific)'.format(n_annotators),
+            'LR(Top-{}-prolific-MV)'.format(n_annotators),
+            'Raykar(Top-{}-accurate)'.format(n_annotators),
+            'LR(Top-{}-accurate-MV)'.format(n_annotators),
+            'Raykar(Top-{}-est-accurate)'.format(n_annotators),
+            'LR(Top-{}-est-accurate-MV)'.format(n_annotators),
         ]
         model = ('{} crowdastro.crowd.raykar.RaykarClassifier, '.format(
                     __version__) +
@@ -124,21 +124,33 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
 
         all_features = training_h5['features'].value
         targets = {
-            'Raykar(Top-10-prolific)':
-                top_n_prolific_targets(crowdastro_h5, n_annotators=10),
-            'LR(Top-10-prolific-MV)':
+            'Raykar(Top-{}-prolific)'.format(n_annotators):
+                top_n_prolific_targets(
+                    crowdastro_h5,
+                    n_annotators=n_annotators),
+            'LR(Top-{}-prolific-MV)'.format(n_annotators):
                 majority_vote(
-                    top_n_prolific_targets(crowdastro_h5, n_annotators=10)),
-            'Raykar(Top-10-accurate)':
-                top_n_accurate_targets(crowdastro_h5, n_annotators=10),
-            'LR(Top-10-accurate-MV)':
+                    top_n_prolific_targets(
+                        crowdastro_h5,
+                        n_annotators=n_annotators)),
+            'Raykar(Top-{}-accurate)'.format(n_annotators):
+                top_n_accurate_targets(
+                    crowdastro_h5,
+                    n_annotators=n_annotators),
+            'LR(Top-{}-accurate-MV)'.format(n_annotators):
                 majority_vote(
-                    top_n_accurate_targets(crowdastro_h5, n_annotators=10)),
-            'Raykar(Top-10-est-accurate)':
-                top_n_mv_accurate_targets(crowdastro_h5, n_annotators=10),
-            'LR(Top-10-est-accurate-MV)':
+                    top_n_accurate_targets(
+                        crowdastro_h5,
+                        n_annotators=n_annotators)),
+            'Raykar(Top-{}-est-accurate)'.format(n_annotators):
+                top_n_mv_accurate_targets(
+                    crowdastro_h5,
+                    n_annotators=n_annotators),
+            'LR(Top-{}-est-accurate-MV)'.format(n_annotators):
                 majority_vote(
-                    top_n_mv_accurate_targets(crowdastro_h5, n_annotators=10)),
+                    top_n_mv_accurate_targets(
+                        crowdastro_h5,
+                        n_annotators=n_annotators)),
         }
 
         for split_id, test_set in enumerate(
@@ -185,6 +197,8 @@ if __name__ == '__main__':
                         help='HDF5 training data file')
     parser.add_argument('--results', default='data/results_rgz_raykar.h5',
                         help='HDF5 results data file')
+    parser.add_argument('--annotators', default=10,
+                        help='number of annotators', type=int)
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite existing results')
     parser.add_argument('--verbose', '-v', action='store_true',
@@ -198,4 +212,4 @@ if __name__ == '__main__':
         logging.root.setLevel(logging.INFO)
 
     main(args.crowdastro, args.training, args.results, overwrite=args.overwrite,
-         plot=args.plot)
+         plot=args.plot, n_annotators=args.annotators)
