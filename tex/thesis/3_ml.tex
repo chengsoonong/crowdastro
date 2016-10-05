@@ -2,7 +2,7 @@
 \chapter{Machine Learning on Crowds}
 \label{cha:ml}
 
-In this chapter, we will introduce some concepts from machine learning that I
+In this chapter, we will introduce some concepts from machine learning that we
 will use for the rest of this thesis. We will introduce the classification
 problem and some common methods for modelling it, explain how convolutional
 neural networks can be used for image feature extraction, discuss the benefits
@@ -14,7 +14,7 @@ combat label noise from crowds.
     
     A common machine learning task, and indeed the machine learning focus of
     this thesis, is \emph{classification}. Given a set $\mathcal X$ of
-    \emph{instances}, a set $\mathcal Y$ of \emph{labels}, the classification
+    \emph{instances} and a set $\mathcal Y$ of \emph{labels}, the classification
     task is to assign a label $y \in \mathcal Y$ to each instance $x \in
     \mathcal X$. The ``true'' label of an instance is called the
     \emph{groundtruth}, and is denoted $z$. Classification thus amounts to
@@ -78,7 +78,7 @@ combat label noise from crowds.
 
         The loss function represents how well the current model fits the
         observations. For binary classification, this is usually given by the
-        \emph{cross-entropy error}
+        \emph{cross-entropy error} \citep{bishop06}
         \[
             L(\vec w) = -\frac{1}{N} \sum_{\vec x, z \in \mathcal D} \left(
                 z \log y(\vec x) + (1 - z) \log (1 - y(\vec x))
@@ -93,17 +93,33 @@ combat label noise from crowds.
     \subsection{Neural Networks}
     \label{sec:neural-networks}
 
-        One key limitation of logistic regression is that it is a linear model. This means that the decision boundary is a hyperplane in the feature space, and thus logistic regression can only classify data with classes that are linearly separated. In general, classes may not be linearly separated, so logistic regression may not be able to accurately model the classification task. One way to improve logistic regression performance on nonlinearly separated classes is to introduce a nonlinear \emph{feature map} $\vec\phi : \mathbb{R}^D \to \mathbb{R}^F$ to transform the inputs. Logistic regression then becomes
+        One key limitation of logistic regression is that it is a linear model.
+        This means that the decision boundary is a hyperplane in the feature
+        space, and thus logistic regression can only classify data with classes
+        that are linearly separated. In general, classes may not be linearly
+        separated, so logistic regression may not be able to accurately model
+        the classification task. One way to improve logistic regression
+        performance on nonlinearly separated classes is to introduce a nonlinear
+        \emph{feature map} $\vec\phi : \mathbb{R}^D \to \mathbb{R}^F$ to
+        transform the inputs. Logistic regression then becomes
         \[
             y(\vec x) = \sigma(\vec w^T \vec\phi(\vec x)).
         \]
-        By judicious choice of feature transformations, the features may be transformed into a space where the classes are linearly separable. This raises a question: What feature map should we choose?
+        By judicious choice of feature transformations, the features may be
+        transformed into a space where the classes are linearly separable. This
+        raises a question: What feature map should we choose?
 
         We can approximate the feature map by a simple linear function, i.e.
         \[
             \vec\phi(\vec x) = \vec\sigma(A \vec x),
         \]
-        where $\vec\sigma(\vec v)$ is $\sigma$ applied elementwise to $\vec v$. The weights $A$ can then be learned by gradient methods along with $\vec w$. This approximation itself has drawbacks --- perhaps a linear function is not powerful enough to approximate a good choice of feature map --- but we can resolve this by applying another nonlinear transformation to $\vec x$, arbitrarily many times. This leads to a new model:
+        where $\vec\sigma(\vec v)$ is $\sigma$ applied elementwise to $\vec v$.
+        The weights $A$ can then be learned by gradient methods along with $\vec
+        w$. This approximation itself has drawbacks --- perhaps a linear
+        function is not powerful enough to approximate a good choice of feature
+        map --- but we can resolve this by applying another nonlinear
+        transformation to $\vec x$, arbitrarily many times. This leads to a new
+        model:
         \begin{align*}
             y(\vec x) &= \sigma(\vec w^T \vec\phi_1(\vec x))\\
             \vec\phi_1(\vec x) &= \vec\sigma(A_1 \phi_2(\vec x))\\
@@ -120,25 +136,29 @@ combat label noise from crowds.
         varied. Interpreting each element in $\vec x, \vec \phi_K, \dots, \vec
         \phi_1$ as a node and the elements of $A_K, \dots, A_1, \vec w$ as
         weighted edges, we can interpret the above neural network as a directed
-        acyclic graph (Figure \ref{fig:nn-as-dag}). In this context, each
-        column of the graph is called a \emph{layer}. If the layer is fully
-        connected to its inputs and outputs, then it is called a \emph{dense
-        layer}. We may also introduce different kinds of layers performing
-        arbitrary nonlinear functions; some examples of these will be covered in Section \ref{sec:convolutional-neural-networks}.
+        acyclic graph (Figure \ref{fig:nn-as-dag}). In this context, each column
+        of the graph is called a \emph{layer}. If the layer is fully connected
+        to its inputs and outputs, then it is called a \emph{dense layer}. We
+        may also introduce different kinds of layers performing arbitrary
+        nonlinear functions; some examples of these will be covered in Section
+        \ref{sec:convolutional-neural-networks}.
 
         \begin{figure}[!ht]
             \centering
             \begin{tikzpicture}[scale=0.5, node distance=2.5cm]
-                \tikzstyle{neuron}=[circle, draw, minimum size=20pt, inner sep=0pt]
+                \tikzstyle{neuron}=[
+                    circle, draw, minimum size=20pt, inner sep=0pt]
                 \tikzstyle{connector}=[->, arrows={-latex}, black!50]
                 \foreach \name / \y in {1, ..., 5}
                     \node [neuron] (I-\name) at (0, -\y*2) {$x_\y$};
 
                 \foreach \name / \y in {1, ..., 6}
-                    \node [neuron] (P1-\name) at (5, -\y*2 + 1) {$\phi_{2, \y}$};
+                    \node [neuron] (P1-\name)
+                        at (5, -\y*2 + 1) {$\phi_{2, \y}$};
 
                 \foreach \name / \y in {1, ..., 3}
-                    \node [neuron] (P2-\name) at (10, -\y*2 - 2) {$\phi_{1, \y}$};
+                    \node [neuron] (P2-\name)
+                        at (10, -\y*2 - 2) {$\phi_{1, \y}$};
 
                 \node [neuron] (y) at (15, -6) {$y$};
 
@@ -153,7 +173,8 @@ combat label noise from crowds.
                 \foreach \source in {1, ..., 3}
                     \path [connector] (P2-\source) edge (y);
             \end{tikzpicture}
-            \caption{A 2-layer neural network represented as a directed acyclic graph.}
+            \caption{A 2-layer neural network represented as a directed acyclic
+                graph.}
             \label{fig:nn-as-dag}
         \end{figure}
 
@@ -256,7 +277,8 @@ combat label noise from crowds.
             ~
             \begin{subfigure}[t]{0.5\textwidth}
                 \centering
-                \includegraphics[width=\textwidth]{images/face_average_pooled.png}
+                \includegraphics[width=\textwidth]
+                    {images/face_average_pooled.png}
                 \caption{Average pooling.}
                 \label{fig:pooling-face-average}
             \end{subfigure}%
@@ -481,7 +503,8 @@ combat label noise from crowds.
     \subsection{Obtaining the Simulated Labels}
     \label{sec:obtaining-simulated-labels}
 
-        To generate crowd labels from our $T$ simulated labellers, we follow Algorithm \ref{alg:simulated-crowd}.
+        To generate crowd labels from our $T$ simulated labellers, we follow
+        Algorithm \ref{alg:simulated-crowd}.
 
         \begin{algorithm}[H]
             \KwData{\\\quad{}A set of groundtruth labels $\{z_1, \dots, z_N\}$\\\quad{}A set of labellers $\{(\alpha_1, \beta_1), \dots, (\alpha_T, \beta_T)\}$.}
@@ -654,23 +677,26 @@ combat label noise from crowds.
         \subsubsection{Testing the Raykar Classifier}
 
             I first used the implementation to perform a simple, simulated crowd
-            labelling problem. Five simulated labellers were assigned true positive
-            and false positive rates uniformly distributed in the range $[0.25,
-            0.75]$. Each simulated labeller labelled 50\% of the breast cancer dataset \todo{backref}. Random samples of
-            75\% of the examples were drawn 20 times and used to train both the
-            \citeauthor{raykar10} classifier and a logistic regression classifier
-            (using majority vote for the labels). These classifiers were tested
-            against the groundtruth of the remaining 25\%. The results are plotted
-            in Figure \ref{fig:raykar}. The Raykar classifier attained a balanced
-            accuracy of $(58 \pm 8)\%$ and the logistic regression classifier
-            attained a balanced accuracy of $(56 \pm 8)\%$.
+            labelling problem. Five simulated labellers were assigned true
+            positive and false positive rates uniformly distributed in the range
+            $[0.25, 0.75]$. Each simulated labeller labelled 50\% of the breast
+            cancer dataset \todo{backref}. Random samples of 75\% of the
+            examples were drawn 20 times and used to train both the
+            \citeauthor{raykar10} classifier and a logistic regression
+            classifier (using majority vote for the labels). These classifiers
+            were tested against the groundtruth of the remaining 25\%. The
+            results are plotted in Figure \ref{fig:raykar}. The Raykar
+            classifier attained a balanced accuracy of $(58 \pm 8)\%$ and the
+            logistic regression classifier attained a balanced accuracy of $(56
+            \pm 8)\%$.
 
             \begin{figure}[!ht]
                 \centering
-                \includegraphics[width=\textwidth]{images/experiments/raykar.pdf}
-                \caption{Performance of the \citeauthor{raykar10} classifier against
-                    logistic regression on a simulated crowd labelling of the breast
-                    cancer dataset \citep{wolberg90}.}
+                \includegraphics[width=\textwidth]
+                    {images/experiments/raykar.pdf}
+                \caption{Performance of the \citeauthor{raykar10} classifier
+                    against logistic regression on a simulated crowd labelling
+                    of the breast cancer dataset \citep{wolberg90}.}
                 \label{fig:raykar}
             \end{figure}
 
@@ -678,31 +704,34 @@ combat label noise from crowds.
 
             The second experiment tested the effect of class imbalance on the
             resulting balanced accuracy of the classifier, as well as on the
-            predicted $\alpha$ and $\beta$ for each labeller. Scikit-learn's \citep
-            {scikit-learn} \texttt{sklearn.datasets.make\_classification} function
-            was used to generate datasets with 5-dimensional features (of which 3
-            were informative, and 2 were redundant) with a class separation of 1 and
-            1\% of true labels randomly flipped. Five datasets were generated, with
-            different ratios of negative to positive examples. The ratios were
-            $4:1$, $2:1$, $1:1$, $1:2$, and $1:4$. 1000 examples were drawn for each
-            dataset. A crowd labelling task was then simulated, assigning 10
-            labellers true positive and false positive rates uniformly at random in
-            the interval $[0.5, 0.9]$ and allowing them to ``label'' the examples.
-            The same labellers were used across all trials and datasets. The
+            predicted $\alpha$ and $\beta$ for each labeller. Scikit-learn's
+            \citep{scikit-learn} \texttt{sklearn.datasets.make\_classification}
+            function was used to generate datasets with 5-dimensional features
+            (of which 3 were informative, and 2 were redundant) with a class
+            separation of 1 and 1\% of true labels randomly flipped. Five
+            datasets were generated, with different ratios of negative to
+            positive examples. The ratios were $4:1$, $2:1$, $1:1$, $1:2$, and
+            $1:4$. 1000 examples were drawn for each dataset. A crowd labelling
+            task was then simulated, assigning 10 labellers true positive and
+            false positive rates uniformly at random in the interval $[0.5,
+            0.9]$ and allowing them to ``label'' the examples. The same
+            labellers were used across all trials and datasets. The
             \citeauthor{raykar10} algorithm was then run on each dataset and the
-            balanced accuracy and output $\alpha$ and $\beta$ values were recorded
-            for each. The experiment was repeated five times. The resulting balanced
-            accuracies are plotted against the ratios of negative to positive
-            examples in Figure \ref{fig:raykar-class-balance-ba}, and the estimated
-            $\alpha$ and $\beta$ values are plotted against the ratios in Figure
+            balanced accuracy and output $\alpha$ and $\beta$ values were
+            recorded for each. The experiment was repeated five times. The
+            resulting balanced accuracies are plotted against the ratios of
+            negative to positive examples in Figure
+            \ref{fig:raykar-class-balance-ba}, and the estimated $\alpha$ and
+            $\beta$ values are plotted against the ratios in Figure
             \ref{fig:raykar-class-balance-ab}.
 
             \begin{figure}[!ht]
                 \centering
                 \includegraphics[width=\textwidth]
                     {images/experiments/raykar_class_balance_ba}
-                \caption{Performance of the \citeauthor{raykar10} classifier on a
-                    simulated labelling problem with different class imbalance.}
+                \caption{Performance of the \citeauthor{raykar10} classifier on
+                    a simulated labelling problem with different class
+                    imbalance.}
                 \label{fig:raykar-class-balance-ba}
             \end{figure}
 
@@ -719,60 +748,84 @@ combat label noise from crowds.
             The classifier performs well when many examples are positive, but
             performance is considerably reduced when there are more negative
             examples than positive examples. In these situations, the algorithm
-            considerably underestimates $\alpha$, which may lead to ``mistrust'' of
-            the crowd and hence reduce the balanced accuracy. The reason for the
-            underestimation of $\alpha$ is unknown. Since we would expect the
-            algorithm to perform identically under relabelling $0 \leftrightarrow
-            1$, this may indicate a problem with the implementation.
+            considerably underestimates $\alpha$, which may lead to ``mistrust''
+            of the crowd and hence reduce the balanced accuracy. The reason for
+            the underestimation of $\alpha$ is unknown. Since we would expect
+            the algorithm to perform identically under relabelling $0
+            \leftrightarrow 1$, this may indicate a problem with the
+            implementation.
 
         \subsubsection{The Effect of Label Noise}
 
-            The final experiment was to determine the effect of label noise on the
-            performance and output of the algorithm. 10 labellers were simulated
-            with $\alpha$ ranging from $0.2$ to $1.0$ and $\beta$ fixed at $1.0$. A
-            dataset was generated as for the previous experiment (but with balanced
-            classes), the labellers were tasked with labelling this dataset, and the
-            labels were used to train the algorithm. The balanced accuracy and
-            $\alpha$ values were recorded. This experiment was repeated $5$ times,
-            and repeated again with $\beta$ replacing $\alpha$. The results are
-            shown in Figure
+            The final experiment was to determine the effect of label noise on
+            the performance and output of the algorithm. 10 labellers were
+            simulated with $\alpha$ ranging from $0.2$ to $1.0$ and $\beta$
+            fixed at $1.0$. A dataset was generated as for the previous
+            experiment (but with balanced classes), the labellers were tasked
+            with labelling this dataset, and the labels were used to train the
+            algorithm. The balanced accuracy and $\alpha$ values were recorded.
+            This experiment was repeated $5$ times, and repeated again with
+            $\beta$ replacing $\alpha$. The results are shown in Figure
 
             \begin{figure}[!ht]
                 \centering
-                \includegraphics[width=\textwidth]{images/experiments/raykar_noise}
+                \includegraphics[width=\textwidth]
+                    {images/experiments/raykar_noise}
                 \caption{Output $\alpha$, $\beta$, and balanced accuracy of the
                     \citeauthor{raykar10} classifier on a simulated labelling
                     problem with different amounts of label noise. ``Estimated
                     $\alpha$'' refers to the value of $\alpha$ output by the
-                    algorithm, and $\alpha$ refers to the groundtruth. Filled areas
-                    represent the standard deviation of multiple measurements.}
+                    algorithm, and $\alpha$ refers to the groundtruth. Filled
+                    areas represent the standard deviation of multiple
+                    measurements.}
                 \label{fig:raykar-noise}
             \end{figure}
 
-            As expected, the balanced accuracy increases as label noise decreases.
-            The output $\alpha$ and $\beta$ closely match the true values.
+            As expected, the balanced accuracy increases as label noise
+            decreases. The output $\alpha$ and $\beta$ closely match the true
+            values.
 
     \subsection{Yan et al. Model}
     \label{sec:yan}
 
         \todo{Clear this up with respect to the above examples.}
 
-        \citet{yan10} propose modelling the $t$th labeller by a Bernoulli distribution of a data-dependent function $\eta_t(\vec x)$, parametrised as a logistic regression function $\eta_t(\vec x) = \sigma(\vec \omega_t^T \vec x + \gamma_t)$. The labeller model is thus
+        \citet{yan10} propose modelling the $t$th labeller by a Bernoulli
+        distribution of a data-dependent function $\eta_t(\vec x)$, parametrised
+        as a logistic regression function $\eta_t(\vec x) = \sigma(\vec
+        \omega_t^T \vec x + \gamma_t)$. The labeller model is thus
         \begin{equation*}
             p(y_t \mid \vec x, z, \vec \omega_t, \gamma_t) = \eta_t(\vec x)^{1 - |y_t - z|} (1 - \eta_t(\vec x))^{|y_t - z|}.
         \end{equation*}
-        For ease of notation, let $\Omega = (\vec \omega_1^T, \dots, \vec \omega_T^T)$ and let $\vec \gamma = (\gamma_1, \dots, \gamma_T)$. This model can be obtained from the \citeauthor{raykar10} model by requiring $\alpha_t = \beta_t = \eta_t(\vec x)$ and allowing these parameters be data-dependent.
+        For ease of notation, let $\Omega = (\vec \omega_1^T, \dots, \vec
+        \omega_T^T)$ and let $\vec \gamma = (\gamma_1, \dots, \gamma_T)$. This
+        model can be obtained from the \citeauthor{raykar10} model by requiring
+        $\alpha_t = \beta_t = \eta_t(\vec x)$ and allowing these parameters be
+        data-dependent.
 
-        As with \citeauthor{raykar10}, the classification model can be any classifier and \citeauthor{yan10} choose to use logistic regression (Equation \ref{eq:raykar-logreg}). The parameters $\vec \theta = \{\Omega, \vec \gamma, \vec w\}$ can be found by maximising the likelihood with expectation-maximisation. Under the assumptions that examples are independently sampled and that the labellers are independent, the likelihood is given by
+        As with \citeauthor{raykar10}, the classification model can be any
+        classifier and \citeauthor{yan10} choose to use logistic regression
+        (Equation \ref{eq:raykar-logreg}). The parameters $\vec \theta =
+        \{\Omega, \vec \gamma, \vec w\}$ can be found by maximising the
+        likelihood with expectation-maximisation. Under the assumptions that
+        examples are independently sampled and that the labellers are
+        independent, the likelihood is given by
         \begin{align*}
-            p(\mathcal D \mid \vec \theta) &= \prod_{i = 1}^N \prod_{t = 1}^T p(y_{t, i} \mid \vec x_i, \vec w, \Omega, \vec \gamma)\\ &= \prod_{i = 1}^N \prod_{t = 1}^T \sum_{z = 0}^1 p(y_t \mid \vec x_i, z, \vec \omega_t, \gamma_t) p(z \mid \vec x_i, \vec w).
+            p(\mathcal D \mid \vec \theta) &= \prod_{i = 1}^N \prod_{t = 1}^T
+            p(y_{t, i} \mid \vec x_i, \vec w, \Omega, \vec \gamma)\\ &= \prod_{i
+            = 1}^N \prod_{t = 1}^T \sum_{z = 0}^1 p(y_t \mid \vec x_i, z, \vec
+            \omega_t, \gamma_t) p(z \mid \vec x_i, \vec w).
         \end{align*}
         The expectation steps requires us to compute
         \[
-            \mu_i \propto \prod_{t = 1}^{T} p(y_{t, i} \mid \vec x_i, z_i = 1, \vec \omega_t, \gamma_t) p(z_i = 1 \mid \vec x_i, \vec w).
+            \mu_i \propto \prod_{t = 1}^{T} p(y_{t, i} \mid \vec x_i, z_i = 1,
+            \vec \omega_t, \gamma_t) p(z_i = 1 \mid \vec x_i, \vec w).
         \]
         The maximisation step requires us to maximise
         \begin{equation*}
-            \sum_{i = 1}^N \sum_{t = 1}^T \sum_{z_i = 0}^1 p(z_i \mid \vec x_i, \vec w) (\log p(y_{t, i} \mid \vec x_i, z, \vec \omega_t, \gamma_t) + \log p(z \mid \vec x_i, \vec w))
+            \sum_{i = 1}^N \sum_{t = 1}^T \sum_{z_i = 0}^1 p(z_i \mid \vec x_i,
+            \vec w) (\log p(y_{t, i} \mid \vec x_i, z, \vec \omega_t, \gamma_t)
+            + \log p(z \mid \vec x_i, \vec w))
         \end{equation*}
-        with respect to $\vec w, \Omega,$ and $\vec \gamma$, where $p(z_i \mid \vec x_i, \vec w)$ is fixed to use the previous value of $\vec w$.
+        with respect to $\vec w, \Omega,$ and $\vec \gamma$, where $p(z_i \mid
+        \vec x_i, \vec w)$ is fixed to use the previous value of $\vec w$.
