@@ -31,7 +31,7 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
     with h5py.File(crowdastro_h5_path, 'r') as crowdastro_h5, \
             h5py.File(training_h5_path, 'r') as training_h5:
 
-        n_splits = crowdastro_h5['/wise/cdfs/test_sets'].shape[0]
+        n_splits = 30
         n_examples, n_params = training_h5['features'].shape
         n_params += 1  # Bias term.
 
@@ -49,11 +49,28 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
         for method in methods:
             method = int(method)
             logging.info('Testing {} ATLAS objects'.format(method))
-            for split, test_set in enumerate(
-                        crowdastro_h5['/wise/cdfs/test_sets']):
+            for split in range(n_splits):
                 logging.info('Test {}/{}'.format(split + 1, n_splits))
+                # Sample random ATLAS objects.
+                atlas_ids = numpy.arange(
+                        crowdastro_h5['/atlas/cdfs/numeric'].shape[0])
+                numpy.random.shuffle(atlas_ids)
+                train_atlas = atlas_ids[:method]
+                # Get nearby IR objects.
+                nearby = set()
+                for atlas_id in train_atlas:
+                    nearby_me = (crowdastro_h5['/atlas/cdfs/numeric'][
+                        atlas_id, 2 + ATLAS_IMAGE_SIZE:] <= ARCMIN).nonzero()[0]
+                    for i in nearby_me:
+                        nearby.add(i)
+                train_ir = nearby
+                # This is the training set. Now, get everything else.
+                ir_ids = range(crowdastro_h5['/wise/cdfs/numeric'].shape[0])
+                test_ir = set(ir_ids) - train_ir
+                train_ir = sorted(train_ir)
+                test_ir = sorted(test_ir)
                 runners.lr(results, str(method), split, features,
-                           targets, test_indices=list(test_set),
+                           targets, test_indices=test_ir,
                            overwrite=overwrite)
 
         if plot:
