@@ -301,10 +301,11 @@ def import_swire(f_h5):
             numeric[index, -image_size:] = radio.reshape(-1)
 
 
-def import_wise(f_h5):
+def import_wise(f_h5, field='cdfs'):
     """Imports the WISE dataset into crowdastro.
 
     f_h5: An HDF5 file.
+    field: 'cdfs' or 'elais'.
     """
     names = []
     rows = []
@@ -351,7 +352,7 @@ def import_wise(f_h5):
     # given radius of an ATLAS object. Otherwise, there's way too much data to
     # store.
     wise_positions = rows[:, :2]
-    atlas_positions = f_h5['/atlas/cdfs/_numeric'][:, :2]
+    atlas_positions = f_h5['/atlas/{}/_numeric'.format(field)][:, :2]
     logging.debug('Computing WISE k-d tree.')
     wise_tree = sklearn.neighbors.KDTree(wise_positions, metric='euclidean')
     indices = numpy.concatenate(
@@ -374,26 +375,28 @@ def import_wise(f_h5):
 
     # Write numeric data to HDF5.
     rows[:, 6] = distances.min(axis=0)
-    atlas_numeric = f_h5['/atlas/cdfs/_numeric']
-    f_h5['/atlas/cdfs'].create_dataset('numeric', dtype='float32',
+    atlas_numeric = f_h5['/atlas/{}/_numeric'.format(field)]
+    f_h5['/atlas/{}'.format(field)].create_dataset('numeric', dtype='float32',
             shape=(atlas_numeric.shape[0],
                    atlas_numeric.shape[1] + len(indices)))
-    f_h5['/atlas/cdfs/numeric'][:, :atlas_numeric.shape[1]] = atlas_numeric
-    f_h5['/atlas/cdfs/numeric'][:, atlas_numeric.shape[1]:] = distances
+    numeric_f = f_h5['/atlas/{}/numeric'.format(field)]
+    numeric_f[:, :atlas_numeric.shape[1]] = atlas_numeric
+    numeric_f[:, atlas_numeric.shape[1]:] = distances
 
-    del f_h5['/atlas/cdfs/_numeric']
+    del f_h5['/atlas/{}/_numeric'.format(field)]
 
     image_size = (PATCH_RADIUS * 2) ** 2
     dim = (rows.shape[0], rows.shape[1] + image_size)
-    numeric = f_h5['/wise/cdfs'].create_dataset('numeric', shape=dim,
-                                                 dtype='float32')
+    numeric = f_h5['/wise/{}'.format(field)].create_dataset(
+        'numeric', shape=dim, dtype='float32')
     numeric[:, :rows.shape[1]] = rows
-    f_h5['/wise/cdfs'].create_dataset('string', data=names)
+    f_h5['/wise/{}'.format(field)].create_dataset('string', data=names)
 
     # Load and store radio images.
     logging.debug('Importing radio patches.')
-    with astropy.io.fits.open(config['data_sources']['atlas_image'],
-                              ignore_blank=True) as atlas_image:
+    with astropy.io.fits.open(
+            config['data_sources']['atlas_{}_image'.format(field)],
+            ignore_blank=True) as atlas_image:
         wcs = astropy.wcs.WCS(atlas_image[0].header).dropaxis(3).dropaxis(2)
         pix_coords = wcs.all_world2pix(wise_positions, FITS_CONVENTION)
         assert pix_coords.shape[1] == 2
