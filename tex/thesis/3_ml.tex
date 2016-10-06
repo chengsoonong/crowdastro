@@ -49,7 +49,7 @@ combat label noise from crowds.
     \subsection{Logistic Regression}
     \label{sec:logistic-regression}
 
-        Logistic regression is a simple linear model of binary classification.
+        Logistic regression is a simple linear model of binary classification \citep{bishop06}.
         The conditional distribution $p(z \mid \vec x)$ is modelled as
         \[
             y(\vec x) = p(z = 1 \mid \vec x) = \sigma(\vec w^T \vec x + b),
@@ -78,7 +78,7 @@ combat label noise from crowds.
 
         The loss function represents how well the current model fits the
         observations. For binary classification, this is usually given by the
-        \emph{cross-entropy error}
+        \emph{cross-entropy error} \citep{bishop06}
         \[
             L(\vec w) = -\frac{1}{N} \sum_{\vec x, z \in \mathcal D} \left(
                 z \log y(\vec x) + (1 - z) \log (1 - y(\vec x))
@@ -87,7 +87,7 @@ combat label noise from crowds.
         with gradient
         \[
             \nabla L(\vec w) = -\frac{1}{N}
-                \sum_{\vec x, z \in \mathcal D} \left(z - y(\vec x)\right).
+                \sum_{\vec x, z \in \mathcal D} \left(z - y(\vec x)\right) \vec x.
         \]
 
     \subsection{Neural Networks}
@@ -382,8 +382,8 @@ combat label noise from crowds.
                 convolutional layers of the neural network, from left to right,
                 top to bottom. Colours represent convolutions with different
                 filters. The output, bottom-right, is a higher-level
-                representation of the input image, and its values can be used as
-                inputs for classification. This figure uses
+                representation of the input image, and its values can be used
+                as inputs for classification. This figure uses
                 \citeauthor{baraldi15}'s implementation of the VGG-16 CNN
                 \citep{simoyan14}.}
             \label{fig:face-cnn}
@@ -434,7 +434,7 @@ combat label noise from crowds.
         different labellers may be better skilled at labelling different kinds
         of examples, some examples may be intrinsically hard for non-experts to
         label, and labellers may even be actively malicious in giving incorrect
-        labels.
+        labels \citep{yan11}.
 
         \todo{Rewrite and extend}
 
@@ -520,8 +520,8 @@ combat label noise from crowds.
     % using labels where the groundtruth doesn't exist. I should write about
     % that.
 
-    In crowd learning scenarios, it is common to have multiple labels for a data
-    point with no known groundtruth.
+    In crowd learning scenarios, it is common to have multiple labels for a
+    data point with no known groundtruth.
 
     \todo{extend}
 
@@ -548,8 +548,8 @@ combat label noise from crowds.
 
         The idea is that the majority of labels are correct, so with
         sufficiently large amounts of relabelling we expect the label noise to
-        be reduced. How large ``sufficiently large'' is is unclear and domain-
-        dependent, and is outside the scope of this thesis, though papers like
+        be reduced. How large ``sufficiently large'' is is unclear and
+        domain-dependent, and is outside the scope of this thesis, though
         \citet{sheng08} and \citet{lin16} provide some information on how to
         choose relabelling rates. Of course, this fails in situations where the
         majority of labellers are not correct, which may be due to intrinsic
@@ -669,7 +669,7 @@ combat label noise from crowds.
                 \centering
                 \includegraphics[width=\textwidth]{images/experiments/raykar.pdf}
                 \caption{Performance of the \citeauthor{raykar10} classifier against
-                    logistic regression on a simulated crowd labelling of the breast
+                    logistic regression (LR) on a simulated crowd labelling of the breast
                     cancer dataset \citep{wolberg90}.}
                 \label{fig:raykar}
             \end{figure}
@@ -735,7 +735,7 @@ combat label noise from crowds.
             labels were used to train the algorithm. The balanced accuracy and
             $\alpha$ values were recorded. This experiment was repeated $5$ times,
             and repeated again with $\beta$ replacing $\alpha$. The results are
-            shown in Figure
+            shown in Figure \ref{fig:raykar-noise}.
 
             \begin{figure}[!ht]
                 \centering
