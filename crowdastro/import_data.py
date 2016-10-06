@@ -12,6 +12,7 @@ import os
 
 from astropy.coordinates import SkyCoord
 import astropy.io.fits
+from  astropy.io import ascii
 import astropy.utils.exceptions
 import astropy.wcs
 import h5py
@@ -61,12 +62,14 @@ def checksum_file(filename, h):
 def prep_h5(f_h5, ir_survey):
     """Creates hierarchy in HDF5 file."""
     f_h5.create_group('/atlas/cdfs')
+    f_h5.create_group('/atlas/elais')
     f_h5.create_group('/{}/cdfs'.format(ir_survey))
+    f_h5.create_group('/{}/elais'.format(ir_survey))
     f_h5.attrs['version'] = VERSION
     f_h5.attrs['ir_survey'] = ir_survey
 
 
-def import_atlas(f_h5, test=False):
+def import_atlas(f_h5, test=False, field='cdfs'):
     """Imports the ATLAS dataset into crowdastro, as well as associated SWIRE.
 
     f_h5: An HDF5 file.
@@ -75,7 +78,7 @@ def import_atlas(f_h5, test=False):
     from . import rgz_data as data
 
     # Fetch groups from HDF5.
-    cdfs = f_h5['/atlas/cdfs']
+    cdfs = f_h5['/atlas/{}'.format(field)]
 
     # First pass, I'll find coords, names, and Zooniverse IDs, as well as how
     # many data points there are.
@@ -84,38 +87,52 @@ def import_atlas(f_h5, test=False):
     names = []
     zooniverse_ids = []
 
-    # We need the ATLAS name, but we can only get it by going through the
-    # ATLAS catalogue and finding the nearest component.
-    # https://github.com/chengsoonong/crowdastro/issues/63
-    # Fortunately, @jbanfield has already done this, so we can just load
-    # that CSV and match the names.
-    # TODO(MatthewJA): This matches the ATLAS component ID, but maybe we should
-    # be using the name instead.
-    rgz_to_atlas = {}
-    with open(config['data_sources']['rgz_to_atlas']) as f:
+    if (field == 'cdfs'):
+      # We need the ATLAS name, but we can only get it by going through the
+      # ATLAS catalogue and finding the nearest component.
+      # https://github.com/chengsoonong/crowdastro/issues/63
+      # Fortunately, @jbanfield has already done this, so we can just load
+      # that CSV and match the names.
+      # TODO(MatthewJA): This matches the ATLAS component ID, but maybe we should
+      # be using the name instead.
+      rgz_to_atlas = {}
+      with open(config['data_sources']['rgz_to_atlas']) as f:
         reader = csv.DictReader(f)
         for row in reader:
             rgz_to_atlas[row['ID_RGZ']] = row['ID']
 
-    all_subjects = data.get_all_subjects(survey='atlas', field='cdfs')
-    if test:
-        all_subjects = all_subjects.limit(10)
+      all_subjects = data.get_all_subjects(survey='atlas', field=field)
+      if test:
+          all_subjects = all_subjects.limit(10)
 
-    for subject in all_subjects:
-        ra, dec = subject['coords']
-        zooniverse_id = subject['zooniverse_id']
+      for subject in all_subjects:
+          ra, dec = subject['coords']
+          zooniverse_id = subject['zooniverse_id']
 
-        rgz_source_id = subject['metadata']['source']
-        if rgz_source_id not in rgz_to_atlas:
-            logging.debug('Skipping %s; no matching ATLAS component.',
+          rgz_source_id = subject['metadata']['source']
+          if rgz_source_id not in rgz_to_atlas:
+              logging.debug('Skipping %s; no matching ATLAS component.',
                           zooniverse_id)
-            continue
-        name = rgz_to_atlas[rgz_source_id]
+              continue
+          name = rgz_to_atlas[rgz_source_id]
+ 
+          # Store the results.
+          coords.append((ra, dec))
+          names.append(name)
+          zooniverse_ids.append(zooniverse_id)
 
-        # Store the results.
-        coords.append((ra, dec))
-        names.append(name)
-        zooniverse_ids.append(zooniverse_id)
+    elif (field == 'elais'):
+      atlascatalogue = ascii.read(config['data_sources']['atlas_catalogue'])
+      ras, decs = atlascatalogue['RA_deg'],atlascatalogue['Dec_deg']
+      e_ids = atlascatalogue['ID']
+      fields = atlascatalogue['field']
+
+      # Store the results.
+      for ra, dec, e_id, field_ in zip(ras,decs,e_ids,fields):
+        if (field_ == 'ELAIS-S1'):
+          coords.append((ra, dec))
+          names.append(e_id)
+          zooniverse_ids.append(e_id)
 
     n_cdfs = len(names)
 
@@ -145,13 +162,14 @@ def import_atlas(f_h5, test=False):
     numeric = cdfs.create_dataset('_numeric', shape=dim, dtype='float32')
 
     # Load image patches and store numeric data.
-    with astropy.io.fits.open(config['data_sources']['atlas_image'],
+    with astropy.io.fits.open(config['data_sources']['atlas_{}_image'.format(field)],
                               ignore_blank=True) as atlas_image:
         wcs = astropy.wcs.WCS(atlas_image[0].header).dropaxis(3).dropaxis(2)
         pix_coords = wcs.all_world2pix(coords, FITS_CONVENTION)
         assert pix_coords.shape[1] == 2
         logging.debug('Fetching %d ATLAS images.', len(pix_coords))
         for index, (x, y) in enumerate(pix_coords):
+            
             radio = atlas_image[0].data[0, 0,  # stokes, freq
                     int(y) - config['surveys']['atlas']['fits_height'] // 2 :
                     int(y) + config['surveys']['atlas']['fits_height'] // 2 ,
@@ -782,7 +800,8 @@ def _main(args):
     check_raw_data()
     with h5py.File(args.h5, 'w') as f_h5:
         prep_h5(f_h5, args.ir)
-        import_atlas(f_h5, test=args.test)
+        import_atlas(f_h5, test=args.test, field='cdfs')
+        import_atlas(f_h5, test=args.test, field='elais')
         if args.ir == 'swire':
             import_swire(f_h5)
         elif args.ir == 'wise':
