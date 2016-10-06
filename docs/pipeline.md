@@ -24,6 +24,12 @@ crowdastro generate_training_data
 
 The training data contains `raw_features` and `labels`. Note that image features have not been processed &mdash; these are raw pixels.
 
+Generate the training and testing sets:
+
+```bash
+crowdastro generate_test_sets
+```
+
 Generate a model:
 
 ```bash
@@ -44,13 +50,13 @@ crowdastro generate_cnn_outputs
 
 This adds the `features` dataset to the training HDF5 file.
 
-Train a classifier:
+Train a classifier (currently broken!):
 
 ```bash
 crowdastro train --classifier lr
 ```
 
-Test the classifier against subjects:
+Test the classifier against subjects (also currently broken!):
 
 ```bash
 crowdastro test

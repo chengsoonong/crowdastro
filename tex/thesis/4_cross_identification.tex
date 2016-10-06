@@ -76,83 +76,34 @@
   --- while this doesn't hold in general, systems larger than $1'$ are rare and
   require human insight to discover \citep{banfield16}.
 
-% \section{Data Sources}
-% \label{sec:data}
+\section{Evaluating Performance Without Groundtruth}
+\label{sec:norris-as-groundtruth}
+  
+  Our training labels for the classification task will come from the Radio
+  Galaxy Zoo. While these labels can be aggregated in a number of ways to
+  approximate the groundtruth (Section \ref{sec:rgz-crowd-labels}), these
+  aggregates are \emph{not} the groundtruth and may contain high noise. This
+  becomes a problem when we want to assess the performance of a trained
+  classifier --- we want our classifier to be capable of finding the best
+  approximation to the groundtruth, not to the noisy inputs, and evaluation
+  should reflect that. We therefore cannot use aggregated crowd labels for
+  evaluation.
 
-%   To learn the cross-identification distribution (Equation \ref{eq:cross-identification}), we need a set of radio objects, a set of candidate host galaxies, and a set of existing cross-identifications for training. I have chosen to use the ATLAS radio survey for radio objects and the WISE survey for candidate host galaxies. The training cross-identifications are based on the Radio Galaxy Zoo.
+  In general, though, we \emph{don't} have groundtruth for this problem, and
+  while the groundtruth exists (a galaxy either has an AGN or does not), it is
+  impossible for us to measure this accurately. Even expert catalogues, such as
+  those provided by \citeauthor{norris06} (Section \ref{sec:norris}), are noisy
+  --- \citep{norris06} estimate that their cross-identifications have a $9.02\%$
+  false positive rate.
 
-%   \subsection{Radio Data}
-%   \label{ssec:radio-data}
-
-%     The ATLAS survey \citep{franzen15} \todo{talk about this in the astro chapter} provides both a catalogue of detected radio objects and a radio image of the CDFS and ELAIS-S1 fields.
-
-%     The catalogue contains around 2400 objects in the CDFS field, all of which have been labelled by expert astronomers \citep{norris06}, by prior algorithms for automated cross-identification \citep{fan15}, and by Radio Galaxy Zoo volunteers \citep{banfield15}. The ELAIS-S1 field does not have Radio Galaxy Zoo classifications as it was not included by the Radio Galaxy Zoo researchers. The existence of expert, algorithmic, and crowdsourced labels makes ATLAS-CDFS an excellent set of radio objects for developing and testing machine learning approaches to cross-identification. Additionally, ATLAS is considered a pilot for the upcoming Evolutionary Map of the Universe survey, which will provide the majority of radio objects needing cross-identification in the future \citep{banfield15}.
-
-%     \todo{talk about ATLAS image in the astro chapter}
-
-%     The catalogue contains the name and position of each radio object, as well as various metadata such as the noise level and the flux. I have chosen to ignore the metadata and only use the position information. The positions are used to extract a $5' \times 5'$ from the full ATLAS image of the CDFS field, centred on each radio object. These image patches represent the radio object in the object localisation problem.
-
-%   \subsection{Infrared Data}
-
-%     Both the SWIRE and WISE surveys have imaged the CDFS field in infrared wavelengths. Of these, WISE is more commonly used, so I have chosen to use WISE as a source of candidate host galaxies. Like ATLAS, WISE provides both a catalogue of detected objects as well as images.
-
-%     The WISE catalogue contains names, positions, and astronomical measurements for all detected infrared objects. I used the positions to generate features for each candidate host, and the raw flux measurements as additional features. Feature generation is described in Section \ref{sec:features}. I chose to use the fluxes as they have the most physical meaning \todo{citation needed}.
-
-%     I have chosen to not use image data from WISE. Preliminary experiments showed that there was not much information gained from the use of infrared images, and using infrared images made the classifier more complex. Future work may use infrared images to improve the classifier.
-
-%   \subsection{Radio Galaxy Zoo Consensus Labels}
-%   \label{sec:consensuses}
-
-%     \todo{move lots of this to the astro section}
-    
-%     Radio Galaxy Zoo volunteers are first asked to select combinations of radio
-%     objects that correspond to one radio source, and are then asked to select
-%     the location of the corresponding host galaxy \citep{banfield15}. Each
-%     radio subject is labelled by multiple volunteers. These labels are then
-%     collated as follows. First, the most common combination of radio objects is
-%     selected, and all labels that have a different combination are discarded.
-%     This radio combination is called the consensus radio combination. Then, the
-%     density of host location labels is estimated using Gaussian kernel density
-%     estimation (KDE), and the highest density location is selected. This is
-%     called the consensus host location. The consensus host location is then
-%     matched to the nearest infrared object.
-
-%     An alternative way to find the consensus host location is by using a
-%     clustering algorithm such as $k$-means. Host locations are clustered and
-%     the cluster containing the most locations is taken to represent the
-%     consensus; the consensus location is then the mean of the cluster. This is
-%     faster and more robust than using KDE, but requires $k$ to be known. $k$
-%     can be estimated using an algorithm such as PG-means \citep{hamerly07} or by
-%     choosing $k$ to minimise some information criterion \todo{cite:sklearn}.
-%     The consensus labels for the data associated with this thesis were found in
-%     this way, fitting a Gaussian mixture model to the host locations with the
-%     number of Gaussians chosen to minimise the Bayesian information criterion.
-
-%     Repeated volunteer labelling helps to reduce noise in the labels. This is
-%     necessary as the volunteers are not experts, and may incorrectly label the
-%     subject. The hope is that the majority of volunteers will correctly label
-%     subjects, which seems to be the case for radio subjects where more than
-%     75\% of volunteers agree \citep{banfield15}. The number of times a radio
-%     subject is shown to different volunteers is called the redundancy. The
-%     redundancy is 5 if the subject is a compact source, and 20 for all other
-%     sources. These numbers were chosen based on the redundancy levels of the
-%     original Galaxy Zoo project [Banfield, personal communication] \todo{Is
-%     this how to cite personal communication? Alternatively, is this written
-%     down somewhere?}. Since labels with radio combinations that disagree with
-%     the consensus are discarded, the redundancy is usually lower in practice
-%     when finding the host location. This can lead to very low redundancy input
-%     to KDE, causing KDE to fail. This failure can usually be caught, but the
-%     existing solution in this case is to take the mean of all host locations.
-%     This is not the consensus host location in general. Another effect is that
-%     since more complex sources have higher levels of disagreement in the radio
-%     combination stage, more complex sources have more discarded volunteer
-%     labels, and thus lower redundancy --- so more complex sources have more
-%     noise in their labels.
-
-%     The training data are generated by assigning each infrared object a binary label: $0$ if the object is not associated with a radio object, and $1$ if the object is associated with a radio object.
-
-%   \subsection{Norris Labels}
-%   \label{sec:norris}
+  To attempt to mitigate this problem, we chose a test set with as little noise
+  as possible by combining the \citeauthor{fan15} catalogue (Section
+  \ref{sec:fan}) with the \citeauthor{norris06} catalogue (Section
+  \ref{sec:norris}) to find all galaxies for which the two catalogues agree.
+  Test sets were drawn from only these galaxies. This does mean that the test
+  instances will be ``easier'' than a test set drawn from the entire data set,
+  but any tests performed against these test sets should be more reliable than
+  would otherwise be the case.
 
 \section{Feature Selection}
 \label{sec:features}
@@ -166,9 +117,9 @@
   \label{sec:ir-features}
 
     The WISE catalogue (Section \ref{sec:wise}) contains magnitude information
-    for each object. There are four such magnitudes --- $w1$, $w2$, $w3$, and $w4$ ---
-    each representing the amount of light emitted by the object in a different
-    range of wavelengths.
+    for each object. There are four such magnitudes --- $w1$, $w2$, $w3$, and
+    $w4$ --- each representing the amount of light emitted by the object in a
+    different range of wavelengths.
 
     We chose to use all four magnitudes as features. Since the features are
     magnitudes, they are on a logarithmic scale, and we found that in practice
@@ -209,9 +160,15 @@
 
     \todo{Discuss SWIRE features.}
 
-    % The SWIRE catalogue (Section \ref{sec:swire}) also contains colour information for each contained object, but only fluxes rather than magnitudes. \todo{Read the SWIRE colour-colour diagram and continue this.}
+    % The SWIRE catalogue (Section \ref{sec:swire}) also contains colour
+    % information for each contained object, but only fluxes rather than
+    % magnitudes. \todo{Read the SWIRE colour-colour diagram and continue this.}
 
-    % Both WISE and SWIRE catalogues contain the positions of each object. The distance from each object to the centre of the closest radio object is used as a feature representing that object. This noticeably improves classification performance \todo{make an experiment showing this, and probably also showing that the other features are good}.
+    % Both WISE and SWIRE catalogues contain the positions of each object. The
+    % distance from each object to the centre of the closest radio object is
+    % used as a feature representing that object. This noticeably improves
+    % classification performance \todo{make an experiment showing this, and
+    % probably also showing that the other features are good}.
 
   \subsection{Radio Features}
   \label{sec:image-features}
@@ -226,49 +183,83 @@
     \subsubsection{Building a Model for Feature Extraction}
     \label{sec:feature-extraction-model}
 
-      We chose to use a convolutional neural network (CNN) with two
+      We chose to use a convolutional neural network (CNN) with three
       convolutional and max pooling layers, shown in Figure \ref{fig:radio-cnn}.
-      This resulted in an 800-dimensional feature vector. For training this
+      This resulted in an 128-dimensional feature vector. For training this
       network, we added a 64-dimensional dense layer mapping to a 1-dimensional
-      output, and trained the entire network to match the consensus Radio Galaxy
-      Zoo labels.
+      output. 10\% of ATLAS objects were selected at random and reserved for
+      training the CNN, to ensure later testing data would not overlap the
+      training set. The entire network was then trained to match the consensus
+      Radio Galaxy Zoo labels of the galaxies nearest the reserved training set.
 
       \begin{figure}[!ht]
          \centering
-         \includegraphics[width=\textwidth]{images/cnn.pdf}
+         \includegraphics[width=\textwidth]{images/cnn_new.pdf}
          \caption{Convolutional neural network for radio feature extraction.}
          \label{fig:radio-cnn}
        \end{figure}
 
-       This introduced a degree of peeking, as the network was effectively
-       trained on the galaxy classification task. This is mitigated in two ways:
-       Firstly, there are many more degrees of freedom in the dense layer as in
-       the classifier we used later, so the CNN could at best partially learn
-       the classification task in the short time it was trained for. Secondly,
-       the dense layer was not included in the final feature extractor, and the
-       CNN was not fine-tuned --- features output by the CNN were fixed as
-       inputs to the classifier. A better approach would be to use a
-       convolutional autoencoder, which would eliminate the peeking entirely and
-       allow training on radio data with no labels at all, but this was
-       computationally infeasible for this project.
+      A better approach would be to use a convolutional autoencoder, which would
+      allow training on all the radio data, and data with no labels at all, but
+      this was computationally infeasible for this project.
 
-    \subsubsection{Filters}
-    \label{sec:image-filters}
-
-      \todo{Write about and show the filters and their effect on input images.}
+      An example of the neural network applied to a radio image is shown in
+      Figure \ref{fig:rgz-cnn}.
 
       \begin{figure}[!ht]
         \centering
-        \includegraphics[width=\textwidth]{images/cnn_outputs.pdf}
-        \caption{The effects of convolutional layers on an input image. Left: A
-          radio image. Middle: Image passed through the first convolutional
-          layer. Right: Image passed through the second convolutional layer.}
+        \includegraphics[width=\textwidth]{images/rgz_cnn}
+        \caption{The effects of convolutional layers on an input image. The
+          left-most image is the original radio image. The other images are the
+          32 images output from each of the three convolutional layers.}
+        \label{fig:rgz-cnn}
       \end{figure}
 
   \subsection{Feature Analysis}
   \label{sec:feature-analysis}
 
-    \todo{Feature ablation experiment.}
+    To determine the effect of each set of features on classification
+    performance, we performed a feature ablation experiment. We trained a
+    logistic regression classifier on the \citeauthor{norris06} label set,
+    holding out different features each time. The lower the resulting balanced
+    accuracy, the more important the held out features. This was repeated ten
+    times with different $50\%$ subsets of the training set. The features we
+    chose to hold out were all features derived from magnitudes, all features
+    extracted by the CNN, the distance feature, and each magnitude feature
+    individually. These results are plotted in Figure \ref{fig:feature-ablation}
+    and the means and standard deviations of the balanced accuracies are tabled
+    in Table \ref{tab:feature-ablation}.
+
+    \begin{figure}[!ht]
+      \centering
+      \includegraphics[width=\textwidth]{%
+        images/experiments/feature_ablation.pdf}
+      \caption{Balanced accuracy of logistic regression trained on the
+        \citeauthor{norris06} label set with different features removed. The
+        horizontal axis indicates which features were removed for the results
+        in that column.}
+      \label{fig:feature-ablation}
+    \end{figure}
+
+    \begin{table}[!ht]
+      \centering
+      \begin{tabular}{r|c}
+        \textbf{Feature/s Removed} & \textbf{Mean Balanced Accuracy}\\\hline
+        None & $(88.74 \pm 0.78)\%$\\
+        All magnitudes & $(88.66 \pm 0.81)\%$\\
+        CNN & $(71.67 \pm 1.71)\%$\\
+        Distance & $(88.84 \pm 0.76)\%$\\
+        $w1$ & $(88.82 \pm 0.78)\%$\\
+        $w1 - w2$ & $(88.78 \pm 0.85)\%$\\
+        $w2$ & $(88.79 \pm 0.80)\%$\\
+        $w2 - w3$ & $(88.82 \pm 0.70)\%$\\
+        $w3$ & $(88.79 \pm 0.77)\%$\\
+        $w4$ & $(88.74 \pm 0.77)\%$
+      \end{tabular}
+      \caption{Balanced accuracy of logistic regression trained on the
+        \citeauthor{norris06} label set with different features removed.}
+      \label{tab:feature-ablation}
+    \end{table}
 
 \section{Choosing a Binary Classifier}
 \label{sec:binary-classifiers}
@@ -302,7 +293,12 @@
 \section{Handling Crowd Labels}
 \label{sec:rgz-crowd-labels}
 
-  While we want to train a classifier on the crowdsourced labels from the Radio Galaxy Zoo, it is unclear how we should aggregate the labels. Some methods for aggregation are described in Section \ref{sec:crowd-labels}. Which method will perform best on a dataset is dependent on the dataset itself, so we tested both variants of the \citeauthor{raykar10} algorithm and majority vote on the galaxy classification task.
+  While we want to train a classifier on the crowdsourced labels from the Radio
+  Galaxy Zoo, it is unclear how we should aggregate the labels. Some methods for
+  aggregation are described in Section \ref{sec:crowd-labels}. Which method will
+  perform best on a dataset is dependent on the dataset itself, so we tested
+  both variants of the \citeauthor{raykar10} algorithm and majority vote on the
+  galaxy classification task.
 
   \todo{Compare majority vote and Raykar.}
 
@@ -313,11 +309,28 @@
 
     \todo{Make this writing considerably less terrible.}
 
-    The infrared objects were partitioned into a testing set and a training set as follows. First, the radio objects were partitioned into a radio testing set and a radio training set, with the radio testing set containing $452$ objects and the radio training set containing $1811$ objects. Infrared objects were then added to the infrared testing set if they were within $1'$ of a radio object in the radio testing set, and added to the infrared training set otherwise. This was done because infrared objects that were close together had overlapping radio features, and thus random partitioning would result in the training set containing many of the features found in the testing set. The partitioning resulted in $5922$ objects in the testing set and $18218$ objects in the training set.
+    The infrared objects were partitioned into a testing set and a training set
+    as follows. First, the radio objects were partitioned into a radio testing
+    set and a radio training set, with the radio testing set containing $452$
+    objects and the radio training set containing $1811$ objects. Infrared
+    objects were then added to the infrared testing set if they were within $1'$
+    of a radio object in the radio testing set, and added to the infrared
+    training set otherwise. This was done because infrared objects that were
+    close together had overlapping radio features, and thus random partitioning
+    would result in the training set containing many of the features found in
+    the testing set. The partitioning resulted in $5922$ objects in the testing
+    set and $18218$ objects in the training set.
 
-    For each infrared object, features and labels were generated as described in Sections \ref{sec:features} and \ref{sec:consensuses}, respectively. Note that the labels were sourced from the Radio Galaxy Zoo. A logistic regression classifier was then trained on the training set using binary cross-entropy loss, with loss of each data point weighted based on the frequency of its label.
+    For each infrared object, features and labels were generated as described in
+    Sections \ref{sec:features} and \ref{sec:consensuses}, respectively. Note
+    that the labels were sourced from the Radio Galaxy Zoo. A logistic
+    regression classifier was then trained on the training set using binary
+    cross-entropy loss, with loss of each data point weighted based on the
+    frequency of its label.
 
-    The classifier was then used to classify the objects in the testing set. The labels were compared to those found by \citet{norris06} as described in Section \ref{sec:norris}, resulting in $80.14\%$ balanced accuracy.
+    The classifier was then used to classify the objects in the testing set. The
+    labels were compared to those found by \citet{norris06} as described in
+    Section \ref{sec:norris}, resulting in $80.14\%$ balanced accuracy.
     \todo{This number is out of date.}
 
     \todo{ROC/precision--recall curves}
@@ -325,7 +338,12 @@
     \begin{figure}[!ht]
       \centering
       \includegraphics[width=\textwidth]{images/experiments/predictors.pdf}
-      \caption{Performance of logistic regression on the galaxy classification task, trained on different sets of labels and tested on the galaxies where \citeauthor{norris06} and \citeauthor{fan15} labels agree. LR($Y$) indicates logistic regression trained on $Y$. RGZ-MV is the set of majority vote labels from the Radio Galaxy Zoo. RGZ-Raw-MV is the majority vote of all crowd labels and is included for comparison.}
+      \caption{Performance of logistic regression on the galaxy classification
+        task, trained on different sets of labels and tested on the galaxies
+        where \citeauthor{norris06} and \citeauthor{fan15} labels agree. LR($Y$)
+        indicates logistic regression trained on $Y$. RGZ-MV is the set of
+        majority vote labels from the Radio Galaxy Zoo. RGZ-Raw-MV is the
+        majority vote of all crowd labels and is included for comparison.}
     \end{figure}
 
   \subsection{Number of Training Examples}
@@ -333,7 +351,9 @@
     \begin{figure}[!ht]
       \centering
       \includegraphics[width=\textwidth]{images/experiments/passive.pdf}
-      \caption{Performance of logistic regression on the galaxy classification task, trained on different amounts of the \citeauthor{norris06} label set.}
+      \caption{Performance of logistic regression on the galaxy classification
+        task, trained on different amounts of the \citeauthor{norris06} label
+        set.}
     \end{figure}
 
 \section{Discussion}

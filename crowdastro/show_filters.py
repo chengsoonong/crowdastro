@@ -20,11 +20,14 @@ def main(model_path, weights_path, training_h5_path):
         model = keras.models.model_from_json(model_json.read())
     model.compile(loss='binary_crossentropy', optimizer='adadelta')
     model.load_weights(weights_path)
-    conv_layer_0 = model.get_weights()[0]
-    conv_layer_1 = model.get_weights()[2]
-    conv_layer_2 = model.get_weights()[4]
 
-    # n_filters = conv_layer_0.shape[0]
+    for i, layer in enumerate(model.layers):
+        print(i, layer)
+
+    conv_layer_0 = model.layers[0].get_weights()[0]
+    conv_layer_1 = model.layers[3].get_weights()[0]
+    conv_layer_2 = model.layers[6].get_weights()[0]
+
     # plt.figure(figsize=[8, 4])
     # for i, filt in enumerate(conv_layer_0):
     #     plt.subplot(4, 8, i + 1)
@@ -35,9 +38,18 @@ def main(model_path, weights_path, training_h5_path):
     #                     top=1.00, right=1.00)
     # plt.show()
 
-    # n_filters = conv_layer_1.shape[0] * conv_layer_1.shape[1]
     # plt.figure(figsize=[8, 8])
     # for i, filts in enumerate(conv_layer_1):
+    #     for j, filt in enumerate(filts):
+    #         plt.subplot(32, 32, i * 32 + j + 1)
+    #         plt.axis('off')
+    #         plt.pcolor(filt, cmap='viridis')
+    # plt.subplots_adjust(hspace=0.05, wspace=0.05, left=0.00, bottom=0.00,
+    #                     top=1.00, right=1.00)
+    # plt.show()
+
+    # plt.figure(figsize=[8, 8])
+    # for i, filts in enumerate(conv_layer_2):
     #     for j, filt in enumerate(filts):
     #         plt.subplot(32, 32, i * 32 + j + 1)
     #         plt.axis('off')
@@ -51,7 +63,7 @@ def main(model_path, weights_path, training_h5_path):
     encoded_1 = keras.backend.function([model.layers[0].input],
                                        [model.layers[3].output])
     encoded_2 = keras.backend.function([model.layers[0].input],
-                                       [model.layers[5].output])
+                                       [model.layers[6].output])
     print('Weights shapes:', [i.shape for i in model.get_weights()])
     print([(i, l) for i, l in enumerate(model.layers)])
 
@@ -70,10 +82,9 @@ def main(model_path, weights_path, training_h5_path):
             #     print(layer)
             #     print(j)
             #     print(f([img])[0].shape)
-
             out_0 = encoded_0([img])[0].reshape((32, 29, 29))
             out_1 = encoded_1([img])[0].reshape((32, 11, 11))
-            out_2 = encoded_2([img])[0].reshape((32, 5, 5))
+            out_2 = encoded_2([img])[0].reshape((32, 2, 2))
 
             plt.figure(figsize=[2 + 4 + 4 + 4, 8])
 

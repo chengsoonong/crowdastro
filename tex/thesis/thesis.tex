@@ -14,10 +14,34 @@
 \usepackage[numbers]{natbib}
 \usepackage{wrapfig}
 \usepackage[usenames,dvipsnames]{pstricks}
-\usepackage{epsfig}
+% \usepackage{epsfig}
 \usepackage[algoruled]{algorithm2e}
 \usepackage{subcaption}
 \usepackage{tikz}
+
+\usepackage[T1]{fontenc}
+\usepackage{fontspec}
+\usepackage{xparse}
+% The Palatino package gives a pretty terrible look to the PDF when compiling on
+% Windows, so we need to use fontspec instead. Palatino Linotype exists on
+% Windows but not on Mac (where Palatino exists instead). So...
+\suppressfontnotfounderror1
+\def\myfont{Palatino}
+\def\myfallback{Palatino Linotype}
+\count255=\interactionmode
+\batchmode
+\font\foo="\myfont"\space at 10pt
+\ifx\foo\nullfont
+  \font\foo = "\myfallback"\space at 10pt
+  \ifx\foo\nullfont
+    \errorstopmode
+    \errmessage{no suitable font found}
+  \else
+    \let\myfont=\myfallback
+  \fi
+\fi
+\interactionmode=\count255
+\setmainfont{\myfont}
 
 \usetikzlibrary{arrows}
 
@@ -109,7 +133,7 @@
 
 \todo{Verify that I didn't break anything by using natbib.}
 
-% \nocite{*}
+\nocite{*}
 % \bibliographystyle{acmnew-xref}
 \bibliographystyle{plainnat}
 \bibliography{../papers}

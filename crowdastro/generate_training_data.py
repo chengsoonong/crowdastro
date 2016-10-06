@@ -83,45 +83,6 @@ def generate(f_h5, out_f_h5):
     out_f_h5.create_dataset('positions', data=coords)
     out_f_h5.attrs['ir_survey'] = ir_survey
 
-    # These testing sets are used for training the CNN. For training/testing
-    # models, use crowdastro.generate_test_sets.
-
-    # We want to ensure our training set is never in our testing set, so
-    # 1. assign all ATLAS objects to a train or test set,
-    # 2. if a IR object is nearby a testing ATLAS object, assign it to a test
-    #    set, and
-    # 3. assign all other IR objects to a train set.
-    n_atlas = f_h5['/atlas/cdfs/numeric'].shape[0]
-    indices = numpy.arange(n_atlas)
-    numpy.random.shuffle(indices)
-    atlas_test_indices = indices[:int(n_atlas * config['test_size'])]
-    atlas_train_indices = indices[int(n_atlas * config['test_size']):]
-
-    atlas_test_indices.sort()
-    atlas_train_indices.sort()
-
-    is_atlas_train = numpy.zeros((n_atlas,))
-    is_atlas_test = numpy.zeros((n_atlas,))
-
-    is_atlas_test[atlas_test_indices] = 1
-    is_atlas_train[atlas_train_indices] = 1
-
-    n_ir = len(astro_features)
-    is_ir_train = numpy.ones((n_ir))
-    is_ir_test = numpy.zeros((n_ir))
-
-    for atlas_index in atlas_test_indices:
-        ir = f_h5['/atlas/cdfs/numeric'][atlas_index, n_astro + IMAGE_SIZE:]
-        nearby = (ir < ARCMIN).nonzero()[0]
-        for ir_index in nearby:
-            is_ir_test[ir_index] = 1
-            is_ir_train[ir_index] = 0
-
-    out_f_h5.create_dataset('is_atlas_train', data=is_atlas_train.astype(bool))
-    out_f_h5.create_dataset('is_atlas_test', data=is_atlas_test.astype(bool))
-    out_f_h5.create_dataset('is_ir_train', data=is_ir_train.astype(bool))
-    out_f_h5.create_dataset('is_ir_test', data=is_ir_test.astype(bool))
-
 
 def _populate_parser(parser):
     parser.description = 'Generates training data (potential hosts and their ' \
