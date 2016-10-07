@@ -310,7 +310,7 @@ def import_wise(f_h5, field='cdfs'):
     names = []
     rows = []
     logging.debug('Reading WISE catalogue.')
-    with open(config['data_sources']['wise_catalogue']) as f_tbl:
+    with open(config['data_sources']['wise_{}_catalogue'.format(field)]) as f_tbl:
         # This isn't a valid ASCII table, so Astropy can't handle it. This means
         # we have to parse it manually.
         for _ in range(105):  # Skip the first 105 lines.
@@ -398,6 +398,7 @@ def import_wise(f_h5, field='cdfs'):
             config['data_sources']['atlas_{}_image'.format(field)],
             ignore_blank=True) as atlas_image:
         wcs = astropy.wcs.WCS(atlas_image[0].header).dropaxis(3).dropaxis(2)
+        print(wise_positions)
         pix_coords = wcs.all_world2pix(wise_positions, FITS_CONVENTION)
         assert pix_coords.shape[1] == 2
         assert pix_coords.shape[0] == len(indices)
@@ -708,7 +709,7 @@ def import_classifications(f_h5, test=False):
     classification_combinations = []
     classification_usernames = []
 
-    with astropy.io.fits.open(config['data_sources']['atlas_image'],
+    with astropy.io.fits.open(config['data_sources']['atlas_cdfs_image'],   # RGZ only has cdfs classifications
                               ignore_blank=True) as atlas_image:
         wcs = astropy.wcs.WCS(atlas_image[0].header).dropaxis(3).dropaxis(2)
 
@@ -808,7 +809,8 @@ def _main(args):
         if args.ir == 'swire':
             import_swire(f_h5)
         elif args.ir == 'wise':
-            import_wise(f_h5)
+            import_wise(f_h5,field='cdfs')
+            import_wise(f_h5,field='elais')
         import_norris(f_h5)
         import_fan(f_h5)
         import_classifications(f_h5)

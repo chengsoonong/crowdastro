@@ -29,7 +29,7 @@ def remove_nans(n):
     return float(n)
 
 
-def generate(f_h5, out_f_h5):
+def generate(f_h5, out_f_h5, field='cdfs'):
     """Generates potential hosts and their astronomical features.
 
     f_h5: crowdastro input HDF5 file.
@@ -37,13 +37,13 @@ def generate(f_h5, out_f_h5):
     """
     ir_survey = f_h5.attrs['ir_survey']
     if ir_survey == 'swire':
-        swire = f_h5['/swire/cdfs/numeric']
+        swire = f_h5['/swire/{}/numeric'.format(field)]
         astro_features = swire[:, 2:8]
         distances = swire[:, 8].reshape((-1, 1))
         images = swire[:, 9:]
         coords = swire[:, :2]
     elif ir_survey == 'wise':
-        wise = f_h5['/wise/cdfs/numeric']
+        wise = f_h5['/wise/{}/numeric'.format(field)]
         magnitudes = wise[:, 2:6]
         distances = wise[:, 6].reshape((-1, 1))
         images = wise[:, 7:]
@@ -67,10 +67,13 @@ def generate(f_h5, out_f_h5):
     assert astro_features.shape[1] + distances.shape[1] == n_features
 
     # We now need to find the labels for each.
-    truths = set(f_h5['/atlas/cdfs/consensus_objects'][:, 1])
-    labels = numpy.array([o in truths for o in range(len(astro_features))])
+    if field == 'cdfs':
+      truths = set(f_h5['/atlas/cdfs/consensus_objects'][:, 1])
+      labels = numpy.array([o in truths for o in range(len(astro_features))])
 
-    assert len(labels) == len(astro_features)
+      assert len(labels) == len(astro_features)
+      out_f_h5.create_dataset('labels', data=labels)
+
     assert len(astro_features) == len(distances)
     assert len(distances) == len(images)
 
@@ -78,11 +81,10 @@ def generate(f_h5, out_f_h5):
     n_astro = features.shape[1] - images.shape[1]
 
     # Save to HDF5.
-    out_f_h5.create_dataset('labels', data=labels)
     out_f_h5.create_dataset('raw_features', data=features)
     out_f_h5.create_dataset('positions', data=coords)
     out_f_h5.attrs['ir_survey'] = ir_survey
-
+    out_f_h5.attrs['field'] = field
 
 def _populate_parser(parser):
     parser.description = 'Generates training data (potential hosts and their ' \
@@ -91,13 +93,14 @@ def _populate_parser(parser):
                         help='HDF5 input file')
     parser.add_argument('-o', default='data/training.h5',
                         help='HDF5 output file')
-
+    parser.add_argument('--field', default='cdfs',
+                        help='ATLAS field')
 
 def _main(args):
     with h5py.File(args.i, 'r') as f_h5:
         assert f_h5.attrs['version'] == '0.5.1'
         with h5py.File(args.o, 'w') as out_f_h5:
-            generate(f_h5, out_f_h5)
+            generate(f_h5, out_f_h5,field=args.field)
 
 
 if __name__ == '__main__':
