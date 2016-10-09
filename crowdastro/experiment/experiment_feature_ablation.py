@@ -33,36 +33,33 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
 
             all_features = training_h5['features']
             n_astro_features = config['surveys']['wise']['n_features']
+            distance_i = n_astro_features - 1
 
             features = {
-                'None': all_features[:],
-                'CNN': all_features[:, :n_astro_features],
-                'w1': all_features[:, 1:],
-                'w2': numpy.hstack([
+                'All features': all_features[:],
+                'CNN only': all_features[:, n_astro_features:],
+                'Magnitudes only': all_features[:, :distance_i],
+                'Distance only': all_features[:, distance_i:distance_i + 1],
+                'No CNN': all_features[:, :n_astro_features],
+                'No magnitudes': all_features[:, 6:],
+                'No distance': numpy.hstack(
+                    [all_features[:, :6], all_features[:, 7:]]),
+                'No CNN + no $w1$': all_features[:, 1:n_astro_features],
+                'No CNN + no $w2$': numpy.hstack([
                     all_features[:, :1],
-                    all_features[:, 2:],
-                ]),
-                'w3': numpy.hstack([
+                    all_features[:, 2:n_astro_features]]),
+                'No CNN + no $w3$': numpy.hstack([
                     all_features[:, :2],
-                    all_features[:, 3:],
-                ]),
-                'w4': numpy.hstack([
+                    all_features[:, 3:n_astro_features]]),
+                'No CNN + no $w4$': numpy.hstack([
                     all_features[:, :3],
-                    all_features[:, 4:],
-                ]),
-                'w1 - w2': numpy.hstack([
+                    all_features[:, 4:n_astro_features]]),
+                'No CNN + no $w1 - w2$': numpy.hstack([
                     all_features[:, :4],
-                    all_features[:, 5:],
-                ]),
-                'w2 - w3': numpy.hstack([
-                    all_features[:, :6],
-                    all_features[:, 7:],
-                ]),
-                'Distance': numpy.hstack([
-                    all_features[:, :7],
-                    all_features[:, 8:],
-                ]),
-                'All magnitudes': all_features[:, 7:],
+                    all_features[:, 5:n_astro_features]]),
+                'No CNN + no $w2 - w3$': numpy.hstack([
+                    all_features[:, :5],
+                    all_features[:, 6:n_astro_features]]),
             }
             assert n_astro_features == 7
 
@@ -93,7 +90,7 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
                 plt.figure(figsize=[11, 6])
                 vertical_scatter_ba(
                     results, crowdastro_h5['/wise/cdfs/norris_labels'].value,
-                    ylim=(0.5, 1.0), violin=True)
+                    ylim=(0.5, 1.0), violin=True, rotation='vertical')
                 plt.show()
 
 
