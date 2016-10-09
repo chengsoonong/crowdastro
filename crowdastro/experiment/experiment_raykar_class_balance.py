@@ -26,7 +26,7 @@ from .results import Results
 
 
 def main(results_h5_path, overwrite=False, plot=False, n_trials=5,
-         n_examples=1000, n_dim=5, n_labellers=10, seed=0):
+         n_examples=1000, n_dim=5, n_labellers=10, seed=0, flip=False):
     numpy.random.seed(seed)
     methods = [
         '4:1',
@@ -49,6 +49,8 @@ def main(results_h5_path, overwrite=False, plot=False, n_trials=5,
     for trial in range(n_trials):
         for mr_method, method in zip(mr_methods, methods):
             # Generate some toy data.
+            mr_method = (mr_method[0] / sum(mr_method),
+                         mr_method[1] / sum(mr_method))
             x, y = sklearn.datasets.make_classification(
                 n_samples=n_examples,
                 n_features=n_dim,
@@ -65,6 +67,14 @@ def main(results_h5_path, overwrite=False, plot=False, n_trials=5,
                 test_size=0.2)
             test_indices.sort()
             labels = crowd_label(y, crowd_alphas, crowd_betas)
+
+            if flip:
+                flipped_labels = numpy.zeros(labels.shape)
+                flipped_labels[labels == 0] = 1
+                flipped_labels = numpy.ma.MaskedArray(flipped_labels,
+                                                      mask=labels.mask)
+                labels = flipped_labels
+
             runners.raykar(results, method, trial, x, labels, test_indices,
                            overwrite=overwrite, downsample=False)
             model = results.get_model(method, trial)
@@ -109,6 +119,7 @@ if __name__ == '__main__':
     parser.add_argument('--trials', type=int, help='Number of trials to run',
                         default=5)
     parser.add_argument('--plot', action='store_true', help='Generate a plot')
+    parser.add_argument('--flip', action='store_true', help='Flip labels')
     args = parser.parse_args()
 
     if args.verbose:
@@ -117,4 +128,4 @@ if __name__ == '__main__':
         logging.root.setLevel(logging.INFO)
 
     main(args.results, overwrite=args.overwrite, plot=args.plot,
-         n_trials=args.trials)
+         n_trials=args.trials, flip=args.flip)
