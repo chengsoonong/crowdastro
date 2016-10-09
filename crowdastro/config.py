@@ -23,8 +23,10 @@ config['data_sources']['atlas_catalogue'] = os.path.normpath(
         os.path.join(os.getcwd(), config['data_sources']['atlas_catalogue']))
 config['data_sources']['swire_catalogue'] = os.path.normpath(
         os.path.join(os.getcwd(), config['data_sources']['swire_catalogue']))
-config['data_sources']['atlas_image'] = os.path.normpath(
-        os.path.join(os.getcwd(), config['data_sources']['atlas_image']))
+config['data_sources']['atlas_cdfs_image'] = os.path.normpath(
+        os.path.join(os.getcwd(), config['data_sources']['atlas_cdfs_image']))
+config['data_sources']['atlas_elais_image'] = os.path.normpath(
+        os.path.join(os.getcwd(), config['data_sources']['atlas_elais_image']))
 config['data_sources']['norris_coords'] = os.path.normpath(
         os.path.join(os.getcwd(), config['data_sources']['norris_coords']))
 

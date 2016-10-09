@@ -10,6 +10,7 @@ import matplotlib.ticker as ticker
 import numpy
 import scipy.misc
 import scipy.signal
+import skimage.exposure
 
 face = scipy.misc.face(gray=True)
 filter_ = numpy.array([[-1, 1, 0],
@@ -28,6 +29,8 @@ ax.get_yaxis().set_visible(False)
 
 # Filtered
 ax = fig.add_axes([0.55, 0.30, 0.40, 0.60], frame_on=False)
+p2, p98 = numpy.percentile(filtered, (2, 98))
+filtered = skimage.exposure.rescale_intensity(filtered, in_range=(p2, p98))
 ax.imshow(filtered, cmap='gray')
 ax.get_xaxis().set_visible(False)
 ax.get_yaxis().set_visible(False)
