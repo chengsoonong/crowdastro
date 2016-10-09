@@ -149,14 +149,14 @@ def violinplot(xs, ys, rotation='horizontal', points=100,
 
 
 def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), violin=False,
-                        minorticks=True, **kwargs):
+                        minorticks=False, **kwargs):
     """Plot a vertical scatter plot of balanced accuracies.
 
     results: Results object.
     targets: Target labels.
     ylim: (lower, upper) y axis.
     violin: Plot a violin plot instead. Default False.
-    minorticks: Use minor ticks. Default True.
+    minorticks: Use minor ticks. Default False.
     kwargs: Keyword arguments passed to vertical_scatter.
     """
     xs = sorted(results.method_idx, key=results.method_idx.get)
