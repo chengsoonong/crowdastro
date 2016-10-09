@@ -220,44 +220,48 @@
 
     To determine the effect of each set of features on classification
     performance, we performed a feature ablation experiment. We trained a
-    logistic regression classifier on the \citeauthor{norris06} label set,
-    holding out different features each time. The lower the resulting balanced
+    logistic regression classifier on the \citeauthor{norris06} label set, each
+    time using a different subset of features. The lower the resulting balanced
     accuracy, the more important the held out features. This was repeated ten
-    times with different $50\%$ subsets of the training set. The features we
-    chose to hold out were all features derived from magnitudes, all features
-    extracted by the CNN, the distance feature, and each magnitude feature
-    individually. These results are plotted in Figure \ref{fig:feature-ablation}
-    and the means and standard deviations of the balanced accuracies are tabled
-    in Table \ref{tab:feature-ablation}.
+    times with different $50\%$ subsets of the training set. When holding out
+    the WISE magnitude features, we also held out the CNN features, since we
+    found that the CNN features tended to dominate results. These results are
+    plotted in Figure \ref{fig:feature-ablation} and the means and standard
+    deviations of the balanced accuracies are tabled in Table
+    \ref{tab:feature-ablation}.
 
     \begin{figure}[!ht]
       \centering
       \includegraphics[width=\textwidth]{%
         images/experiments/feature_ablation.pdf}
       \caption{Balanced accuracy of logistic regression trained on the
-        \citeauthor{norris06} label set with different features removed. The
-        horizontal axis indicates which features were removed for the results
-        in that column.}
+        \citeauthor{norris06} label set with different subsets of features. The
+        horizontal axis indicates which features were used for the results in
+        that column.}
       \label{fig:feature-ablation}
     \end{figure}
 
     \begin{table}[!ht]
       \centering
       \begin{tabular}{r|c}
-        \textbf{Feature/s Removed} & \textbf{Mean Balanced Accuracy}\\\hline
-        None & $(88.74 \pm 0.78)\%$\\
-        All magnitudes & $(88.66 \pm 0.81)\%$\\
-        CNN & $(71.67 \pm 1.71)\%$\\
-        Distance & $(88.84 \pm 0.76)\%$\\
-        $w1$ & $(88.82 \pm 0.78)\%$\\
-        $w1 - w2$ & $(88.78 \pm 0.85)\%$\\
-        $w2$ & $(88.79 \pm 0.80)\%$\\
-        $w2 - w3$ & $(88.82 \pm 0.70)\%$\\
-        $w3$ & $(88.79 \pm 0.77)\%$\\
-        $w4$ & $(88.74 \pm 0.77)\%$
+        \textbf{Features} & \textbf{Mean Balanced Accuracy}\\\hline
+        No distance & $(88.82 \pm 0.70)\%$\\
+        All features & $(88.74 \pm 0.78)\%$\\
+        No magnitudes & $(88.73 \pm 0.83)\%$\\
+        CNN only & $(88.66 \pm 0.81)\%$\\
+        No CNN + no $w1 - w2$ & $(81.32 \pm 0.81)\%$\\
+        Distance only & $(79.01 \pm 0.58)\%$\\
+        No CNN & $(71.67 \pm 1.71)\%$\\
+        No CNN + no $w1$ & $(71.67 \pm 1.71)\%$\\
+        No CNN + no $w2$ & $(71.67 \pm 1.71)\%$\\
+        No CNN + no $w3$ & $(71.67 \pm 1.71)\%$\\
+        No CNN + no $w4$ & $(71.67 \pm 1.70)\%$\\
+        No CNN + no $w2 - w3$ & $(71.15 \pm 2.16)\%$\\
+        Magnitudes only & $(56.47 \pm 0.70)\%$\\
       \end{tabular}
       \caption{Balanced accuracy of logistic regression trained on the
-        \citeauthor{norris06} label set with different features removed.}
+        \citeauthor{norris06} label set with different subsets of features. The
+        rows are sorted from highest accuracy to lower.}
       \label{tab:feature-ablation}
     \end{table}
 
