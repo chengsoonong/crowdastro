@@ -302,13 +302,40 @@
         \subsection{Norris et al. Catalogue}
         \label{sec:norris}
 
+            \begin{itemize}
+                \item Norris provided a catalogue of cross-identifications
+                \item The catalogue is ``expert'' data, so sorted through by actual astronomers
+                \item The catalogue contains the names and locations of each component and matches them to the corresponding SWIRE objects
+                \item The catalogue also contains the flux associated with the SWIRE object
+                \item Estimated $9.02\%$ false cross-identifications
+            \end{itemize}
+
         \subsection{Fan et al. Catalogue}
         \label{sec:fan}
+
+            \begin{itemize}
+                \item Bayesian hypothesis testing to fit models to the ATLAS catalogue
+                \item Doesn't detect IR sources not in catalogue
+                \item Matches within 2'
+                \item Matched 564 radio objects identically to Norris, missed 31 Norris identified, and identified an additional 62
+            \end{itemize}
 
     \section{Radio Galaxy Zoo}
     \label{sec:radio-galaxy-zoo}
 
-        \todo{Rewrite this section.}
+        \begin{itemize}
+            \item The Norris catalogue is manual expert classifications, which scales terribly (especially for EMU)
+            \item The Fan catalogue is model-based, so might miss things that are unusual
+            \item Radio Galaxy Zoo is an attempt to generate a catalogue of cross-identifications for the ATLAS and FIRST surveys using crowdsourcing
+            \item This is an example of citizen science, see also Lintott et al. Galaxy Zoo
+            \item Aims to have non-experts classify radio objects \cite{norris16}
+            \item 20 classifications for complex objects, 5 for compact \cite{banfield15}
+            \item Launched in December 2013
+            \item Resulted in x cross-identifications of FIRST and ATLAS
+            \item Brief description of how it works
+            \item Citizen scientists also found one of the largest known WATs \cite{banfield16}
+            \item The plan is to use RGZ as a training set for next-generation cross-identification and classification algorithms
+        \end{itemize}
 
 %     Radio Galaxy Zoo volunteers are first asked to select combinations of radio
 %     objects that correspond to one radio source, and are then asked to select
