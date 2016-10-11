@@ -58,6 +58,11 @@ class QBCSampler(Sampler):
         index = self.disagreement.argmin()
         return index
 
+    def sample_indices(self, n):
+        """Finds indices of the top n most disagreed upon unlabelled points."""
+        indices = self.disagreement.argsort()
+        return indices[:n]
+
     def retrain(self):
         """Retrains the classifier."""
         super().retrain()

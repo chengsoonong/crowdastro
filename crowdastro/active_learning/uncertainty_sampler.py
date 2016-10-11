@@ -41,6 +41,11 @@ class ConfidenceUncertaintySampler(Sampler):
         index = self.uncertainties.argmax()
         return index
 
+    def sample_indicies(self, n):
+        """Finds indices of the n least certain unlabelled points."""
+        indices = self.uncertainties.argsort()
+        return indices[-n:]
+
     def retrain(self):
         """Retrains the classifier."""
         super().retrain()

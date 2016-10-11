@@ -10,6 +10,8 @@ The Australian National University
 import numpy
 import sklearn.metrics
 
+from crowdastro.crowd.util import balanced_accuracy
+
 
 class Sampler(object):
     """Pool-based active learning base class."""
@@ -32,6 +34,10 @@ class Sampler(object):
         """Finds index of the unlabelled point to sample."""
         raise NotImplementedError()
 
+    def sample_indices(self, n):
+        """Finds indices of the top n unlabelled points to sample."""
+        raise NotImplementedError()
+
     def add_label(self, index, label, retrain=True):
         """Adds a label from an oracle.
 
@@ -39,6 +45,17 @@ class Sampler(object):
         label: Label from the oracle.
         """
         self.labels[index] = label
+        if retrain:
+            self.retrain()
+
+    def add_labels(self, indices, labels, retrain=True):
+        """Adds labels from an oracle.
+
+        indices: Indices of data points to label.
+        labels: Labels from the oracle.
+        """
+        for index, label in zip(indices, labels):
+            self.add_label(index, label, retrain=False)
         if retrain:
             self.retrain()
 
@@ -59,3 +76,7 @@ class Sampler(object):
         return sklearn.metrics.log_loss(
             test_ts,
             self.classifier.predict(test_xs))
+
+    def ba(self, test_xs, test_ts):
+        """Finds balanced accuracy on test data."""
+        return balanced_accuracy(test_ts, self.classifier.predict(test_xs))

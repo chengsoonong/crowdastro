@@ -16,7 +16,7 @@ class RandomSampler(Sampler):
     """Pool-based learning with random sampling."""
 
     def sample_index(self):
-        """Finds index of the least certain unlabelled point."""
+        """Finds index of a random unlabelled point."""
         unlabelled = self.labels.mask.nonzero()[0]
 
         if len(unlabelled):
@@ -24,3 +24,17 @@ class RandomSampler(Sampler):
             return index
 
         return 0
+
+    def sample_indices(self, n):
+        """Finds indices of n random unlabelled points."""
+        indices = set()
+        unlabelled = self.labels.mask.nonzero()[0]
+
+        if len(unlabelled) < n:
+            return unlabelled
+
+        while len(indices) < n:
+            index = numpy.random.choice(unlabelled)
+            indices.add(index)
+
+        return sorted(indices)
