@@ -9,16 +9,16 @@ ax = fig.add_subplot(1, 1, 1, projection='mollweide')
 ax.set_xticklabels(['14h','16h','18h','20h','22h','0h','2h','4h','6h','8h','10h'])
 ax.grid(True, which='major')
 
-# EMU
-emu = SkyCoord(ra='-180', dec='-90', unit='deg')
-ax.add_patch(
-    patches.Rectangle(
-        (-numpy.pi, emu.dec.rad),
-        numpy.pi * 2,
-        120 / 180 * numpy.pi,
-        color='lightgreen',
-    )
-)
+# # EMU
+# emu = SkyCoord(ra='-180', dec='-90', unit='deg')
+# ax.add_patch(
+#     patches.Rectangle(
+#         (-numpy.pi, emu.dec.rad),
+#         numpy.pi * 2,
+#         120 / 180 * numpy.pi,
+#         color='lightgreen',
+#     )
+# )
 
 
 # SWIRE

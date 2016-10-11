@@ -1,34 +1,27 @@
 %!TEX root=thesis.tex
 
 \chapter{Radio Cross-identification}
-\label{cha:passive-learning}
-  % In this chapter I'll talk about a machine learning approach to the cross-identification problem (i.e. my pipeline).
+\label{cha:cross-identification}
 
-  In this chapter, I develop a machine learning approach to the radio cross-identification problem. First, I will discuss different ways to train and use a classifier for the task, in particular framing the cross-identification problem as an object localisation problem. Then, I will discuss the available training data and how I chose to process it. Finally, I will present results against a dataset of expert labels, and compare these results to those found by other methods.
+  In this chapter, we develop a machine learning approach to the radio cross-
+  identification problem. First, we discuss different ways to train and use
+  a classifier for the task, in particular framing the cross-identification
+  problem as an object localisation problem. We then discuss the available
+  training data and how we chose to process it. Finally, we present results
+  against a dataset of expert labels, and compare these results to those found
+  by other methods.
 
 \section{Formalism}
 \label{sec:cross-identification-formalism}
-  
-  \todo{Rewrite below into this section.}
 
-  \todo{Explain why we're ignoring the radio part of this problem.}
-
-  \subsection{Cross-identification as Object Localisation}
-  \label{sec:object-localisation}
-
-  \subsection{The Galaxy Classification Task}
-  \label{sec:galaxy-classification-task}
-
-% \section{Cross-identification as Binary Classification}
-% \label{sec:framing-as-classification}
-  
-  When we look at the sky with radio telescopes, we see the radio emissions from
-  the jets of AGNs. \todo{Add backlink.} Given an image of these radio
-  emissions, we want to locate the host galaxy containing the associated AGN. In
-  general, there may be multiple hosts associated with one radio object (such as
-  in Figure \ref{fig:two-hosts}), but we make the assumption that there is only
-  one. This is the same assumption made by Radio Galaxy Zoo \todo{cite:rgz-
-  analysis-github(?)} and greatly simplifies the problem.
+  We begin by restating the cross-identification problem (Section
+  \ref{sec:radio-cross-identification}). When we look at the sky with radio
+  telescopes, we see the radio emissions from the jets of AGNs. Given an image
+  of these radio emissions, and possibly other images in other wavelengths, we
+  want to locate the host galaxy containing the associated AGN. In general,
+  there may be multiple hosts associated with one radio object (such as in
+  Figure \ref{fig:two-hosts}), but we make the assumption that there is only
+  one. This greatly simplifies the problem.
 
   \begin{figure}[!ht]
     \centering
@@ -39,21 +32,33 @@
     \label{fig:two-hosts}
   \end{figure}
 
-  We can interpret cross-identification as an object localisation problem. As
-  input, we have an image of the radio sky, and we want to locate a host galaxy
-  in this image. A common way to find an object in an image is by using a
-  sliding window. A fixed-size image patch centred on each pixel is taken as a
-  feature representation of that pixel. This is then used as input to a
-  classification model which outputs a probability for each pixel, with higher
-  probabilities corresponding to higher likelihood of the object being located
-  at that pixel. The pixel with the highest rating is considered the location
-  of the object. This approach can be improved by intelligently selecting
-  candidate pixels and only testing these. For the cross-identification
-  problem, we can use galaxy locations as candidate pixels, with galaxies found
-  in infrared surveys such as WISE and SWIRE. Additionally, astronomical
-  measurements such as flux are included in these surveys and these may be
-  taken as additional features for each candidate pixel, giving more
-  information to the classifier.
+  \subsection{Cross-identification as Object Localisation}
+  \label{sec:object-localisation}
+
+    We can interpret cross-identification as an object localisation problem. As
+    input, we have an image of the radio sky, and we want to locate a host
+    galaxy in this image. A common way to find an object in an image is by using
+    a sliding window. A fixed-size image patch centred on each pixel is taken as
+    a representation of that pixel. This is then used as input to a
+    classification model which outputs a probability for each pixel, with higher
+    probabilities corresponding to higher likelihood of the object being located
+    at that pixel. The pixel with the highest probability is considered the
+    location of the object.
+
+    This may be slow depending on the size of the image. One way to improve upon
+    this approach is to first identify a small number of candidate locations,
+    and then only examine patches around these locations. For the cross-
+    identification problem, we can use galaxy locations as candidate pixels,
+    with galaxies found in infrared surveys such as WISE and SWIRE.
+    Additionally, astronomical measurements such as magnitude are included in
+    these surveys and these may be taken as additional features for each
+    candidate pixel, giving more information to the classifier.
+
+  \subsection{The Galaxy Classification Task}
+  \label{sec:galaxy-classification-task}
+
+% \section{Cross-identification as Binary Classification}
+% \label{sec:framing-as-classification}
 
   This approach can be formalised as follows. Consider a set $\mathcal X$ of
   candidate host galaxies, and a radio object $r$ that we want to assign a
@@ -261,7 +266,7 @@
       \end{tabular}
       \caption{Balanced accuracy of logistic regression trained on the
         \citeauthor{norris06} label set with different subsets of features. The
-        rows are sorted from highest accuracy to lower.}
+        rows are sorted from highest accuracy to lowest.}
       \label{tab:feature-ablation}
     \end{table}
 
@@ -306,59 +311,55 @@
 
   \todo{Compare majority vote and Raykar.}
 
-\section{Results}
+\section{Galaxy Classification Performance}
 \label{sec:rgz-results}
-  
-  \subsection{Classifying Galaxies}
 
-    \todo{Make this writing considerably less terrible.}
+  \todo{Make this writing considerably less terrible.}
 
-    The infrared objects were partitioned into a testing set and a training set
-    as follows. First, the radio objects were partitioned into a radio testing
-    set and a radio training set, with the radio testing set containing $452$
-    objects and the radio training set containing $1811$ objects. Infrared
-    objects were then added to the infrared testing set if they were within $1'$
-    of a radio object in the radio testing set, and added to the infrared
-    training set otherwise. This was done because infrared objects that were
-    close together had overlapping radio features, and thus random partitioning
-    would result in the training set containing many of the features found in
-    the testing set. The partitioning resulted in $5922$ objects in the testing
-    set and $18218$ objects in the training set.
+  The infrared objects were partitioned into a testing set and a training set
+  as follows. First, the radio objects were partitioned into a radio testing
+  set and a radio training set, with the radio testing set containing $452$
+  objects and the radio training set containing $1811$ objects. Infrared
+  objects were then added to the infrared testing set if they were within $1'$
+  of a radio object in the radio testing set, and added to the infrared
+  training set otherwise. This was done because infrared objects that were
+  close together had overlapping radio features, and thus random partitioning
+  would result in the training set containing many of the features found in
+  the testing set. The partitioning resulted in $5922$ objects in the testing
+  set and $18218$ objects in the training set.
 
-    For each infrared object, features and labels were generated as described in
-    Sections \ref{sec:features} and \ref{sec:consensuses}, respectively. Note
-    that the labels were sourced from the Radio Galaxy Zoo. A logistic
-    regression classifier was then trained on the training set using binary
-    cross-entropy loss, with loss of each data point weighted based on the
-    frequency of its label.
+  For each infrared object, features and labels were generated as described in
+  Sections \ref{sec:features} and \ref{sec:consensuses}, respectively. Note
+  that the labels were sourced from the Radio Galaxy Zoo. A logistic
+  regression classifier was then trained on the training set using binary
+  cross-entropy loss, with loss of each data point weighted based on the
+  frequency of its label.
 
-    The classifier was then used to classify the objects in the testing set. The
-    labels were compared to those found by \citet{norris06} as described in
-    Section \ref{sec:norris}, resulting in $80.14\%$ balanced accuracy.
-    \todo{This number is out of date.}
+  The classifier was then used to classify the objects in the testing set. The
+  labels were compared to those found by \citet{norris06} as described in
+  Section \ref{sec:norris}, resulting in $80.14\%$ balanced accuracy.
+  \todo{This number is out of date.}
 
-    \todo{ROC/precision--recall curves}
+  \todo{ROC/precision--recall curves}
 
-    \begin{figure}[!ht]
-      \centering
-      \includegraphics[width=\textwidth]{images/experiments/predictors.pdf}
-      \caption{Performance of logistic regression on the galaxy classification
-        task, trained on different sets of labels and tested on the galaxies
-        where \citeauthor{norris06} and \citeauthor{fan15} labels agree. LR($Y$)
-        indicates logistic regression trained on $Y$. RGZ-MV is the set of
-        majority vote labels from the Radio Galaxy Zoo. RGZ-Raw-MV is the
-        majority vote of all crowd labels and is included for comparison.}
-    \end{figure}
+  \begin{figure}[!ht]
+    \centering
+    \includegraphics[width=\textwidth]{images/experiments/predictors.pdf}
+    \caption{Performance of logistic regression on the galaxy classification
+      task, trained on different sets of labels and tested on the galaxies
+      where \citeauthor{norris06} and \citeauthor{fan15} labels agree. LR($Y$)
+      indicates logistic regression trained on $Y$. RGZ-MV is the set of
+      majority vote labels from the Radio Galaxy Zoo. RGZ-Raw-MV is the
+      majority vote of all crowd labels and is included for comparison.}
+  \end{figure}
 
-  \subsection{Number of Training Examples}
+\section{Number of Training Examples}
 
-    \begin{figure}[!ht]
-      \centering
-      \includegraphics[width=\textwidth]{images/experiments/passive.pdf}
-      \caption{Performance of logistic regression on the galaxy classification
-        task, trained on different amounts of the \citeauthor{norris06} label
-        set.}
-    \end{figure}
+  \begin{figure}[!ht]
+    \centering
+    \includegraphics[width=\textwidth]{images/experiments/passive.pdf}
+    \caption{Performance of logistic regression on the galaxy classification
+      task, trained on different amounts of the \citeauthor{norris06} label
+      set.}
+  \end{figure}
 
-\section{Discussion}
-\label{sec:rgz-discussion}
