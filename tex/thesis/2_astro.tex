@@ -337,28 +337,100 @@
             \item The plan is to use RGZ as a training set for next-generation cross-identification and classification algorithms
         \end{itemize}
 
-%     Radio Galaxy Zoo volunteers are first asked to select combinations of radio
-%     objects that correspond to one radio source, and are then asked to select
-%     the location of the corresponding host galaxy \citep{banfield15}. Each
-%     radio subject is labelled by multiple volunteers. These labels are then
-%     collated as follows. First, the most common combination of radio objects is
-%     selected, and all labels that have a different combination are discarded.
-%     This radio combination is called the consensus radio combination. Then, the
-%     density of host location labels is estimated using Gaussian kernel density
-%     estimation (KDE), and the highest density location is selected. This is
-%     called the consensus host location. The consensus host location is then
-%     matched to the nearest infrared object.
+    The \citeauthor{norris06} catalogue is highly accurate, but manual expert
+    cross-identification of radio surveys is impractical for large surveys. The
+    CDFS field examined by \citeauthor{norris06} only contains around 2400 radio
+    objects, which is small even compared to existing surveys --- FIRST
+    \citep{becker95} found 946 000 radio sources, and EMU is expected to find 70
+    million. Automated algorithms such as \citeauthor{fan15} scale better, but
+    most such algorithms are still in their infancy \citeauthor{norris16} and
+    many are model-based, potentially missing many sources that do not fit the
+    models. The Radio Galaxy Zoo project \citep{banfield15} provides a different
+    approach: Allow many non-expert volunteers to manually cross-identify radio
+    sources with their infrared host galaxies.
+
+    Radio Galaxy Zoo is a website where volunteers are presented with a radio
+    image from ATLAS or FIRST and a corresponding infrared image from SWIRE or
+    WISE, and are tasked with matching the radio source with its host galaxy, as
+    well as identifying which radio objects are associated with the same host
+    galaxy (e.g., two radio objects may represent two jets of one AGN). While
+    both the cross-identification task and the radio object association task are
+    astronomically interesting, we focus only on the cross-identification task
+    for this thesis. An example of the workflow presented to volunteers is shown
+    in Figure \ref{fig:rgz-interface}.
+
+    \begin{figure}[!ht]
+        \centering
+        \begin{subfigure}[t]{0.3\textwidth}
+            \centering
+            \includegraphics[height=2in]{images/rgz_radio.png}
+            % These empty captions give us something to reference later.
+            \caption{}
+            \label{fig:rgz-interface-a}
+        \end{subfigure}%
+        ~
+        \begin{subfigure}[t]{0.3\textwidth}
+            \centering
+            \includegraphics[height=2in]{images/rgz_ir.png}
+            \caption{}
+            \label{fig:rgz-interface-b}
+        \end{subfigure}%
+        ~
+        \begin{subfigure}[t]{0.3\textwidth}
+            \centering
+            \includegraphics[height=2in]{images/rgz_done.png}
+            \caption{}
+            \label{fig:rgz-interface-c}
+        \end{subfigure}
+        \caption{Radio Galaxy Zoo volunteer workflow.\\\ref{fig:rgz-interface-a}
+          Volunteers are first asked to identify associated radio objects.
+          \\\ref{fig:rgz-interface-b} Volunteers then cross-identify the radio
+          objects with the corresponding host galaxy.\\\ref{fig:rgz-interface-c}
+          This is repeated for all radio objects in the image.}
+        \label{fig:rgz-interface}
+    \end{figure}
+
+    The Radio Galaxy Zoo dataset contains around 177 000 images from FIRST, and
+    2400 images of the CDFS field from ATLAS. The ATLAS images of the ELAIS-S1
+    field are not included, and may be used as a testing set for cross-
+    identification algorithms trained on the Radio Galaxy Zoo in the future. Each image is a 2 arcminute-wide square.
+
+    To help reduce noise in the labels, each compact radio object is shown to 5
+    volunteers, and each complex radio object is shown to 20 volunteers.
+
+    The labels are stored in a MongoDB database as a collection of associated
+    radio objects and the corresponding pixel locations that volunteers clicked
+    on, as well as the right ascension and declination of the radio object. The
+    radio and infrared image patches associated with each radio object are also
+    included alongside the database.
+
+    In this thesis, we will train machine learning algorithms to perform the
+    cross-identification task trained on ATLAS-CDFS labels from the Radio Galaxy
+    Zoo.
+
+%     Radio Galaxy Zoo volunteers are first asked to select combinations of
+%     radio objects that correspond to one radio source, and are then asked to
+%     select the location of the corresponding host galaxy \citep{banfield15}.
+%     Each radio subject is labelled by multiple volunteers. These labels are
+%     then collated as follows. First, the most common combination of radio
+%     objects is selected, and all labels that have a different combination are
+%     discarded. This radio combination is called the consensus radio
+%     combination. Then, the density of host location labels is estimated using
+%     Gaussian kernel density estimation (KDE), and the highest density location
+%     is selected. This is called the consensus host location. The consensus
+%     host location is then matched to the nearest infrared object.
 
 %     An alternative way to find the consensus host location is by using a
 %     clustering algorithm such as $k$-means. Host locations are clustered and
 %     the cluster containing the most locations is taken to represent the
 %     consensus; the consensus location is then the mean of the cluster. This is
 %     faster and more robust than using KDE, but requires $k$ to be known. $k$
-%     can be estimated using an algorithm such as PG-means \citep{hamerly07} or by
-%     choosing $k$ to minimise some information criterion \todo{cite:sklearn}.
-%     The consensus labels for the data associated with this thesis were found in
-%     this way, fitting a Gaussian mixture model to the host locations with the
-%     number of Gaussians chosen to minimise the Bayesian information criterion.
+%     can be estimated using an algorithm such as PG-means \citep{hamerly07} or
+%     by choosing $k$ to minimise some information criterion
+%     \todo{cite:sklearn}. The consensus labels for the data associated with
+%     this thesis were found in this way, fitting a Gaussian mixture model to
+%     the host locations with the number of Gaussians chosen to minimise the
+%     Bayesian information criterion.
 
 %     Repeated volunteer labelling helps to reduce noise in the labels. This is
 %     necessary as the volunteers are not experts, and may incorrectly label the
