@@ -64,7 +64,7 @@ def make_train_indices(test_indices, n_examples, downsample=False, labels=None):
 
 
 def lr(results, method_name, split_id, features, targets, test_indices, C=1.0,
-       overwrite=False):
+       overwrite=False, n_train=None, selection='passive'):
     """Run logistic regression and store results.
 
     results: Results object.
@@ -76,15 +76,22 @@ def lr(results, method_name, split_id, features, targets, test_indices, C=1.0,
     C: Regularisation parameter. Default 1.0. Higher values mean less
         regularisation.
     overwrite: Whether to overwrite existing results (default False).
+    n_train: Number of training examples. Default as many as possible.
+    selection: How to select training examples. Default 'passive'.
     """
     assert max(test_indices) < features.shape[0]
     assert min(test_indices) >= 0
 
-    train_indices = make_train_indices(test_indices, features.shape[0])
-
     if results.has_run(method_name, split_id) and not overwrite:
         logging.info('Skipping trial {}:{}.'.format(method_name, split_id))
         return
+
+    train_indices = make_train_indices(test_indices, features.shape[0])
+    if n_train is not None and n_train != len(train_indices):
+        assert n_train <= len(train_indices)
+        train_indices, _ = sklearn.cross_validation.train_test_split(
+            train_indices, train_size=n_train, stratify=targets[train_indices])
+        train_indices.sort()
 
     lr = sklearn.linear_model.LogisticRegression(class_weight='balanced', C=C)
     lr.fit(features[train_indices], targets[train_indices])

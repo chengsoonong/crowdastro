@@ -61,8 +61,10 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
         if plot:
             matplotlib.rcParams['font.family'] = 'serif'
             matplotlib.rcParams['font.serif'] = ['Palatino Linotype']
-            vertical_scatter_ba(results,
-                    crowdastro_h5['/wise/cdfs/norris_labels'].value)
+            vertical_scatter_ba(
+                results,
+                crowdastro_h5['/wise/cdfs/norris_labels'].value,
+                violin=True)
             plt.show()
 
 

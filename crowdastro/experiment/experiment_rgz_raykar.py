@@ -6,8 +6,8 @@ The Australian National University
 """
 
 import argparse
-import collections
 import logging
+import time
 
 import h5py
 import matplotlib
@@ -162,9 +162,12 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
                 features = all_features
                 if method.startswith('Raykar'):
                     runner = runners.raykar
+                    then = time.time()
                     runner(results, method, split_id, features,
                            targets[method], list(test_set),
                            overwrite=overwrite, n_restarts=1)
+                    now = time.time()
+                    logging.info('Raykar took {} s'.format(now - then))
                     model = results.get_model(method, split_id)
                     rc = RaykarClassifier.unserialise(model)
                     logging.info('{} alpha: {}'.format(method, rc.a_))
