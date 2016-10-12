@@ -104,7 +104,7 @@ def plot_classifications_row(atlas_vector, ir_matrix, classifier_labels,
 
 
 def vertical_scatter(xs, ys, style='bx', rotation='horizontal',
-                     line=False, x_tick_offset=0):
+                     line=False, x_tick_offset=0, numeric_x=False):
     """Plots a vertical scatter plot.
 
     xs: List of x labels.
@@ -113,17 +113,27 @@ def vertical_scatter(xs, ys, style='bx', rotation='horizontal',
     rotation: x label rotation. Default 'horizontal'.
     line: Draw lines between corresponding points. Default False.
     x_tick_offset: How far to offset the x tick labels. Default 0.
+    numeric_x: Whether the x labels should be treated as numeric. Default False.
     """
-    for x in range(len(xs)):
-        plt.plot([x] * len(ys[x]), ys[x], style)
-    if line:
-        assert all(len(y) == len(ys[0]) for y in ys)
-        ys_t = list(zip(*ys))
-        for y in range(len(ys[0])):
-            plt.plot(range(len(xs)), ys_t[y])
-    plt.xticks([i + x_tick_offset for i in range(len(xs))], xs,
-               rotation=rotation)
-    plt.xlim((-0.5, len(xs) - 0.5))  # Adds a little buffer.
+    if not numeric_x:
+        for x in range(len(xs)):
+            plt.plot([x] * len(ys[x]), ys[x], style)
+        if line:
+            assert all(len(y) == len(ys[0]) for y in ys)
+            ys_t = list(zip(*ys))
+            for y in range(len(ys[0])):
+                plt.plot(range(len(xs)), ys_t[y])
+        plt.xticks([i + x_tick_offset for i in range(len(xs))], xs,
+                   rotation=rotation)
+        plt.xlim((-0.5, len(xs) - 0.5))  # Adds a little buffer.
+    else:
+        for xi, x in enumerate(xs):
+            plt.plot([float(x)] * len(ys[xi]), ys[xi], style)
+        if line:
+            assert all(len(y) == len(ys[0]) for y in ys)
+            ys_t = list(zip(*ys))
+            for y in range(len(ys[0])):
+                plt.plot(xs, ys_t[y])
 
 
 def violinplot(xs, ys, rotation='horizontal', points=100,
