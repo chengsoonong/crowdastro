@@ -194,7 +194,10 @@
     \section{Radio Surveys}
     \label{sec:radio-surveys}
 
-        \todo{Introduce surveys.}
+        A \emph{survey} is an image of the sky made with repeated observations
+        in specific wavelengths, aiming to comprehensively cover some large area
+        of the sky. In this section we look at EMU and ATLAS, two surveys in
+        radio wavelengths that are relevant to this thesis.
 
         \begin{figure}[!ht]
             \centering
@@ -216,24 +219,35 @@
             the sky, but to a depth of $0.015$ mJy with an angular resolution of
             $1.6''$. The Evolutionary Map of the Universe (EMU) is an upcoming
             deep radio survey that aims to provide both deep and wide coverage
-            of the radio sky \citep{norris11}. EMU will be sensitive to objects
-            to around $0.015$ mJy with an angular resolution of around $10''$,
-            and cover the entire southern sky as far north as $30^\circ$. The
-            survey is expected to find huge numbers of radio objects --- while
-            ATLAS (Section \ref{sec:atlas}) has detected around 4000 radio
-            objects, EMU is expected to find \emph{70 million}.
+            of the radio sky at 1.3 GHz frequency \citep{norris11}. EMU will be
+            sensitive to objects to around $0.015$ mJy with an angular
+            resolution of around $10''$, and cover the entire southern sky as
+            far north as $30^\circ$. The survey is expected to find huge numbers
+            of radio objects --- while ATLAS (Section \ref{sec:atlas}) has
+            detected around 4000 radio objects, EMU is expected to find \emph{70
+            million}.
+
+            EMU aims to fulfil a number of scientific goals. These include
+            \begin{itemize}
+                \item investigating the evolution of galaxies and supermassive black holes,
+                \item exploring the large-scale structure and cosmology of the universe,
+                \item developing a catalogue of radio objects in the southern sky,
+                \item looking for never-before-seen astronomical objects, and
+                \item testing strategies for dealing with data from the upcoming Square Kilometre Array (SKA) telescope.
+            \end{itemize}
 
             Such large numbers of radio objects make analysis of the data
             considerably more difficult than analysis of existing surveys has
-            been.
-
-            \begin{itemize}
-                \item We need to use machine learning to do things like cross-
-                    identification, because the dataset is \emph{really big}
-                \item EMU might find lots of new things
-                \item ATLAS is a pilot survey for EMU
-                \item Scientific purpose (Norris has a section on this)
-            \end{itemize}
+            been. Analysis of EMU is far too large to be done by hand, and as
+            such will require algorithms to process the data. With such large
+            numbers of new objects, it is likely that many objects will not fit
+            existing models, meaning that model-based approaches to data
+            processing may be ineffective. It is this problem that motivates the
+            development of new, machine-learned algorithms for processing
+            astronomical data at these large scales. While the EMU survey data
+            is not yet released, development of such algorithms can begin by
+            looking at other datasets with similar sensitivity and resolution,
+            such as ATLAS (Section \ref{sec:atlas}).
 
         \subsection{ATLAS: The Australia Telescope Large Area Survey}
         \label{sec:atlas}
