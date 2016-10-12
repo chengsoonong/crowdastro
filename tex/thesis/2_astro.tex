@@ -6,26 +6,22 @@
     sky in different wavelengths, with different wavelengths carrying different
     physical meanings. Infrared surveys detect star formation and dust in
     distant galaxies, and radio surveys detect massive objects called active
-    galactic nuclei. In this section, I introduce the physics of what we see
-    when we look at the sky in these wavelengths, as well as introducing
-    specific radio and infrared surveys relevant to this thesis. I will also
-    discuss the motivation behind cross-identifying active galactic nuclei with
-    their host galaxies, as well as the inherent difficulty in doing so, and
-    hence provide the motivation behind this thesis.
-
-        % \todo{Talk about how black holes are predicted by GR.}
-
-        %     More information on black holes and general relativity can be found in \citet{wald10}.
-
-        % \todo{Talk about how we can observe black holes?}
+    galactic nuclei. In this section, we describe what we see when we look at
+    the sky in these wavelengths, as well as introducing specific radio and
+    infrared surveys relevant to this thesis. We also discuss the motivation
+    behind cross-identifying active galactic nuclei with their host galaxies, as
+    well as the inherent difficulty in doing so, and hence provide the
+    motivation behind this thesis.
 
     \section{Radio Active Galactic Nuclei}
     \label{sec:agns}
 
         \begin{figure}[!ht]
             \centering
-            \includegraphics[width=0.8\textwidth]{images/accretion_disk_artist_impression.jpg}
-            \caption{An artist's impression of the accretion disk of an active galactic nucleus. \emph{Image: NASA/JPL-Caltech}}
+            \includegraphics[width=0.8\textwidth]
+                {images/accretion_disk_artist_impression.jpg}
+            \caption{An artist's impression of the accretion disk of an active
+                galactic nucleus. \emph{Image: NASA/JPL-Caltech}}
             \label{fig:accretion-disk}
         \end{figure}
 
@@ -39,11 +35,12 @@
         entire galaxy emits \citep{begelman84}. AGNs are found throughout the
         universe: The closest known AGN is Centaurus A (shown in Figure
         \ref{fig:centaurus-a}), with $z \approx 0.0018$, and AGNs have been
-        detected up to redshifts of $z \approx 7$ \todo{citation needed}.
+        detected up to redshifts of $z \approx 7$ \citeme.
 
         \begin{figure}[!ht]
             \centering
-            \includegraphics[width=0.5\textwidth]{images/ESO_Centaurus_A_LABOCA.jpg}
+            \includegraphics[width=0.5\textwidth]
+                {images/ESO_Centaurus_A_LABOCA.jpg}
             \caption{Centaurus A, a relatively close radio active galactic
                 nucleus. \emph{Image: ESO/WFI (Optical); MPIfR/ESO/APEX/A.Weiss
                 et al. (Submillimetre); NASA/CXC/CfA/R.Kraft et al. (X-ray)}}
@@ -52,10 +49,9 @@
 
         AGNs produce \emph{jets} from their accretion disk. Jets are long, thin
         streams of matter such as the one shown in Figure \ref{fig:m87}. These
-        jets can be very long, with ``giant'' AGNs emitting jets up to 1 Mpc in
-        length \todo{citation needed --- maybe \citet{banfield16}?}. The process
-        through which jets are emitted is currently unknown \todo{citation
-        needed}.        %--- for example, the jet in Figure \ref{fig:m87} is $1.5$ kpc in length \citep{rees87}.
+        jets can be very long, with ``giant'' AGNs emitting jets nearly 1 Mpc in
+        length \citep{saripalli05}. The process through which jets are emitted
+        is currently unknown \citeme.
 
         \begin{figure}[!ht]
             \centering
@@ -67,16 +63,21 @@
 
         Electrons in jets can produce \emph{synchrotron radiation}, a form of
         radiation emitted by charged particles as they accelerate at
-        relativistic speeds in a magnetic field \todo{citation needed}. This
+        relativistic speeds in a magnetic field \citeme. This
         radiation is emitted in radio wavelengths, and so AGNs emitting this
         kind of radiation are called \emph{radio AGNs}. As radio AGNs are the
         focus of this thesis, from this point on ``AGN'' will refer only to
         radio AGNs.
 
-        To understand these AGNs and their host galaxies, they must be matched
-        to each other using the limited information we can gain from radio
-        surveys. We discuss this in Section
-        \ref{sec:radio-cross-identification}.
+        To fully understand these objects, astronomers need data from more than
+        just radio surveys. Combining observations of objects in multiple
+        wavelengths is thus a common problem in astronomy, and is called
+        \emph{cross-identification} \citep{fan15}. For point sources of light,
+        this can be straightforward --- the coordinates of each source on the
+        sky are well-known and can often be immediately matched throughout
+        surveys --- but as we can only observe AGNs by observing their jets,
+        AGNs are effectively not point sources. We discuss this in detail in
+        Section \ref{sec:radio-cross-identification}.
 
     \section{Astronomical Observations}
     \label{sec:astronomical-observations}
@@ -291,10 +292,15 @@
         \subsection{Motivation}
         \label{sec:cross-identification-motivation}
 
+        The main goal of cross-
+        identifying AGNs is to better understand the relationship between AGNs
+        and star-forming activity in their host galaxies \citep{norris06}.
+
         While we cannot observe the black holes of AGNs directly, we can observe
         the radio emissions from their jets. These could then be matched to the
         galaxies hosting the black holes, allowing us to learn more about the
-        galaxy, the black hole, and the surrounding environment. These host galaxies are not visible in radio wavelengths, 
+        galaxy, the black hole, and the surrounding environment. These host
+        galaxies are not visible in radio wavelengths,
 
         \subsection{Norris et al. Catalogue}
         \label{sec:norris}
