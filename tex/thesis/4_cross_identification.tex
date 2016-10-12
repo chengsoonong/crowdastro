@@ -121,10 +121,19 @@
   \subsection{Infrared Features}
   \label{sec:ir-features}
 
-    The WISE catalogue (Section \ref{sec:wise}) contains magnitude information
-    for each object. There are four such magnitudes --- $w1$, $w2$, $w3$, and
-    $w4$ --- each representing the amount of light emitted by the object in a
-    different range of wavelengths.
+    As described in Section \ref{sec:cross-identification-formalism}, we need
+    candidate host galaxies from an infrared catalogue. We have two choices here
+    --- the SWIRE catalogue (Section \ref{sec:swire}) and the WISE catalogue
+    (Section \ref{sec:wise}). SWIRE has higher resolution and sensitivity, and
+    thus would give more accurate galaxies, but it does not cover the whole sky.
+    WISE is lower resolution and less sensitive, but is the survey that will be
+    used to cross-identify EMU (Section \ref{sec:emu}) sources when they are
+    available. Here, we describe our choice of features for both.
+
+    The WISE catalogue contains magnitude information for each object. There are
+    four such magnitudes --- $w1$, $w2$, $w3$, and $w4$ --- each representing
+    the amount of light emitted by the object in a different range of
+    wavelengths.
 
     We chose to use all four magnitudes as features. Since the features are
     magnitudes, they are on a logarithmic scale, and we found that in practice
@@ -163,7 +172,14 @@
     infrared images on classification performance, but this is out of the scope
     of this thesis.
 
-    \todo{Discuss SWIRE features.}
+    SWIRE also contains colour information, but unlike WISE, the information is
+    in the form of fluxes instead of magnitudes. This means that the flux
+    information in the catalogue can be used as features directly. The ratios
+    can also be used --- $3.6\ \mu\text{Jy} / 4.5\ \mu\text{Jy}$ and $4.5\
+    \mu\text{Jy} / 5.8\ \mu\text{Jy}$ are the SWIRE equivalents of $w1 - w2$ and
+    $w2 - w3$. Since SWIRE is higher resolution than WISE, the
+    infrared images may contain more useful information and thus be useful for
+    features, but this was not explored in this thesis.
 
     % The SWIRE catalogue (Section \ref{sec:swire}) also contains colour
     % information for each contained object, but only fluxes rather than
@@ -289,6 +305,11 @@
   labels from \citet{fan15}. I then computed the balanced accuracy for each
   classifier. Finally, I repeated the experiment for random forests.
 
+  \begin{itemize}
+    \item LR used L2 regularisation with C = 1 strength
+    \item RF used sqrt(features)
+  \end{itemize}
+
   To generate the test sets, I first selected at random half of all ATLAS
   objects. I then added all WISE objects within $1'$ of a selected ATLAS object
   to the test set. This was repeated for each test set. The motivation for first
@@ -309,7 +330,26 @@
   both variants of the \citeauthor{raykar10} algorithm and majority vote on the
   galaxy classification task.
 
-  \todo{Compare majority vote and Raykar.}
+  One key problem with the use of the \citeauthor{raykar10} algorithm is that it
+  is very slow with large numbers of labellers. To help mitigate this problem,
+  we tested the algorithm on a subset of labellers, chosen by three different
+  measures: the 10 labellers with the most labels, the 10 labellers with the
+  highest balanced accuracy assessed against the \citeauthor{norris06} labels,
+  and the 10 labellers with the highest balanced accuracy assessed against the
+  majority vote of all labellers. While in practice on datasets such as EMU or
+  FIRST there would be no equivalent to the \citeauthor{norris06} labels, we can
+  treat this test as a ``best-case'' method. For each subset of labellers, the
+  \citeauthor{raykar10} algorithm was tested against logistic regression trained
+  on the majority vote of just these labellers. The results are shown in Figure
+  \ref{fig:rgz-raykar}.
+
+  \begin{figure}[!ht]
+    \centering
+    \includegraphics[width=\textwidth]{images/experiments/rgz_raykar}
+    \caption{Comparison of logistic regression and \citeauthor{raykar10} on the
+      galaxy classification task with different numbers of labellers.}
+    \label{fig:rgz-raykar}
+  \end{figure}
 
 \section{Galaxy Classification Performance}
 \label{sec:rgz-results}
@@ -363,3 +403,4 @@
       set.}
   \end{figure}
 
+  \todo{Discuss results}
