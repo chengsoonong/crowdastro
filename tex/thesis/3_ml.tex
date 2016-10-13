@@ -610,7 +610,11 @@ combat label noise from crowds.
         majority of labellers are not correct, which may be due to intrinsic
         difficulty or malicious labelling, or where there is no clear majority.
 
-        \todo{Discuss weighted majority vote.}
+        One simple improvement to majority vote is to weight labels by the
+        accuracy of the associated labeller, computing these accuracies based on
+        some known groundtruth for a subset of the data. However, this requires
+        access to the groundtruth for a subset of data, which is not available
+        in general.
 
     \subsection{Raykar et al. Model}
     \label{sec:raykar}
@@ -618,9 +622,7 @@ combat label noise from crowds.
         One way to learn from crowdsourced labels when no groundtruth is
         available is to jointly model both the reliability of each labeller (the
         \emph{labeller model}) and the groundtruth itself (the
-        \emph{classification model}).
-
-        \citet{raykar10} proposed such a joint model, which we describe here.
+        \emph{classification model}). \citet{raykar10} propose such a joint model, which we describe here.
 
         The accuracy of the $t$th labeller is modelled by the sensitivity
         $\alpha_t$ and the specificity $\beta_t$, as described in Section
@@ -821,20 +823,21 @@ combat label noise from crowds.
     \subsection{Yan et al. Model}
     \label{sec:yan}
 
-        \todo{Clear this up with respect to the above examples.}
-
-        \citet{yan10} propose modelling the $t$th labeller by a Bernoulli
-        distribution of a data-dependent function $\eta_t(\vec x)$, parametrised
-        as a logistic regression function $\eta_t(\vec x) = \sigma(\vec
-        \omega_t^T \vec x + \gamma_t)$. The labeller model is thus
+        A similar approach is described by \citet{yan10}, again jointly learning
+        the groundtruth and labeller models. Unlike \citeauthor{raykar10}, the
+        \citeauthor{yan10} labeller model is data-dependent. The accuracy of the
+        $t$th labeller is modelled by a Bernoulli distribution of $\eta_t(\vec
+        x)$, parametrised as a logistic regression function $\eta_t(\vec x) =
+        \sigma(\vec \omega_t^T \vec x + \gamma_t)$. The labeller model is thus
         \begin{equation*}
-            p(y_t \mid \vec x, z, \vec \omega_t, \gamma_t) = \eta_t(\vec x)^{1 - |y_t - z|} (1 - \eta_t(\vec x))^{|y_t - z|}.
+            p(y_t \mid \vec x, z, \vec \omega_t, \gamma_t) =
+                \eta_t(\vec x)^{1 - |y_t - z|} (1 - \eta_t(\vec x))^{|y_t - z|}.
         \end{equation*}
-        For ease of notation, let $\Omega = (\vec \omega_1^T, \dots, \vec
-        \omega_T^T)$ and let $\vec \gamma = (\gamma_1, \dots, \gamma_T)$. This
-        model can be obtained from the \citeauthor{raykar10} model by requiring
-        $\alpha_t = \beta_t = \eta_t(\vec x)$ and allowing these parameters be
-        data-dependent.
+        For ease of notation, let $\Omega = (\vec \omega_1^T, \dots,
+        \vec \omega_T^T)$ and let $\vec \gamma = (\gamma_1, \dots, \gamma_T)$.
+        This model can be obtained from the \citeauthor{raykar10} model by
+        requiring $\alpha_t = \beta_t = \eta_t(\vec x)$ and allowing these
+        parameters be data-dependent.
 
         As with \citeauthor{raykar10}, the classification model can be any
         classifier and \citeauthor{yan10} choose to use logistic regression
@@ -844,21 +847,25 @@ combat label noise from crowds.
         examples are independently sampled and that the labellers are
         independent, the likelihood is given by
         \begin{align*}
-            p(\mathcal D \mid \vec \theta) &= \prod_{i = 1}^N \prod_{t = 1}^T
-            p(y_{t, i} \mid \vec x_i, \vec w, \Omega, \vec \gamma)\\ &= \prod_{i
-            = 1}^N \prod_{t = 1}^T \sum_{z = 0}^1 p(y_t \mid \vec x_i, z, \vec
-            \omega_t, \gamma_t) p(z \mid \vec x_i, \vec w).
+            p(\mathcal D \mid \vec \theta)
+                &= \prod_{i = 1}^N \prod_{t = 1}^T
+                    p(y_{t, i} \mid \vec x_i, \vec w, \Omega, \vec \gamma)\\
+                &= \prod_{i = 1}^N \prod_{t = 1}^T \sum_{z = 0}^1
+                    p(y_t \mid \vec x_i, z, \vec \omega_t, \gamma_t)
+                    p(z \mid \vec x_i, \vec w).
         \end{align*}
         The expectation steps requires us to compute
         \[
-            \mu_i \propto \prod_{t = 1}^{T} p(y_{t, i} \mid \vec x_i, z_i = 1,
-            \vec \omega_t, \gamma_t) p(z_i = 1 \mid \vec x_i, \vec w).
+            \mu_i \propto \prod_{t = 1}^{T}
+                p(y_{t, i} \mid \vec x_i, z_i = 1, \vec \omega_t, \gamma_t)
+                p(z_i = 1 \mid \vec x_i, \vec w).
         \]
         The maximisation step requires us to maximise
         \begin{equation*}
-            \sum_{i = 1}^N \sum_{t = 1}^T \sum_{z_i = 0}^1 p(z_i \mid \vec x_i,
-            \vec w) (\log p(y_{t, i} \mid \vec x_i, z, \vec \omega_t, \gamma_t)
-            + \log p(z \mid \vec x_i, \vec w))
+            \sum_{i = 1}^N \sum_{t = 1}^T \sum_{z_i = 0}^1
+                p(z_i \mid \vec x_i, \vec w) (
+                    \log p(y_{t, i} \mid \vec x_i, z, \vec \omega_t, \gamma_t) +
+                    \log p(z \mid \vec x_i, \vec w))
         \end{equation*}
         with respect to $\vec w, \Omega,$ and $\vec \gamma$, where $p(z_i \mid
         \vec x_i, \vec w)$ is fixed to use the previous value of $\vec w$.
