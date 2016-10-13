@@ -556,19 +556,26 @@ combat label noise from crowds.
             \label{alg:simulated-crowd}
         \end{algorithm}
 
-\section{Aggregating Crowd Labels}
+\section{Utilising Crowd Labels}
 \label{sec:crowd-labels}
-
-    \todo{Introduce}
 
     % There's kind of two things going on here - using multiple labels, and
     % using labels where the groundtruth doesn't exist. I should write about
     % that.
 
-    In crowd learning scenarios, it is common to have multiple labels for a
-    data point with no known groundtruth.
+    A common method to combat label noise in crowd learning scenarios is to
+    request multiple labels from the crowd for each data point. There is
+    theoretical basis for such redundancy, with \citet{sheng08} showing that
+    repeated labelling may improve label and model quality, and existing citizen
+    science projects such as Galaxy Zoo \citep{lintott08} and Radio Galaxy Zoo
+    \citep{banfield15} already include high levels of redundancy in their data
+    collection.
 
-    \todo{extend}
+    This raises the question of how to make use of multiple labels to train
+    classification models. In this section, we look at some methods that
+    directly learn a model from multiple noisy labels, as well as some methods
+    of aggregating the labels to obtain individual labels with (ideally) lower
+    noise.
 
     \subsection{Using Raw Labels}
     \label{sec:raw-labels}
