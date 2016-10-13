@@ -564,12 +564,15 @@ combat label noise from crowds.
     % that.
 
     A common method to combat label noise in crowd learning scenarios is to
-    request multiple labels from the crowd for each data point. There is
+    request multiple labels from the crowd for each data point.  There is some
     theoretical basis for such redundancy, with \citet{sheng08} showing that
-    repeated labelling may improve label and model quality, and existing citizen
-    science projects such as Galaxy Zoo \citep{lintott08} and Radio Galaxy Zoo
-    \citep{banfield15} already include high levels of redundancy in their data
-    collection.
+    repeated labelling may improve label and model quality, though \citet{lin14}
+    show that this is not always the case and results depend on the level and
+    kind of label noise.
+
+    Nevertheless, this approach is used in existing citizen science projects
+    such as Galaxy Zoo \citep{lintott08} and Radio Galaxy Zoo
+    \citep{banfield15}, both of which request 20 crowd labels for each instance.
 
     This raises the question of how to make use of multiple labels to train
     classification models. In this section, we look at some methods that
