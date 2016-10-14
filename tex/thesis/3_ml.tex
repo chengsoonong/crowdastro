@@ -856,7 +856,7 @@ combat label noise from crowds.
                     p(y_t \mid \vec x_i, z, \vec \omega_t, \gamma_t)
                     p(z \mid \vec x_i, \vec w).
         \end{align*}
-        The expectation steps requires us to compute
+        The expectation step requires us to compute
         \[
             \mu_i \propto \prod_{t = 1}^{T}
                 p(y_{t, i} \mid \vec x_i, z_i = 1, \vec \omega_t, \gamma_t)
@@ -873,6 +873,62 @@ combat label noise from crowds.
         \vec x_i, \vec w)$ is fixed to use the previous value of $\vec w$.
 
         As part of this thesis, we have produced an open source implementation
-        of this algorithm, described in Section \ref{sec:crowdastro-yan}. As the
-        \citeauthor{yan10} algorithm is considerably slower than the
-        \citeauthor{raykar10} algorithm, we do not test it in this thesis.
+        of this algorithm, described in Section \ref{sec:crowdastro-yan}. After
+        the algorithm was implemented, we found it to be considerably slower
+        than the \citeauthor{raykar10} algorithm, so we do not use it later in
+        this thesis. Its main purpose here is to show that the expectation-
+        maximisation approach can be extended by choice of labeller model.
+
+        \begin{figure}[!ht]
+            \centering
+            \begin{subfigure}{\textwidth}
+                \centering
+                \includegraphics[width=0.9\textwidth]
+                    {images/experiments/yan_25pc_noise.pdf}
+                \caption{$\upsilon = 75\%$}
+                \label{fig:yan-experiment-low-noise}
+            \end{subfigure}
+            \begin{subfigure}{\textwidth}
+                \centering
+                \includegraphics[width=0.9\textwidth]
+                    {images/experiments/yan_75pc_noise.pdf}
+                \caption{$\upsilon = 25\%$}
+                \label{fig:yan-experiment-high-noise}
+            \end{subfigure}
+            \caption{\citeauthor{yan10} algorithm compared with logistic
+                regression trained on the majority vote (LR) and logistic
+                regression trained on the groundtruth (LR(Groundtruth)).
+                Labellers have an accuracy of $\upsilon$ when not in
+                their cluster of expertise.}
+        \end{figure}
+
+        The \citeauthor{yan10} algorithm is good for modelling labellers with
+        highly feature-dependent noise. To test the algorithm, we employed it on
+        the breast cancer Wisconsin dataset (Section \ref{sec:breast-dataset}),
+        but using a different simulation of labellers to that used for the
+        \citeauthor{raykar10} tests of Section \ref{sec:raykar}. While the
+        method for generating simulated crowd labels was similar, the labeller
+        model differed to show the ability of the \citeauthor{yan10} model to
+        handle feature-dependent noise. Instead of using two values $\alpha$ and
+        $\beta$ to describe each labeller, we clustered the data and assigned
+        each labeller one cluster The labeller had $100\%$ accuracy for that
+        cluster, and a fixed lower accuracy $\upsilon$ for all other clusters,
+        giving each labeller a ``cluster of expertise''.. We tested with low
+        noise ($\upsilon = 0.75$) and high noise ($\upsilon = 0.25$). The
+        results are compared with logistic regression trained on the majority
+        vote and logistic regression trained on the groundtruth in Figure
+        \ref{fig:yan-experiment-low-noise} and Figure
+        \ref{fig:yan-experiment-high-noise} for low and high noise,
+        respectively.
+
+        From these plots, we can tell that with low noise, logistic regression
+        is able to learn a high quality model from the majority vote, while the
+        \citeauthor{yan10} model performs more poorly. While it is possible for
+        the \citeauthor{yan10} model to reduce to logistic regression, this is
+        evidently not guaranteed in practice. This may be due to the difficulty
+        of the expectation-maximisation problem, which is never guaranteed to
+        converge on a global maximum in general. When noise is high, however,
+        the \citeauthor{yan10} algorithm considerably outperforms logistic
+        regression, indicating that in situations with high, feature-dependent
+        noise, the \citeauthor{yan10} algorithm may be a good choice of
+        classification algorithm.

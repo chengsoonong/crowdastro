@@ -108,6 +108,7 @@ def main(input_csv_path, results_h5_path, overwrite=False, plot=False,
         if plot:
             matplotlib.rcParams['font.family'] = 'serif'
             matplotlib.rcParams['font.serif'] = ['Palatino Linotype']
+            plt.figure(figsize=(8, 4))  # Make the plot a little shorter.
             vertical_scatter_ba(results, labels, violin=False, minorticks=False)
             plt.ylim((0, 1))
             plt.show()

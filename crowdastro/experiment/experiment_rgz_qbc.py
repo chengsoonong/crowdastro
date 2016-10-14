@@ -7,6 +7,7 @@ The Australian National University
 
 import argparse
 import logging
+import os.path
 
 import h5py
 import matplotlib
@@ -36,60 +37,68 @@ def main(crowdastro_h5_path, training_h5_path, results_npy_path,
             labels = training_h5['labels'].value
             norris = crowdastro_h5['/wise/cdfs/norris_labels'].value
 
-            for method_index, Sampler in enumerate([
-                    qbc_sampler.QBCSampler, random_sampler.RandomSampler]):
-                logging.debug(str(Sampler))
-                for split_id, split in enumerate(
-                        crowdastro_h5['/wise/cdfs/test_sets'].value):
-                    logging.info('Running split {}/{}'.format(split_id + 1,
-                                                              n_splits))
-                    # Set of indices that are not the testing set. This is where
-                    # it's valid to query from.
-                    train_indices = set(numpy.arange(n_instances))
-                    for i in split:
-                        train_indices.remove(i)
-                    train_indices = sorted(train_indices)
+            if os.path.exists(results_npy_path):
+                with open(results_npy_path, 'rb') as f:
+                    logging.info('Loading from NPY file.')
+                    results = numpy.load(f, allow_pickle=False)
+            else:
+                for method_index, Sampler in enumerate([
+                        qbc_sampler.QBCSampler, random_sampler.RandomSampler]):
+                    logging.debug(str(Sampler))
+                    for split_id, split in enumerate(
+                            crowdastro_h5['/wise/cdfs/test_sets'].value):
+                        logging.info('Running split {}/{}'.format(split_id + 1,
+                                                                  n_splits))
+                        # Set of indices that are not the testing set. This is where
+                        # it's valid to query from.
+                        train_indices = set(numpy.arange(n_instances))
+                        for i in split:
+                            train_indices.remove(i)
+                        train_indices = sorted(train_indices)
 
-                    # The masked set of labels we can query.
-                    queryable_labels = numpy.ma.MaskedArray(
-                        training_h5['labels'][train_indices],
-                        mask=numpy.ones(n_train_indices))
+                        # The masked set of labels we can query.
+                        queryable_labels = numpy.ma.MaskedArray(
+                            training_h5['labels'][train_indices],
+                            mask=numpy.ones(n_train_indices))
 
-                    # Initialise by selecting instance_counts[0] random labels,
-                    # stratified.
-                    init_indices, _ = sklearn.cross_validation.train_test_split(
-                        numpy.arange(n_train_indices),
-                        train_size=instance_counts[0],
-                        stratify=queryable_labels.data)
-                    queryable_labels.mask[init_indices] = 0
-                    sampler = Sampler(
-                        features[train_indices], queryable_labels,
-                        sklearn.linear_model.LogisticRegression,
-                        classifier_params={'class_weight': 'balanced'})
+                        # Initialise by selecting instance_counts[0] random labels,
+                        # stratified.
+                        init_indices, _ = sklearn.cross_validation.train_test_split(
+                            numpy.arange(n_train_indices),
+                            train_size=instance_counts[0],
+                            stratify=queryable_labels.data)
+                        queryable_labels.mask[init_indices] = 0
+                        sampler = Sampler(
+                            features[train_indices], queryable_labels,
+                            sklearn.linear_model.LogisticRegression,
+                            classifier_params={'class_weight': 'balanced'})
 
-                    results[method_index, split_id, 0] = sampler.ba(
-                        features[split], norris[split])
-                    for count_index, count in enumerate(instance_counts[1:]):
-                        # Query until we have seen count labels.
-                        n_required_queries = count - (~sampler.labels.mask).sum()
-                        assert n_required_queries >= 0
-                        # Make that many queries.
-                        logging.debug('Making {} queries.'.format(
-                            n_required_queries))
-                        queries = sampler.sample_indices(n_required_queries)
-                        queried_labels = queryable_labels.data[queries]
-                        sampler.add_labels(queries, queried_labels)
-                        logging.debug('Total labels known: {}'.format(
-                            (~sampler.labels.mask).sum()))
-                        results[
-                            method_index, split_id, count_index + 1
-                        ] = sampler.ba(features[split], norris[split])
+                        results[method_index, split_id, 0] = sampler.ba(
+                            features[split], norris[split])
+                        for count_index, count in enumerate(instance_counts[1:]):
+                            # Query until we have seen count labels.
+                            n_required_queries = count - (~sampler.labels.mask).sum()
+                            assert n_required_queries >= 0
+                            # Make that many queries.
+                            logging.debug('Making {} queries.'.format(
+                                n_required_queries))
+                            queries = sampler.sample_indices(n_required_queries)
+                            queried_labels = queryable_labels.data[queries]
+                            sampler.add_labels(queries, queried_labels)
+                            logging.debug('Total labels known: {}'.format(
+                                (~sampler.labels.mask).sum()))
+                            results[
+                                method_index, split_id, count_index + 1
+                            ] = sampler.ba(features[split], norris[split])
 
-                    # with open(results_npy_path, 'w') as f:
-                    #     numpy.save(f, results, allow_pickle=False)
+                        with open(results_npy_path, 'wb') as f:
+                            numpy.save(f, results, allow_pickle=False)
 
-                    # TODO(MatthewJA): Implement overwrite parameter.
+                        # TODO(MatthewJA): Implement overwrite parameter.
+                        # TODO(MatthewJA): Implement loading .npy file.
 
+            matplotlib.rcParams['font.family'] = 'serif'
+            matplotlib.rcParams['font.serif'] = ['Palatino Linotype']
             fillbetween(instance_counts, list(zip(*results[0, :])))
             fillbetween(instance_counts, list(zip(*results[1, :])),
                         facecolour='blue', edgecolour='blue', facealpha=0.2)
