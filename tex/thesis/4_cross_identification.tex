@@ -82,24 +82,31 @@
   require human insight to discover \citep{banfield16}.
 
 \section{Evaluating Performance Without Groundtruth}
-\label{sec:norris-as-groundtruth}
-  
-  Our training labels for the classification task will come from the Radio
-  Galaxy Zoo. While these labels can be aggregated in a number of ways to
-  approximate the groundtruth (Section \ref{sec:rgz-crowd-labels}), these
-  aggregates are \emph{not} the groundtruth and may contain high noise. This
-  becomes a problem when we want to assess the performance of a trained
-  classifier --- we want our classifier to be capable of finding the best
-  approximation to the groundtruth, not to the noisy inputs, and evaluation
-  should reflect that. We therefore cannot use aggregated crowd labels for
-  evaluation.
+  \label{sec:norris-as-groundtruth}
 
-  In general, though, we \emph{don't} have groundtruth for this problem, and
-  while the groundtruth exists (a galaxy either has an AGN or does not), it is
+  In general, we do not have groundtruth for the cross-identification problem.
+  While the groundtruth exists (a galaxy either has an AGN or does not), it is
   impossible for us to measure this accurately. Even expert catalogues, such as
   those provided by \citeauthor{norris06} (Section \ref{sec:norris}), are noisy
   --- \citep{norris06} estimate that their cross-identifications have a $9.02\%$
   false positive rate.
+  
+  Our primary source of labels for the classification task is the Radio Galaxy
+  Zoo. These labels have been provided by non-experts, and as such are even more
+  noisy. This leads to two problems: A classifier trained on the noisy labels
+  may be inaccurate, and evaluating the performance of a trained classifier
+  against noisy labels will not accurately reflect the true performance of the
+  classifier. We address the former in Section \ref{sec:rgz-crowd-labels}, and
+  the latter here.
+
+  The obvious way to evaluate classifier performance without groundtruth is to
+  aggregate the Radio Galaxy Zoo crowd labels in some way to approximate the
+  groundtruth, and then use that for evaluation. While there are many ways that
+  we could aggregate the labels (Section \ref{sec:rgz-crowd-labels}), these
+  aggregates are \emph{not} the groundtruth and may still contain high noise. We
+  want our classifier to be capable of finding the best approximation to the
+  groundtruth, not to the noisy inputs, and evaluation should reflect that. We
+  therefore cannot use aggregated crowd labels for evaluation.
 
   To attempt to mitigate this problem, we chose a test set with as little noise
   as possible by combining the \citeauthor{fan15} catalogue (Section

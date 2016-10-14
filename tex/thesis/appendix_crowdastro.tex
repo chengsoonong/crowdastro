@@ -1,12 +1,12 @@
-%!tex root=thesis.tex
+%!TeX1 root=thesis.tex
 
 \appendix
 \chapter{Crowdastro Package}
 
-As part of this thesis, I developed an open source Python package called
+As part of this thesis, we developed an open source Python package called
 \emph{crowdastro}, containing methods for machine learning on the cross-
 identification task, and implementations of many of the methods described here.
-In this appendix, I briefly describe how to obtain this package, and list the
+In this appendix, we briefly describe how to obtain this package, and list the
 submodules available.
 
 \section{Obtaining Crowdastro}
@@ -16,10 +16,24 @@ submodules available.
     installed through pip, by running \texttt{pip3 install crowdastro}. The code
     is MIT licensed.
 
+\section{Crowdastro}
+
+    The crowdastro package can be imported into Python or used with the command-
+    line interface.
+
+    \todo{Finish this.}
+
 \section{Submodules}
     \label{sec:crowdastro-submodules}
 
-    \todo{List submodules.}
+    \subsection{crowdastro.active\_learning.random\_sampler}
+        \label{sec:crowdastro-random-sampler}
+    \subsection{crowdastro.active\_learning.sampler}
+        \label{sec:crowdastro-sampler}
+    \subsection{crowdastro.active\_learning.qbc\_sampler}
+        \label{sec:crowdastro-qbc-sampler}
+    \subsection{crowdastro.active\_learning.uncertainty\_sampler}
+        \label{sec:crowdastro-uncertainty-sampler}
 
     \subsection{crowdastro.crowd.raykar}
         \label{sec:crowdastro-raykar}
@@ -28,4 +42,31 @@ submodules available.
         learning algorithm developed by \citet{raykar10}, described here in
         Section \ref{sec:raykar}. The module provides a
         \texttt{RaykarClassifier} object which implements a modified scikit-
+        learn interface.
+
+    \subsection{crowdastro.crowd.util}
+        \label{sec:crowdastro-util}
+
+        \texttt{crowdastro.crowd.util} contains useful functions for dealing
+        with crowd labels and performing related experiments shown in this
+        thesis. These functions are:
+        \begin{itemize}
+            \item \texttt{balanced\_accuracy}, which computes the balanced
+                accuracy of a classifier against a test set,
+            \item \texttt{crowd\_label}, which simulates the crowd labelling
+                task as described in Section \ref{sec:crowd-simulation},
+            \item \texttt{majority\_vote}, which computes the majority vote of
+                a set of crowd labels,
+            \item \texttt{logistic\_regression}, a simple implementation of the
+                logistic regression function (Equation
+                \ref{eq:logistic-regression}).
+        \end{itemize}
+
+    \subsection{crowdastro.crowd.yan}
+        \label{sec:crowdastro-yan}
+
+        \texttt{crowdastro.crowd.yan} is an implementation of the crowd
+        learning algorithm developed by \citet{yan10}, described here in
+        Section \ref{sec:yan}. The module provides a
+        \texttt{YanClassifier} object which implements a modified scikit-
         learn interface.

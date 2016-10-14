@@ -205,7 +205,7 @@ def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), violin=False,
 
 
 def fillbetween(xs, ys, facecolour='lightgreen', edgecolour='green',
-                marker='x', **kwargs):
+                marker='x', facealpha=1.0, **kwargs):
     """Plots a line plot with error represented by filled-between lines.
 
     xs: List of x values.
@@ -213,9 +213,11 @@ def fillbetween(xs, ys, facecolour='lightgreen', edgecolour='green',
     facecolour: Colour of the filled-between lines. Default light green.
     edgecolour: Colour of the central line. Default green.
     marker: Point marker. Default 'x'.
+    facealpha: Alpha value of filled section. Default 1.0.
     kwargs: Keyword arguments passed to plot.
     """
     means = numpy.mean(ys, axis=1)
     stds = numpy.std(ys, axis=1)
     plt.plot(xs, means, color=edgecolour, marker=marker, **kwargs)
-    plt.fill_between(xs, means - stds, means + stds, color=facecolour)
+    plt.fill_between(xs, means - stds, means + stds, color=facecolour,
+                     alpha=facealpha)

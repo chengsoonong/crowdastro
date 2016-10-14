@@ -51,9 +51,10 @@ combat label noise from crowds.
 
         Logistic regression is a simple linear model of binary classification \citep{bishop06}.
         The conditional distribution $p(z \mid \vec x)$ is modelled as
-        \[
+        \begin{equation}
+            \label{eq:logistic-regression}
             y(\vec x) = p(z = 1 \mid \vec x) = \sigma(\vec w^T \vec x + b),
-        \]
+        \end{equation}
         where $\vec w$ and $b$ are parameters to the model and $\sigma$ is the
         logistic sigmoid function
         \[
@@ -222,9 +223,11 @@ combat label noise from crowds.
         of images, then the pixel location may also matter --- for example, we
         might have as inputs photographs of landscapes, where the sky tends to
         be at the top of the image --- and this information is also lost. These
-        effects are shown in Figure \ref{fig:shuffled-face}. Finally, with independent pixels as features, trained models will be sensitive to small distortions or translations in the input \citep{lecun98}. In Section
-        \ref{sec:convolutions}, we describe a common approach for resolving this
-        problem.
+        effects are shown in Figure \ref{fig:shuffled-face}. Finally, with
+        independent pixels as features, trained models will be sensitive to
+        small distortions or translations in the input \citep{lecun98}. In
+        Section \ref{sec:convolutions}, we describe a common approach for
+        resolving this problem.
 
         \begin{figure}[!ht]
             \centering
@@ -247,26 +250,6 @@ combat label noise from crowds.
     \subsection{Pooling}
     \label{sec:pooling}
 
-        Pooling is a class of operations that reduce the dimensionality of an
-        image, parameterised by a \emph{pool size} $p$\footnote{Another
-        parameter is the \emph{stride} $s$, which we ignore here for simplicity,
-        setting $s = p$.}. Nonoverlapping $p \times p$ squares of pixels are
-        condensed into one value, which becomes the corresponding pixel in the
-        output. In this way, the size of the image is reduced from $m \times n$
-        to $\frac{m}{p} \times \frac{n}{p}$. This results in both a smaller
-        amount of data, and some amount of translation invariance when pooling
-        is used in models like neural networks \citep{scherer10}.
-
-        We are free to choose whatever aggregation operation we like to condense
-        squares of pixels; common choices are $\max$ (called \emph{max pooling})
-        and $\mbox{mean}$ (called \emph{average pooling}). Some pooling examples
-        are shown in Figure \ref{fig:pooling}.
-
-        \begin{itemize}
-            \item Max pooling introduces a degree of position invariance
-            \item Downsamples which makes training easier
-        \end{itemize}
-        
         \begin{figure}[!ht]
             \centering
             \begin{subfigure}[t]{0.5\textwidth}
@@ -300,6 +283,21 @@ combat label noise from crowds.
                 image.}
             \label{fig:pooling}
         \end{figure}
+
+        Pooling is a class of operations that reduce the dimensionality of an
+        image, parameterised by a \emph{pool size} $p$\footnote{Another
+        parameter is the \emph{stride} $s$, which we ignore here for simplicity,
+        setting $s = p$.}. Nonoverlapping $p \times p$ squares of pixels are
+        condensed into one value, which becomes the corresponding pixel in the
+        output. In this way, the size of the image is reduced from $m \times n$
+        to $\frac{m}{p} \times \frac{n}{p}$. This results in both a smaller
+        amount of data, and some amount of translation invariance when pooling
+        is used in models like neural networks \citep{scherer10}.
+
+        We are free to choose whatever aggregation operation we like to condense
+        squares of pixels; common choices are $\max$ (called \emph{max pooling})
+        and $\mbox{mean}$ (called \emph{average pooling}). Some pooling examples
+        are shown in Figure \ref{fig:pooling}.
 
     \subsection{Convolutions}
     \label{sec:convolutions}
@@ -390,31 +388,6 @@ combat label noise from crowds.
     \subsection{Convolutional Neural Networks}
     \label{sec:convolutional-neural-networks}
 
-        It is not clear what convolutions we should choose to extract features
-        from our images. In fact, there are no convolutions that work well in
-        general, so convolutions must be chosen on a domain-dependent basis.
-        This raises the question: What convolutions should we choose?
-
-        One way to answer this question is simply to not choose at all, and
-        then learn the appropriate convolutions as part of a larger
-        classification model. This gives rise to the concept of a
-        \emph{convolutional neural network} (CNN). A CNN is a neural network
-        with layers that convolve their inputs and layers that pool their
-        inputs, called \emph{convolutional layers} and \emph{pooling layers},
-        respectively. Convolutional layers may contain any number of separate
-        filters. They are generally interspersed with pooling layers. The final
-        layers of the CNN are usually dense layers. Additionally, CNNs introduce some amount of translation invariance into their outputs, since the same filters are applied across the image \citep{lecun98}.
-
-        CNNs can be used for feature extraction from images. As input, they
-        take images to extract features from, and they are tasked with mapping
-        these to some meaningful value or the intended output of the greater
-        classification problem. The convolutional and pooling layers can then
-        be isolated, forming a network that extracts features from images. An
-        example of a convolutional neural network applied to an image is shown
-        in Figure \ref{fig:face-cnn}.
-
-        \todo{Diagram of VGG-16}
-
         \begin{figure}[!ht]
             \centering
             \includegraphics[width=\textwidth]{images/face_cnn.png}
@@ -429,6 +402,31 @@ combat label noise from crowds.
                 \citep{simoyan14}.}
             \label{fig:face-cnn}
         \end{figure}
+
+        It is not clear what convolutions we should choose to extract features
+        from our images. In fact, there are no convolutions that work well in
+        general, so convolutions must be chosen on a domain-dependent basis.
+        This raises the question: What convolutions should we choose?
+
+        One way to answer this question is simply to not choose at all, and
+        then learn the appropriate convolutions as part of a larger
+        classification model. This gives rise to the concept of a
+        \emph{convolutional neural network} (CNN). A CNN is a neural network
+        with layers that convolve their inputs and layers that pool their
+        inputs, called \emph{convolutional layers} and \emph{pooling layers},
+        respectively. Convolutional layers may contain any number of separate
+        filters. They are generally interspersed with pooling layers. The final
+        layers of the CNN are usually dense layers. Additionally, CNNs introduce
+        some amount of translation invariance into their outputs, since the same
+        filters are applied across the image \citep{lecun98}.
+
+        CNNs can be used for feature extraction from images. As input, they
+        take images to extract features from, and they are tasked with mapping
+        these to some meaningful value or the intended output of the greater
+        classification problem. The convolutional and pooling layers can then
+        be isolated, forming a network that extracts features from images. An
+        example of a convolutional neural network applied to an image is shown
+        in Figure \ref{fig:face-cnn}.
 
 \section{Crowdsourcing Labels}
 \label{sec:crowdsourcing}
@@ -445,7 +443,12 @@ combat label noise from crowds.
     Crowdsourcing allows us to quickly and cheaply label large amounts of data.
     This comes at the expense of objectivity and reliability --- since the crowd
     are necessarily non-experts, they do not have domain knowledge for the
-    problem, and may not provide high-quality labels \citep{raykar10}. While we can try to reduce noise by requesting multiple labellers label each instance \citep{lin16, sheng08}, this does not address the fact that the data may be intrinsically hard to label, the labellers may be correlated, and some labellers may even be actively malicious \citep{yan10}. Some strategies to address these problems are described in Section \ref{sec:crowd-labels}.
+    problem, and may not provide high-quality labels \citep{raykar10}. While we
+    can try to reduce noise by requesting multiple labellers label each instance
+    \citep{lin16, sheng08}, this does not address the fact that the data may be
+    intrinsically hard to label, the labellers may be correlated, and some
+    labellers may even be actively malicious \citep{yan10}. Some strategies to
+    address these problems are described in Section \ref{sec:crowd-labels}.
 
     % The most obvious advantage of crowdsourcing is that crowds are able to
     % cheaply or quickly label large amounts of data simply because there are so
@@ -455,14 +458,14 @@ combat label noise from crowds.
     One form of crowdsourcing we are particularly interested in is
     \emph{citizen science}, as this is form of crowdsourcing that the Radio
     Galaxy Zoo (Section \ref{sec:radio-galaxy-zoo}) uses. Citizen science is
-    ``scientific work undertaken by members of the general public'' \citep{oed-
-    citizenscience, marshall15}, and has recently come to refer mainly to
-    websites that allow non-experts to label scientific data. A notable example
-    of citizen science is the Galaxy Zoo project \citep{lintott08}, which aims
-    to identify morpologies of galaxies from the Sloan Digital Sky Survey.
-    Galaxy Zoo has gathered tens of millions of labels for nearly 900 000
-    galaxies from over 80 000 volunteers \citep{lintott11}, and the data
-    collected have been used in 48 publications so
+    ``scientific work undertaken by members of the general public''
+    \citep{oed-citizenscience, marshall15}, and has recently come to refer
+    mainly to websites that allow non-experts to label scientific data. A
+    notable example of citizen science is the Galaxy Zoo project
+    \citep{lintott08}, which aims to identify morpologies of galaxies from the
+    Sloan Digital Sky Survey. Galaxy Zoo has gathered tens of millions of labels
+    for nearly 900 000 galaxies from over 80 000 volunteers \citep{lintott11},
+    and the data collected have been used in 48 publications so
     far\footnote{\url{https://www.zooniverse.org/about/publications}}. Many
     other citizen science projects have been hosted on the Galaxy Zoo's
     platform, Zooniverse\footnote{\url{http://zooniverse.org}}, from further
@@ -492,7 +495,9 @@ combat label noise from crowds.
     so we must instead simulate a crowd labelling task based on a dataset with
     known groundtruth. In this section, we describe our method for simulating a
     crowd labelling task, which we then employ to test methods in Section
-    \ref{sec:crowd-labels}.
+    \ref{sec:crowd-labels}. As part of this thesis, we have also implemented
+    this simulation in Python. The implemention is described in Section
+    \ref{sec:crowdastro-util}.
 
     \subsection{The Breast Cancer Wisconsin Dataset}
     \label{sec:breast-dataset}
@@ -622,7 +627,8 @@ combat label noise from crowds.
         One way to learn from crowdsourced labels when no groundtruth is
         available is to jointly model both the reliability of each labeller (the
         \emph{labeller model}) and the groundtruth itself (the
-        \emph{classification model}). \citet{raykar10} propose such a joint model, which we describe here.
+        \emph{classification model}). \citet{raykar10} propose such a joint
+        model, which we now describe.
 
         The accuracy of the $t$th labeller is modelled by the sensitivity
         $\alpha_t$ and the specificity $\beta_t$, as described in Section
@@ -644,7 +650,7 @@ combat label noise from crowds.
         and $\vec \beta = (\beta_1, \dots, \beta_t)$.
 
         With this method, the classification model can be any classifier.
-        \citeauthor{raykar10} choose to use logistic regression:
+        \citeauthor{raykar10} choose to use logistic regression, i.e.
         \begin{equation}
             \label{eq:raykar-logreg}
             p(z = 1 \mid \vec x, \vec w) = \sigma(\vec w^T \vec x).
@@ -703,19 +709,19 @@ combat label noise from crowds.
         using logistic regression trained on the majority vote, and then used
         the old $\vec w$ to initialise each subsequent maximisation step.
 
-        As part of this thesis, I have produced an open source implementation of
-        this algorithm, described in Section \ref{sec:crowdastro-raykar}. I then
-        performed a series of experiments using this implementation, which I
-        describe here.
+        As part of this thesis, we have produced an open source implementation
+        of this algorithm, described in Section \ref{sec:crowdastro-raykar}. We
+        then performed a series of experiments using this implementation, which
+        are detailed here.
 
         \subsubsection{Testing the Raykar Classifier}
 
-            I first used the implementation to perform a simple, simulated crowd
-            labelling problem. Five simulated labellers were assigned true
+            We first used the implementation to perform a simple, simulated
+            crowd labelling problem. Five simulated labellers were assigned true
             positive and false positive rates uniformly distributed in the range
             $[0.25, 0.75]$. Each simulated labeller labelled 50\% of the breast
-            cancer dataset \todo{backref}. Random samples of 75\% of the
-            examples were drawn 20 times and used to train both the
+            cancer dataset (Section \ref{sec:breast-dataset}). Random samples of
+            75\% of the examples were drawn 20 times and used to train both the
             \citeauthor{raykar10} classifier and a logistic regression
             classifier (using majority vote for the labels). These classifiers
             were tested against the groundtruth of the remaining 25\%. The
@@ -733,6 +739,8 @@ combat label noise from crowds.
                     of the breast cancer dataset \citep{wolberg90}.}
                 \label{fig:raykar}
             \end{figure}
+
+            \todo{Conclude.}
 
         \subsubsection{The Effect of Class Imbalance}
 
@@ -761,7 +769,7 @@ combat label noise from crowds.
 
             \begin{figure}[!ht]
                 \centering
-                \includegraphics[width=\textwidth]
+                \includegraphics[height=0.4\textheight]
                     {images/experiments/raykar_class_balance_ba}
                 \caption{Performance of the \citeauthor{raykar10} classifier on
                     a simulated labelling problem with different class
@@ -771,7 +779,7 @@ combat label noise from crowds.
 
             \begin{figure}[!ht]
                 \centering
-                \includegraphics[width=\textwidth]
+                \includegraphics[height=0.4\textheight]
                     {images/experiments/raykar_class_balance}
                 \caption{Output $\alpha$ and $\beta$ values of the
                     \citeauthor{raykar10} classifier on a simulated labelling
@@ -779,28 +787,11 @@ combat label noise from crowds.
                 \label{fig:raykar-class-balance-ab}
             \end{figure}
 
-            The classifier performs well when many examples are positive, but
-            performance is considerably reduced when there are more negative
-            examples than positive examples. In these situations, the algorithm
-            considerably underestimates $\alpha$, which may lead to ``mistrust''
-            of the crowd and hence reduce the balanced accuracy. The reason for
-            the underestimation of $\alpha$ is unknown. Since we would expect
-            the algorithm to perform identically under relabelling $0
-            \leftrightarrow 1$, this may indicate a problem with the
-            implementation.
+            \todo{Conclude.}
+
+            \clearpage
 
         \subsubsection{The Effect of Label Noise}
-
-            The final experiment was to determine the effect of label noise on
-            the performance and output of the algorithm. 10 labellers were
-            simulated with $\alpha$ ranging from $0.2$ to $1.0$ and $\beta$
-            fixed at $1.0$. A dataset was generated as for the previous
-            experiment (but with balanced classes), the labellers were tasked
-            with labelling this dataset, and the labels were used to train the
-            algorithm. The balanced accuracy and $\alpha$ values were recorded.
-            This experiment was repeated $5$ times, and repeated again with
-            $\beta$ replacing $\alpha$. The results are shown in Figure
-            \ref{fig:raykar-noise}.
 
             \begin{figure}[!ht]
                 \centering
@@ -815,6 +806,17 @@ combat label noise from crowds.
                     measurements.}
                 \label{fig:raykar-noise}
             \end{figure}
+
+            The final experiment was to determine the effect of label noise on
+            the performance and output of the algorithm. 10 labellers were
+            simulated with $\alpha$ ranging from $0.2$ to $1.0$ and $\beta$
+            fixed at $1.0$. A dataset was generated as for the previous
+            experiment (but with balanced classes), the labellers were tasked
+            with labelling this dataset, and the labels were used to train the
+            algorithm. The balanced accuracy and $\alpha$ values were recorded.
+            This experiment was repeated $5$ times, and repeated again with
+            $\beta$ replacing $\alpha$. The results are shown in Figure
+            \ref{fig:raykar-noise}.
 
             As expected, the balanced accuracy increases as label noise
             decreases. The output $\alpha$ and $\beta$ closely match the true
@@ -869,3 +871,8 @@ combat label noise from crowds.
         \end{equation*}
         with respect to $\vec w, \Omega,$ and $\vec \gamma$, where $p(z_i \mid
         \vec x_i, \vec w)$ is fixed to use the previous value of $\vec w$.
+
+        As part of this thesis, we have produced an open source implementation
+        of this algorithm, described in Section \ref{sec:crowdastro-yan}. As the
+        \citeauthor{yan10} algorithm is considerably slower than the
+        \citeauthor{raykar10} algorithm, we do not test it in this thesis.
