@@ -56,7 +56,7 @@ def main(input_csv_path, results_h5_path, overwrite=False, plot=False,
 
         # Generate the crowd labels. Cluster the data into T clusters and assign
         # each cluster to a labeller. That labeller is 100% accurate in that
-        # cluster and 75% accurate everywhere else.
+        # cluster and 25% accurate everywhere else.
         km = sklearn.cluster.KMeans(n_clusters=n_labellers)
         km.fit(features)
         classes = km.predict(features)
@@ -65,7 +65,7 @@ def main(input_csv_path, results_h5_path, overwrite=False, plot=False,
             for i in range(n_examples):
                 if classes[i] == labeller:
                     crowd_labels[labeller, i] = labels[i]
-                elif numpy.random.random() < 0.25:
+                elif numpy.random.random() < 0.75:
                     crowd_labels[labeller, i] = 1 - labels[i]
                 else:
                     crowd_labels[labeller, i] = labels[i]

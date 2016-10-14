@@ -13,6 +13,7 @@ import numpy
 import sklearn.metrics
 
 from .sampler import Sampler
+from ..crowd.util import balanced_accuracy, majority_vote
 
 
 class QBCSampler(Sampler):
@@ -74,3 +75,12 @@ class QBCSampler(Sampler):
                 sklearn.metrics.log_loss(
                         test_ts, c.predict(test_xs))
                 for c in self.classifiers])
+
+    def ba(self, test_xs, test_ts):
+        """Finds balanced accuracy on test data."""
+        labels = numpy.zeros((self.n_classifiers, len(test_xs)))
+        for c in range(self.n_classifiers):
+            preds = self.classifiers[c].predict(test_xs)
+            labels[c, :] = preds
+        labels = numpy.ma.MaskedArray(labels, mask=numpy.zeros(labels.shape))
+        return balanced_accuracy(test_ts, majority_vote(labels))
