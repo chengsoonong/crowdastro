@@ -67,31 +67,75 @@ This thesis presents a na\"ive, supervised learning approach to the problem of
 active galactic nuclei cross-identification, using label data sourced from the
 Radio Galaxy Zoo.
 
-\todo{Figure out where to put these acknowledgements. Each of these has an
-  acknowledgement requirement, so there's actually a paragraph I have to include
-  for each of them.}
+\section{Contributions}
+\label{sec:contributions}
 
-This thesis makes use of data products from
-\begin{itemize}
-    \item ATLAS
-    \item WISE
-    \item Radio Galaxy Zoo
-    \item SWIRE
-    \item Breast cancer Wisconsin dataset --- ``The database was obtained from the University of Wisconsin Hospitals, Madison from Dr. William H. Wolberg.''
-    \item UCI Machine Learning Repository
-\end{itemize}
+  \begin{itemize}
+    \item ML on RGZ
+    \item Non-physical model for cross identification
+    \item Deep learning features for radio
+    \item Effect of features. \url{https://see.stanford.edu/materials/aimlcs229/ml-advice.pdf}
+    \item Framing cross identification as object localisation then binary classification
+    \item Implementation of Raykar and Yan
+    \item Compare Raykar, Yan, MV (wins)
+    \item Compare Logistic Regression with Random Forest
+    \item Benefit active learning
+  \end{itemize}
 
+\section{Outline}
+\label{sec:outline}
+  
+  Chapter \ref{cha:astro} introduces astronomical concepts such as radio active
+  galactic nuclei. These concepts are important to understand both the purpose
+  of this thesis, and to understand the problem we are trying to solve. We also
+  introduce four astronomical surveys --- EMU, ATLAS, WISE, and SWIRE --- that
+  produced the data we used in our experiments.
 
-\section{Contributions of this project}
+  Chapter \ref{cha:ml} introduces machine learning concepts such as
+  classification and image feature extraction. These concepts are the building
+  blocks for a machine-learned algorithm for automated radio cross-
+  identification. We also perform some experiments to test how selected crowd
+  learning algorithms behave in different contexts.
 
-\begin{itemize}
-  \item ML on RGZ
-  \item Non-physical model for cross identification
-  \item Deep learning features for radio
-  \item Effect of features. \url{https://see.stanford.edu/materials/aimlcs229/ml-advice.pdf}
-  \item Framing cross identification as object localisation then binary classification
-  \item Implementation of Raykar and Yan
-  \item Compare Raykar, Yan, MV (wins)
-  \item Compare Logistic Regression with Random Forest
-  \item Benefit active learning
-\end{itemize}
+  Chapter \ref{cha:cross-identification} brings together Chapters 2 and 3 to
+  develop a machine learning approach to the radio cross-identification task. We
+  formalise the problem and highlight the problems that must be solved for
+  development, trial different methods of approaching the task, and present
+  results on task performance using our classifier.
+
+  Chapter \ref{cha:active-learning} discusses active learning, and its
+  application to crowdsourced projects like the Radio Galaxy Zoo. We perform
+  some simple experiments and suggest future pathways for research in this area.
+
+  Appendix \ref{cha:crowdastro} describes crowdastro, a Python package developed
+  as part of this project. This package was used to perform all experiments
+  described in this thesis. It also provides a command-line interface for
+  training and executing the automated cross-identification task.
+
+\section{Data Products Used in this Thesis}
+\label{sec:data-products}
+  
+  The work presented in this thesis would not have been possible without the
+  various data products used for experiments and development.
+
+  This thesis makes use of data products from the Wide-field Infrared Survey
+  Explorer (WISE), the Spitzer Space Telescope, and the Australia Telescope
+  Compact Array. WISE is a joint project of the University of California, Los
+  Angeles, and the Jet Propulsion Laboratory/California Institute of Technology,
+  funded by the National Aeronautics and Space Administration. The Spitzer Space
+  Telescope is operated by the Jet Propulsion Laboratory, California Institute
+  of Technology, under contract with NASA. SWIRE was supported by NASA through
+  the Spitzer Legacy Program under contract 1407 with the Jet Propulsion
+  Laboratory. The Australia Telescope Compact Array is part of the Australia
+  Telescope, which is funded by the Commonwealth of Australia for operation as a
+  National Facility managed by CSIRO.
+
+  This thesis also makes use of the Breast Cancer Wisconsin dataset. The dataset
+  was obtained from the University of Wisconsin Hospitals, Madison from Dr.
+  William H. Wolberg, and was accessed from the UCI Machine Learning Repository
+  \footnote{https://archive.ics.uci.edu/ml/}.
+
+  Finally, this thesis makes use of data from the Radio Galaxy Zoo project, made
+  possible by the participation of more than \todo{How many volunteers?}. Their
+  contributions are individually acknowledged at
+  http://rgzauthors.galaxyzoo.org/.
