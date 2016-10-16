@@ -109,9 +109,9 @@
   therefore cannot use aggregated crowd labels for evaluation.
 
   To attempt to mitigate this problem, we chose a test set with as little noise
-  as possible by combining the \citeauthor{fan15} catalogue (Section
-  \ref{sec:fan}) with the \citeauthor{norris06} catalogue (Section
-  \ref{sec:norris}) to find all galaxies for which the two catalogues agree.
+  as possible by combining the \citeauthor{norris06} catalogue (Section
+  \ref{sec:norris}) with the \citeauthor{fan15} catalogue (Section
+  \ref{sec:fan}) to find all galaxies for which the two catalogues agree.
   Test sets were drawn from only these galaxies. This does mean that the test
   instances will be ``easier'' than a test set drawn from the entire data set,
   but any tests performed against these test sets should be more reliable than
@@ -137,32 +137,7 @@
   \subsection{Infrared Features}
   \label{sec:ir-features}
 
-    As described in Section \ref{sec:cross-identification-formalism}, we need
-    candidate host galaxies from an infrared catalogue. We have two choices here
-    --- the SWIRE catalogue (Section \ref{sec:swire}) and the WISE catalogue
-    (Section \ref{sec:wise}). SWIRE has higher resolution and sensitivity, and
-    thus would give more accurate galaxies, but it does not cover the whole sky.
-    WISE is lower resolution and less sensitive, but is the survey that will be
-    used to cross-identify EMU (Section \ref{sec:emu}) sources when they are
-    available. Here, we describe our choice of features for both.
-
-    The WISE catalogue contains magnitude information for each object. There are
-    four such magnitudes --- $w1$, $w2$, $w3$, and $w4$ --- each representing
-    the amount of light emitted by the object in a different range of
-    wavelengths.
-
-    We chose to use all four magnitudes as features. Since the features are
-    magnitudes, they are on a logarithmic scale, and we found that in practice
-    classification performance improved when the magnitudes were converted to
-    fluxes. We performed this conversion with the formula
-    \[
-      f = 10^{-0.4m}
-    \]
-    where $f$ is the flux and $m$ is the magnitude. This is the inverse of
-    Equation \ref{eq:apparent-magnitude}, and gives the flux in arbitrary, but
-    linear, units.
-
-    \begin{figure}[!ht]
+    \begin{figure}
       \centering
       \includegraphics[width=0.5\textwidth]{images/wise_colour-colour}
       \caption{WISE colour-colour diagram showing the colours of various
@@ -171,13 +146,36 @@
       \label{fig:wise-colour-colour}
     \end{figure}
 
+    As described in Section \ref{sec:cross-identification-formalism}, we need
+    candidate host galaxies from an infrared catalogue. We have two choices here
+    --- the WISE catalogue (Section \ref{sec:wise}) and the SWIRE catalogue
+    (Section \ref{sec:swire}). WISE is lower resolution and less sensitive, but
+    is the survey that will be used to cross-identify EMU (Section
+    \ref{sec:emu}) sources when they are available. SWIRE has higher
+    resolution and sensitivity, and thus would give more accurate galaxies, but
+    it does not cover the whole sky. Here, we describe our choice of features
+    for both.
+
+    For WISE, we chose to use all four WISE band magnitudes ($w1, w2, w3,$ and
+    $w4$) as features. Since the features are magnitudes, they are on a
+    logarithmic scale, and we found that in practice classification performance
+    improved when the magnitudes were converted to their corresponding flux
+    value. We performed this conversion with the formula
+    \begin{equation}
+      \label{eq:mag-to-flux}
+      f = 10^{-0.4m}.
+    \end{equation}
+    This is the inverse of Equation \ref{eq:apparent-magnitude} with the flux in
+    linear units of $f_{\text{Vega}}$ Jy.
+
     The ratios between infrared fluxes are indicators of physical galactic
     properties such as star formation and dust \todo{Find a source on this ---
     Probably the WISE paper wright10}. In practice, the $w1 - w2$ and $w2 - w3$
     ratios are most commonly used (such as in Figure
     \ref{fig:wise-colour-colour}), so we chose to use these ratios as features.
     Once again, we used a linear scale, computing the ratios using equation
-    \ref{eq:magnitude-difference}.
+    \ref{eq:magnitude-difference} and converting them to linear units with
+    Equation \ref{eq:mag-to-flux}.
 
     Also available were the unprocessed infrared images captured in the survey.
     Under the assumption that the large scale infrared structure of a galaxy is
@@ -208,17 +206,26 @@
     % probably also showing that the other features are good}.
 
   \subsection{Radio Features}
-  \label{sec:image-features}
+  \label{sec:radio-features}
 
     While the infrared catalogues include measurements on individual galaxies,
     the ATLAS radio catalogue does not. This is because galaxies are not
     visible in radio, so while galaxies are directly represented in an infrared
     catalogue they are not in a radio catalogue. Galactic features must thus be
     extracted from the radio images directly. We chose to use a convolutional
-    neural network, as described in Section \ref{sec:image-features}.
+    neural network, as described in Section \ref{sec:image-feature-extraction}.
 
     \subsubsection{Building a Model for Feature Extraction}
     \label{sec:feature-extraction-model}
+
+      \begin{figure}[!ht]
+         \centering
+         \includegraphics[width=\textwidth]{images/cnn_new.pdf}
+         \caption{Convolutional neural network for radio feature extraction. The
+           leftmost square represents the input image; the rightmost rectangle
+           is the output.}
+         \label{fig:radio-cnn}
+       \end{figure}
 
       We chose to use a convolutional neural network (CNN) with three
       convolutional and max pooling layers, shown in Figure \ref{fig:radio-cnn}.
@@ -228,13 +235,6 @@
       training the CNN, to ensure later testing data would not overlap the
       training set. The entire network was then trained to match the consensus
       Radio Galaxy Zoo labels of the galaxies nearest the reserved training set.
-
-      \begin{figure}[!ht]
-         \centering
-         \includegraphics[width=\textwidth]{images/cnn_new.pdf}
-         \caption{Convolutional neural network for radio feature extraction.}
-         \label{fig:radio-cnn}
-       \end{figure}
 
       A better approach would be to use a convolutional autoencoder, which would
       allow training on all the radio data, and data with no labels at all, but
@@ -264,7 +264,7 @@
     the WISE magnitude features, we also held out the CNN features, since we
     found that the CNN features tended to dominate results. These results are
     plotted in Figure \ref{fig:feature-ablation} and the means and standard
-    deviations of the balanced accuracies are tabled in Table
+    deviations of the balanced accuracies can be found in Table
     \ref{tab:feature-ablation}.
 
     \begin{figure}[!ht]
@@ -281,20 +281,20 @@
     \begin{table}[!ht]
       \centering
       \begin{tabular}{r|c}
-        \textbf{Features} & \textbf{Mean Balanced Accuracy}\\\hline
-        No distance & $(88.82 \pm 0.70)\%$\\
-        All features & $(88.74 \pm 0.78)\%$\\
-        No magnitudes & $(88.73 \pm 0.83)\%$\\
-        CNN only & $(88.66 \pm 0.81)\%$\\
-        No CNN + no $w1 - w2$ & $(81.32 \pm 0.81)\%$\\
-        Distance only & $(79.01 \pm 0.58)\%$\\
-        No CNN & $(71.67 \pm 1.71)\%$\\
-        No CNN + no $w1$ & $(71.67 \pm 1.71)\%$\\
-        No CNN + no $w2$ & $(71.67 \pm 1.71)\%$\\
-        No CNN + no $w3$ & $(71.67 \pm 1.71)\%$\\
-        No CNN + no $w4$ & $(71.67 \pm 1.70)\%$\\
-        No CNN + no $w2 - w3$ & $(71.15 \pm 2.16)\%$\\
-        Magnitudes only & $(56.47 \pm 0.70)\%$\\
+        \textbf{Features} & \textbf{Mean Balanced Accuracy (\%)}\\\hline
+        No distance & $88.82 \pm 0.70$\\
+        All features & $88.74 \pm 0.78$\\
+        No magnitudes & $88.73 \pm 0.83$\\
+        CNN only & $88.66 \pm 0.81$\\
+        No CNN + no $w1 - w2$ & $81.32 \pm 0.81$\\
+        Distance only & $79.01 \pm 0.58$\\
+        No CNN & $71.67 \pm 1.71$\\
+        No CNN + no $w1$ & $71.67 \pm 1.71$\\
+        No CNN + no $w2$ & $71.67 \pm 1.71$\\
+        No CNN + no $w3$ & $71.67 \pm 1.71$\\
+        No CNN + no $w4$ & $71.67 \pm 1.70$\\
+        No CNN + no $w2 - w3$ & $71.15 \pm 2.16$\\
+        Magnitudes only & $56.47 \pm 0.70$\\
       \end{tabular}
       \caption{Balanced accuracy of logistic regression trained on the
         \citeauthor{norris06} label set with different subsets of features. The
@@ -314,27 +314,22 @@
   \end{figure}
 
   To compare the performance of logistic regression with random forests on the
-  galaxy classification task, I performed the following experiment. First, I
+  galaxy classification task, we performed the following experiment. We first
   generated five test sets of WISE objects. Then, using all other WISE objects
-  as a training set, I trained a logistic regression classifier for each test
-  set, first using labels from \citet{norris06}, and then, separately, using
-  labels from \citet{fan15}. I then computed the balanced accuracy for each
-  classifier. Finally, I repeated the experiment for random forests.
+  as a training set, we trained a logistic regression classifier with $L2$
+  regularisation for each test set, first using labels from \citet{norris06},
+  and separately using labels from \citet{fan15}. We then computed the balanced
+  accuracy for each classifier. This was repeated for random forests, with each
+  tree using $\sqrt{D}$ features.
 
-  \begin{itemize}
-    \item LR used L2 regularisation with C = 1 strength
-    \item RF used sqrt(features)
-  \end{itemize}
-
-  To generate the test sets, I first selected at random half of all ATLAS
-  objects. I then added all WISE objects within $1'$ of a selected ATLAS object
+  To generate the test sets, we first selected at random half of all ATLAS
+  objects. We then added all WISE objects within $1'$ of a selected ATLAS object
   to the test set. This was repeated for each test set. The motivation for first
   selecting ATLAS objects rather than drawing WISE objects directly is that WISE
-  objects have overlapping features since radio features are taken from a patch
+  objects have overlapping features, since radio features are taken from a patch
   of sky centred on each object, and WISE objects tend to be close together.
   Objects from the test sets were then removed at random until all test sets
-  were the same size. Each test set contained $13605$ WISE objects.
-  \todo{Check numbers.}
+  were the same size.
 
 \section{Handling Crowd Labels}
 \label{sec:rgz-crowd-labels}
@@ -347,8 +342,8 @@
   galaxy classification task.
 
   One key problem with the use of the \citeauthor{raykar10} algorithm is that it
-  is very slow with large numbers of labellers. To help mitigate this problem,
-  we tested the algorithm on a subset of labellers, chosen by three different
+  is very slow with large numbers of labellers. To mitigate this problem, we
+  tested the algorithm on a subset of labellers, chosen by three different
   measures: the 10 labellers with the most labels, the 10 labellers with the
   highest balanced accuracy assessed against the \citeauthor{norris06} labels,
   and the 10 labellers with the highest balanced accuracy assessed against the
