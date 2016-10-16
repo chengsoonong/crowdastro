@@ -8,8 +8,10 @@ The Australian National University
 """
 
 import collections
+import logging
 
 import numpy
+import sklearn.cross_validation
 import sklearn.metrics
 
 from .sampler import Sampler
@@ -21,11 +23,14 @@ class QBCSampler(Sampler):
     based on confidence."""
 
     def __init__(self, pool, labels, Classifier, n_classifiers=20,
-                 classifier_params=None):
+                 subsample_rate=0.75, classifier_params=None):
         """
         pool: (n_samples, n_features) array of partially labelled data points.
         labels: (n_samples,) masked array of binary labels.
         classifier: Binary classifier class implementing a sklearn interface.
+        subsample_rate: Percentage of labels to pass to the classifiers.
+            Lower numbers give more variety, but higher numbers give more
+            reliability.
         classifier_params: Parameters to pass to Classifier. Default None.
         """
         self.pool = pool
@@ -33,6 +38,7 @@ class QBCSampler(Sampler):
         self.Classifier = Classifier
         self.classifier_params = classifier_params or {}
         self.n_classifiers = n_classifiers
+        self.subsample_rate = subsample_rate
 
         self.train()
         self.compute_disagreement()
@@ -42,8 +48,40 @@ class QBCSampler(Sampler):
         self.classifiers = [self.Classifier(random_state=i,
                                             **self.classifier_params)
                             for i in range(self.n_classifiers)]
-        for c in self.classifiers:
-            c.fit(self.pool[~self.labels.mask], self.labels[~self.labels.mask])
+        self.reference_classifier = self.Classifier(
+            random_state=self.n_classifiers, **self.classifier_params)
+        valid_indices = (~self.labels.mask).nonzero()[0]
+        classifier_training_indices = []
+        n_subsample = int(len(valid_indices) * self.subsample_rate)
+        for c in range(self.n_classifiers):
+            try:
+                indices, _ = sklearn.cross_validation.train_test_split(
+                    valid_indices,
+                    train_size=n_subsample,
+                    stratify=self.labels[valid_indices].data)
+            except ValueError:  # Only one kind of label...
+                    logging.debug('Only one kind of label is visible.')
+                    numpy.random.shuffle(valid_indices)
+                    indices = valid_indices[:n_subsample]
+                    valid_indices.sort()
+            indices.sort()
+            classifier_training_indices.append(indices)
+        for i, c in enumerate(self.classifiers):
+            labels = self.labels[classifier_training_indices[i]].copy()
+            # This is absolutely a hack to get around imbalanced classes when
+            # label counts are very small.
+            if all(i == 1 for i in labels):
+                labels[0] = 0
+            elif all(i == 0 for i in labels):
+                labels[0] = 1
+            c.fit(
+                self.pool[classifier_training_indices[i]],
+                labels)
+        logging.debug('Training reference classifier with {} labels.'.format(
+            (~self.labels.mask).sum()))
+        self.reference_classifier.fit(
+            self.pool[~self.labels.mask],
+            self.labels[~self.labels.mask])
 
     def compute_disagreement(self):
         """Finds disagreement for all objects in the pool."""
@@ -78,9 +116,11 @@ class QBCSampler(Sampler):
 
     def ba(self, test_xs, test_ts):
         """Finds balanced accuracy on test data."""
-        labels = numpy.zeros((self.n_classifiers, len(test_xs)))
-        for c in range(self.n_classifiers):
-            preds = self.classifiers[c].predict(test_xs)
-            labels[c, :] = preds
-        labels = numpy.ma.MaskedArray(labels, mask=numpy.zeros(labels.shape))
-        return balanced_accuracy(test_ts, majority_vote(labels))
+        # labels = numpy.zeros((self.n_classifiers, len(test_xs)))
+        # for c in range(self.n_classifiers):
+        #     preds = self.classifiers[c].predict(test_xs)
+        #     labels[c, :] = preds
+        # labels = numpy.ma.MaskedArray(labels, mask=numpy.zeros(labels.shape))
+        # return balanced_accuracy(test_ts, majority_vote(labels))
+        return balanced_accuracy(
+            test_ts, self.reference_classifier.predict(test_xs))
