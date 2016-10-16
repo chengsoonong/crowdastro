@@ -136,7 +136,7 @@ def vertical_scatter(xs, ys, style='bx', rotation='horizontal',
                 plt.plot(xs, ys_t[y])
 
 
-def violinplot(xs, ys, rotation='horizontal', points=100,
+def violinplot(xs, ys, rotation='horizontal', points=100, x_tick_offset=0,
                facecolour='lightgreen', edgecolour='green'):
     """Plots a vertical scatter plot.
 
@@ -144,6 +144,7 @@ def violinplot(xs, ys, rotation='horizontal', points=100,
     ys: List of lists of points to scatter vertically.
     rotation: x label rotation. Default 'horizontal'.
     points: Number of points to use in the density estimate.
+    x_tick_offset: How far to offset the x tick labels. Default 0.
     facecolour: Colour of the violin plots. Default light green.
     edgecolour: Colour of the violin lines. Default green.
     """
@@ -154,7 +155,8 @@ def violinplot(xs, ys, rotation='horizontal', points=100,
         pc.set_facecolor(facecolour)
         pc.set_edgecolor(edgecolour)
     vp['cmeans'].set_color(edgecolour)
-    plt.xticks([1 + i for i in range(len(xs))], xs, rotation=rotation)
+    plt.xticks([1 + i + x_tick_offset for i in range(len(xs))],
+               xs, rotation=rotation)
     plt.xlim((0.5, len(xs) + 0.5))  # Adds a little buffer.
 
 

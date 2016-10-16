@@ -369,6 +369,21 @@
     \label{fig:rgz-raykar}
   \end{figure}
 
+  \begin{table}
+    \centering
+    \begin{tabular}{r|c}
+      \textbf{Method(Training Set)} & \textbf{Mean Balanced Accuracy (\%)}\\\hline
+      Raykar(Top-15-prolific) & $46.34 \pm 18.45$\\
+      LR(Top-15-prolific-MV) & $51.98 \pm 3.87$\\
+      Raykar(Top-15-accurate) & $86.43 \pm 0.10$\\
+      LR(Top-15-accurate-MV) & $86.76 \pm 1.01$\\
+      Raykar(Top-15-est-accurate) & $87.25 \pm 0.74$\\
+      LR(Top-15-est-accurate-MV) & $87.25 \pm 0.90$\\
+    \end{tabular}
+    \caption{Comparison of logistic regression and \citeauthor{raykar10} on the
+      galaxy classification task with different numbers of labellers.}
+    \label{tab:rgz-raykar}
+  \end{table}
 
   While we want to train a classifier on the crowdsourced labels from the Radio
   Galaxy Zoo, it is unclear how we should aggregate the labels. Some methods for
@@ -388,7 +403,7 @@
   treat this test as a ``best-case'' method. For each subset of labellers, the
   \citeauthor{raykar10} algorithm was tested against logistic regression trained
   on the majority vote of just these labellers. The results are shown in Figure
-  \ref{fig:rgz-raykar}.
+  \ref{fig:rgz-raykar} and Table \ref{tab:rgz-raykar}.
 
   With $T = 10$ labellers, the \citeauthor{raykar10} algorithm took $83 \pm 36$
   seconds to run. When the number of labellers was increased to $T = 15$, the
@@ -403,6 +418,35 @@
   \subsection{Comparison of Methods}
   \label{sec:comparison-predictors}
 
+  \begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{images/experiments/predictors.pdf}
+    \caption{Performance of logistic regression and the \citeauthor{raykar10}
+      algorithm on the galaxy classification task, trained on different sets of
+      labels and tested on the galaxies where \citeauthor{norris06} and
+      \citeauthor{fan15} labels agree. LR($Y$) indicates logistic regression
+      trained on $Y$. RGZ-MV is the set of majority vote labels from the Radio
+      Galaxy Zoo. RGZ-Raw-MV is the majority vote of all crowd labels and is
+      included for comparison.}
+    \label{fig:predictors}
+  \end{figure}
+
+  \begin{table}
+    \centering
+    \begin{tabular}{r|c}
+      \textbf{Method(Training Set)} & \textbf{Mean Balanced Accuracy (\%)}\\\hline
+      LR(Norris) & $88.74 +- 0.77$\\
+      LR(Fan) & $88.44 +- 0.89$\\
+      LR(RGZ-MV) & $87.17 +- 0.90$\\
+      Raykar(RGZ-Top-20) & $85.76 +- 1.28$\\
+      RGZ-Raw-MV & $85.89 +- 0.00$\\
+    \end{tabular}
+    \caption{Performance of logistic regression and the \citeauthor{raykar10}
+      algorithm on the galaxy classification task, as in Figure
+      \ref{fig:predictors}.}
+    \label{tab:predictors}
+  \end{table}
+
   We trained logistic regression classifiers on three training sets:
   \begin{itemize}
     \item the \citeauthor{norris06} labels,
@@ -411,34 +455,16 @@
   \end{itemize}
   We also trained the \citeauthor{raykar10} algorithm with the Radio Galaxy Zoo
   labels. Each volunteer was assigned a unique index and the algorithm was run
-  with $T = 2014$ total labellers.
+  with the best $T = 20$ labellers, computed against the Radio Galaxy Zoo
+  majority vote. Finally, we compared the predictions of all classifiers to the
+  Radio Galaxy Zoo majority vote. These results are plotted in Figure
+  \ref{fig:predictors} and shown in Table \ref{tab:predictors}.
 
-  The classifier was then used to classify the objects in the testing set. The
-  labels were compared to those found by \citet{norris06} as described in
-  Section \ref{sec:norris}, resulting in $80.14\%$ balanced accuracy.
-  \todo{This number is out of date.}
+  % The classifier was then used to classify the objects in the testing set. The
+  % labels were compared to those found by \citet{norris06} as described in
+  % Section \ref{sec:norris}, resulting in $80.14\%$ balanced accuracy.
+  % \todo{This number is out of date.}
 
   \todo{ROC/precision--recall curves}
-
-  \begin{figure}[!ht]
-    \centering
-    \includegraphics[width=\textwidth]{images/experiments/predictors.pdf}
-    \caption{Performance of logistic regression on the galaxy classification
-      task, trained on different sets of labels and tested on the galaxies
-      where \citeauthor{norris06} and \citeauthor{fan15} labels agree. LR($Y$)
-      indicates logistic regression trained on $Y$. RGZ-MV is the set of
-      majority vote labels from the Radio Galaxy Zoo. RGZ-Raw-MV is the
-      majority vote of all crowd labels and is included for comparison.}
-  \end{figure}
-
-\section{Number of Training Examples}
-
-  \begin{figure}[!ht]
-    \centering
-    \includegraphics[width=\textwidth]{images/experiments/passive.pdf}
-    \caption{Performance of logistic regression on the galaxy classification
-      task, trained on different amounts of the \citeauthor{norris06} label
-      set.}
-  \end{figure}
 
   \todo{Discuss results}

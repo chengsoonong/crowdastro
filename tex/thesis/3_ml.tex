@@ -174,7 +174,7 @@ from crowds.
         nonlinear functions; some examples of these will be covered in Section
         \ref{sec:convolutional-neural-networks}.
 
-        \begin{figure}[!ht]
+        \begin{figure}
             \centering
             \begin{tikzpicture}[scale=0.5, node distance=2.5cm]
                 \tikzstyle{neuron}=[
@@ -280,7 +280,7 @@ from crowds.
     \subsection{Pooling}
     \label{sec:pooling}
 
-        \begin{figure}[!ht]
+        \begin{figure}
             \centering
             \begin{subfigure}[t]{0.5\textwidth}
                 \centering
@@ -332,28 +332,28 @@ from crowds.
     \subsection{Convolutions}
     \label{sec:convolutions}
 
-        \begin{figure}[!ht]
+        \begin{figure}
             \centering
-            \begin{subfigure}[t]{0.5\textwidth}
+            \begin{subfigure}[t]{0.3\textwidth}
                 \centering
                 \includegraphics[width=\textwidth]{images/face.png}
                 \caption{Original image.}
                 \label{fig:convolution-face-original}
             \end{subfigure}%
             ~
-            \begin{subfigure}[t]{0.5\textwidth}
-                \centering
-                \includegraphics[width=\textwidth]{images/face_convolved.png}
-                \caption{Convolved image.}
-                \label{fig:convolution-face-convolved}
-            \end{subfigure}
-            %
             \begin{subfigure}[t]{0.3\textwidth}
                 \centering
                 \includegraphics[width=\textwidth]
                     {images/convolutional_filter.png}
                 \caption{Convolutional filter.}
                 \label{fig:convolution-face-filter}
+            \end{subfigure}%
+            ~
+            \begin{subfigure}[t]{0.3\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/face_convolved.png}
+                \caption{Convolved image.}
+                \label{fig:convolution-face-convolved}
             \end{subfigure}
             \caption{Convolving an image with a $3 \times 3$ filter gives a new
                 image. This filter acts as a kind of vertical edge detector.}
@@ -383,7 +383,7 @@ from crowds.
         Figure \ref{fig:convolved-face}, and an algorithm for performing a
         convolution is shown in Algorithm \ref{alg:convolution}.
 
-        \begin{algorithm}[!ht]
+        \begin{algorithm}
             \KwData{\\\quad{}An image $X \in \mathbb{R}^{m \times n}$%
                     \\\quad{}A filter $F \in \mathbb{C}^{d \times d}$}
             \KwResult{An image $\in
@@ -418,7 +418,7 @@ from crowds.
     \subsection{Convolutional Neural Networks}
     \label{sec:convolutional-neural-networks}
 
-        \begin{figure}[!ht]
+        \begin{figure}
             \centering
             \includegraphics[width=\textwidth]{images/face_cnn.png}
             \caption{A convolutional neural network applied to the top-left
@@ -909,7 +909,7 @@ from crowds.
         this thesis. Its main purpose here is to show that the expectation-
         maximisation approach can be extended by choice of labeller model.
 
-        \begin{figure}[!ht]
+        \begin{figure}
             \centering
             \begin{subfigure}{\textwidth}
                 \centering
