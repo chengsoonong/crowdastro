@@ -191,44 +191,76 @@ def remove_nulls(n):
     return n
 
 
-def import_swire(f_h5):
+def import_swire(f_h5, field='cdfs'):
     """Imports the SWIRE dataset into crowdastro.
 
     f_h5: An HDF5 file.
+    field: 'cdfs' or 'elais'.
     """
     names = []
     rows = []
     logging.debug('Reading SWIRE catalogue.')
-    with open(config['data_sources']['swire_catalogue']) as f_tbl:
+    with open(
+        config['data_sources']['swire_{}_catalogue'.format(field)]
+    ) as f_tbl:
         # This isn't a valid ASCII table, so Astropy can't handle it. This means
         # we have to parse it manually.
-        for _ in range(5):  # Skip the first five lines.
-            next(f_tbl)
+        if field == 'cdfs':
+            for _ in range(5):  # Skip the first five lines.
+                next(f_tbl)
 
-        # Get the column names.
-        columns = [c.strip() for c in next(f_tbl).strip().split('|')][1:-1]
-        assert len(columns) == 156
+            # Get the column names.
+            columns = [c.strip() for c in next(f_tbl).strip().split('|')][1:-1]
+            assert len(columns) == 156
 
-        for _ in range(3):  # Skip the next three lines.
-            next(f_tbl)
+            for _ in range(3):  # Skip the next three lines.
+                next(f_tbl)
 
-        for row in f_tbl:
-            row = row.strip().split()
-            assert len(row) == 156
-            row = dict(zip(columns, row))
-            name = row['object']
-            ra = float(row['ra'])
-            dec = float(row['dec'])
-            flux_ap2_36 = float(remove_nulls(row['flux_ap2_36']))
-            flux_ap2_45 = float(remove_nulls(row['flux_ap2_45']))
-            flux_ap2_58 = float(remove_nulls(row['flux_ap2_58']))
-            flux_ap2_80 = float(remove_nulls(row['flux_ap2_80']))
-            flux_ap2_24 = float(remove_nulls(row['flux_ap2_24']))
-            stell_36 = float(remove_nulls(row['stell_36']))
-            # Extra -1 is so we can store nearest distance later.
-            rows.append((ra, dec, flux_ap2_36, flux_ap2_45, flux_ap2_58,
-                         flux_ap2_80, flux_ap2_24, stell_36, -1))
-            names.append(name)
+            for row in f_tbl:
+                row = row.strip().split()
+                assert len(row) == 156
+                row = dict(zip(columns, row))
+                name = row['object']
+                ra = float(row['ra'])
+                dec = float(row['dec'])
+                flux_ap2_36 = float(remove_nulls(row['flux_ap2_36']))
+                flux_ap2_45 = float(remove_nulls(row['flux_ap2_45']))
+                flux_ap2_58 = float(remove_nulls(row['flux_ap2_58']))
+                flux_ap2_80 = float(remove_nulls(row['flux_ap2_80']))
+                flux_ap2_24 = float(remove_nulls(row['flux_ap2_24']))
+                stell_36 = float(remove_nulls(row['stell_36']))
+                # Extra -1 is so we can store nearest distance later.
+                rows.append((ra, dec, flux_ap2_36, flux_ap2_45, flux_ap2_58,
+                             flux_ap2_80, flux_ap2_24, stell_36, -1))
+                names.append(name)
+        elif field == 'elais':
+            for _ in range(121):  # Skip the first 121 lines.
+                next(f_tbl)
+
+            # Get the column names.
+            columns = [c.strip() for c in next(f_tbl).strip().split('|')][1:-1]
+            assert len(columns) == 54
+
+            for _ in range(3):  # Skip the next three lines.
+                next(f_tbl)
+
+            for row in f_tbl:
+                row = row.strip().split()
+                assert len(row) == 54
+                row = dict(zip(columns, row))
+                name = row['object']
+                ra = float(row['ra'])
+                dec = float(row['dec'])
+                flux_ap2_36 = float(remove_nulls(row['flux_ap2_36']))
+                flux_ap2_45 = float(remove_nulls(row['flux_ap2_45']))
+                flux_ap2_58 = float(remove_nulls(row['flux_ap2_58']))
+                flux_ap2_80 = float(remove_nulls(row['flux_ap2_80']))
+                flux_ap2_24 = float(remove_nulls(row['flux_ap2_24']))
+                stell_36 = float(remove_nulls(row['stell_36']))
+                # Extra -1 is so we can store nearest distance later.
+                rows.append((ra, dec, flux_ap2_36, flux_ap2_45, flux_ap2_58,
+                             flux_ap2_80, flux_ap2_24, stell_36, -1))
+                names.append(name)
 
     logging.debug('Found %d SWIRE objects.', len(names))
 
@@ -244,7 +276,7 @@ def import_swire(f_h5):
     # given radius of an ATLAS object. Otherwise, there's way too much data to
     # store.
     swire_positions = rows[:, :2]
-    atlas_positions = f_h5['/atlas/cdfs/_numeric'][:, :2]
+    atlas_positions = f_h5['/atlas/{}/_numeric'.format(field)][:, :2]
     logging.debug('Computing SWIRE k-d tree.')
     swire_tree = sklearn.neighbors.KDTree(swire_positions, metric='euclidean')
     indices = numpy.concatenate(
@@ -267,27 +299,30 @@ def import_swire(f_h5):
 
     # Write numeric data to HDF5.
     rows[:, 8] = distances.min(axis=0)
-    atlas_numeric = f_h5['/atlas/cdfs/_numeric']
-    f_h5['/atlas/cdfs'].create_dataset(
+    atlas_numeric = f_h5['/atlas/{}/_numeric'.format(field)]
+    f_h5['/atlas/{}'.format(field)].create_dataset(
         'numeric', dtype='float32',
         shape=(atlas_numeric.shape[0],
                atlas_numeric.shape[1] + len(indices)))
-    f_h5['/atlas/cdfs/numeric'][:, :atlas_numeric.shape[1]] = atlas_numeric
-    f_h5['/atlas/cdfs/numeric'][:, atlas_numeric.shape[1]:] = distances
+    f_h5['/atlas/{}/numeric'.format(field)][
+        :, :atlas_numeric.shape[1]] = atlas_numeric
+    f_h5['/atlas/{}/numeric'.format(field)][
+        :, atlas_numeric.shape[1]:] = distances
 
-    del f_h5['/atlas/cdfs/_numeric']
+    del f_h5['/atlas/{}/_numeric'.format(field)]
 
     image_size = (PATCH_RADIUS * 2) ** 2
     dim = (rows.shape[0], rows.shape[1] + image_size)
-    numeric = f_h5['/swire/cdfs'].create_dataset('numeric', shape=dim,
-                                                 dtype='float32')
+    numeric = f_h5['/swire/{}'.format(field)].create_dataset(
+        'numeric', shape=dim, dtype='float32')
     numeric[:, :rows.shape[1]] = rows
-    f_h5['/swire/cdfs'].create_dataset('string', data=names)
+    f_h5['/swire/{}'.format(field)].create_dataset('string', data=names)
 
     # Load and store radio images.
     logging.debug('Importing radio patches.')
-    with astropy.io.fits.open(config['data_sources']['atlas_image'],
-                              ignore_blank=True) as atlas_image:
+    with astropy.io.fits.open(
+            config['data_sources']['atlas_{}_image'.format(field)],
+            ignore_blank=True) as atlas_image:
         wcs = astropy.wcs.WCS(atlas_image[0].header).dropaxis(3).dropaxis(2)
         pix_coords = wcs.all_world2pix(swire_positions, FITS_CONVENTION)
         assert pix_coords.shape[1] == 2
@@ -403,7 +438,6 @@ def import_wise(f_h5, field='cdfs'):
             config['data_sources']['atlas_{}_image'.format(field)],
             ignore_blank=True) as atlas_image:
         wcs = astropy.wcs.WCS(atlas_image[0].header).dropaxis(3).dropaxis(2)
-        print(wise_positions)
         pix_coords = wcs.all_world2pix(wise_positions, FITS_CONVENTION)
         assert pix_coords.shape[1] == 2
         assert pix_coords.shape[0] == len(indices)
@@ -816,7 +850,8 @@ def _main(args):
         import_atlas(f_h5, test=args.test, field='cdfs')
         import_atlas(f_h5, test=args.test, field='elais')
         if args.ir == 'swire':
-            import_swire(f_h5)
+            import_swire(f_h5, field='cdfs')
+            import_swire(f_h5, field='elais')
         elif args.ir == 'wise':
             import_wise(f_h5, field='cdfs')
             import_wise(f_h5, field='elais')

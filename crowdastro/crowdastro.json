@@ -1,16 +1,17 @@
 {
     "data_sources": {
-        "atlas_catalogue": "RGZ/ATLASDR3_cmpcat_23July2015.csv",
-        "atlas_cdfs_image": "RGZ/CDFSmosaic_allch_8March2015.fits",
-        "atlas_elais_image": "RGZ/ELAISmosaic_allch_8March2015.fits",
-        "cdfs_fits": "RGZ/cdfs",
-        "norris_coords": "RGZ/norris_2006_atlas_classifications_ra_dec_only.dat",
-        "fan_swire": "RGZ/fan_2015_swire_only.csv",
+        "atlas_catalogue": "data/ATLASDR3_cmpcat_23July2015.csv",
+        "atlas_cdfs_image": "data/CDFSmosaic_allch_8March2015.fits",
+        "atlas_elais_image": "data/ELAISmosaic_allch_8March2015.fits",
+        "cdfs_fits": "data/cdfs",
+        "norris_coords": "data/norris_2006_atlas_classifications_ra_dec_only.dat",
+        "fan_swire": "data/fan_2015_swire_only.csv",
         "radio_galaxy_zoo_db": "radio",
-        "rgz_to_atlas": "RGZ/RGZ-ATLAS-Bookkeeping.csv",
-        "swire_catalogue": "RGZ/SWIRE3_CDFS_cat_IRAC24_21Dec05.tbl",
-        "wise_cdfs_catalogue": "RGZ/wise_allwise.wise_allwise_p3as_psd4511.tbl",
-        "wise_elais_catalogue": "RGZ/wise_allwise.wise_allwise_p3as_psd24832.tbl"
+        "rgz_to_atlas": "data/RGZ-ATLAS-Bookkeeping.csv",
+        "swire_cdfs_catalogue": "data/SWIRE3_CDFS_cat_IRAC24_21Dec05.tbl",
+        "swire_elais_catalogue": "data/swire.elaiss1_cat_f0521785.tbl",
+        "wise_cdfs_catalogue": "data/wise_allwise.wise_allwise_p3as_psd4511.tbl",
+        "wise_elais_catalogue": "data/wise_allwise.wise_allwise_p3as_psd24832.tbl"
     },
 
     "data_checksums": {
@@ -19,8 +20,8 @@
         "norris_coords": "b8dd557d5c2ec6e31a1b51415162a02e",
         "fan_swire": "8dcda8121c549374ea47a30095031675",
         "rgz_to_atlas": "defbc6545c43429cc5c1c2927bc8febc",
-        "swire_catalogue": "d175f8ad33749a09c2470122c1067f22",
-        "wise_catalogue": "28a546e272d9d9521afe3e2eec74eab2"
+        "swire_cdfs_catalogue": "d175f8ad33749a09c2470122c1067f22",
+        "wise_cdfs_catalogue": "28a546e272d9d9521afe3e2eec74eab2"
     },
 
     "mongo": {
@@ -45,7 +46,7 @@
             "mosaic_scale_y": 0.4
         },
         "swire": {
-            "n_features": 7,
+            "n_features": 9,
             "n_raw_features": 7,
             "distance_cutoff": 0.05
         },
