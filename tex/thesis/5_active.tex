@@ -3,4 +3,103 @@
 \chapter{Active Learning}
 \label{cha:active-learning}
 
-In this chapter I'll talk about applying active learning to the RGZ data.
+In this chapter we discuss active learning and look at its application to both
+the galaxy classification task and to the Radio Galaxy Zoo project.
+
+\section{Introduction}
+\label{sec:intro-active-learning}
+    
+    In supervised learning we deal with a set of data points and their
+    associated labels. This dataset may be expensive to obtain, but the main
+    costs may come from collecting labels, rather than from collecting the data
+    points themselves. Examples of such data include text samples
+    \citep{lewis94, mccallum98}, and images \citep{loy11, lintott08}, both of
+    which are now widely and cheaply available through the internet. A more
+    abstract example is scientific hypotheses \citep{king04}. Labelling text and
+    images is hard, error-prone, and requires humans; and performing a
+    scientific experiment to test a hypothesis is considerably more expensive
+    than coming up with the hypothesis. It may even be the case that we simply
+    cannot label all the data because there is too much, such as in the Galaxy
+    Zoo \citep{lintott08} and Radio Galaxy Zoo \citep{banfield15} projects.
+
+    \emph{Active learning} (or \emph{query learning} \citep{settles09, seung92,angluin86})
+    allows a machine learning algorithm to select specific, unlabelled examples
+    to be labelled by an expert. The algorithm effectively chooses its own
+    training set \citep{settles09}. The hope is that the algorithm can choose to
+    label only the most useful examples \citep{mccallum98}, and the expensive
+    process of labelling redundant or useless examples is avoided
+    \citep{engelson99}. Intelligently selecting the training set as in active
+    learning can result in massively reduced labelling costs \citep{lewis94,
+    king04} or even make intractable labelling problems tractable.
+
+    While there are many variations of active learning scenarios, we focus on
+    \emph{pool-based} active learning in this thesis. In pool-based active
+    learning, we already have a large pool of unlabelled data points accessible
+    to our algorithms, and our algorithms can choose to present any of these
+    data points to the expert. The pool-based scenario commonly arises when we
+    are able to obtain a lot of unlabelled data at once, such as in astronomical
+    surveys \citep{pelleg04, richards12, marshall15}.
+
+    Active learning has already been successfully applied in astronomy.
+    \citet{pelleg04} applied active learning to the Sloan Digital Sky Survey to
+    find anomalies in the survey. \citet{richards12} applied active learning to
+    classify variable stars from the All Sky Automated Survey. Both papers
+    showed that active learning resulted in a great reduction in the number of
+    labels needed to achieve their respective tasks.
+
+\section{Query Strategies}
+\label{sec:query-strategies}
+
+    A \emph{query strategy} is the approach an active learning algorithm takes
+    to selecting a new data point to label. There are many different query
+    strategies, but here we focus on uncertainty sampling and
+    query-by-committee.
+
+    All pool-based query strategies take the same form. We are given some pool
+    of data $\mathcal X$ and a set of labelled data $\mathcal D = \mathcal X
+    \times \mathcal Y$. We want to select $\tilde x \in \mathcal X$ such that
+    labelling $\tilde x$ maximises our information gain.
+
+    \subsection{Uncertainty Sampling}
+    \label{sec:uncertainty-sampling}
+
+        \emph{Uncertainty sampling} \citep{lewis94} is perhaps the most common
+        query strategy. Given a classification model $y(\vec x) = p(z \mid x)$
+        with the ability to output a probability (including probabilistic
+        classifiers like logistic regression, nearest-neighbour classifiers
+        \citep{lewis94}, and combinations of probabilistic and non-probabilistic
+        classifiers \citep{lewis94b}), the queried point $\tilde x$ is the data
+        point for which the model is least certain of the classification. This
+        is not well-defined and an uncertainty sampling algorithm must choose
+        what ``least certain'' means. There are three common measures of
+        uncertainty --- confidence-, entropy-, and margin-based --- but in the
+        case of binary classification, they all reduce to one strategy
+        \citep{settles09}:
+        \[
+            \tilde x = \underset{\vec x}{\mbox{argmax}}\ 1 - \abs{y(\vec x) - 0.5}.
+        \]
+        The intuition is that the further a data point is from the decision
+        boundary, the more certain the classifier is of the assigned label, so
+        choosing the closest data point to the decision boundary is equivalent
+        to choosing the most uncertain data point. Another interpretation is that $1 - \abs{y(\vec x) - 0.5}$ is the expected probability of mislabelling $\vec x$ \citep{settles09}.
+
+        % In the confidence-based approach, $\tilde x$ is the data point that is
+        % closest to the decision boundary, i.e.
+
+        % % In the 
+
+    \subsection{Query-by-Committee}
+    \label{sec:qbc}
+
+\section{Query-by-Committee on the Galaxy Classification Task}
+\label{sec:rgz-qbc}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]
+            {images/experiments/rgz_qbc.pdf}
+        \caption{Logistic regression trained on the \citeauthor{norris06}
+            labels with different amounts of training data and two different
+            query strategies.}
+        \label{fig:rgz-qbc}
+    \end{figure}
