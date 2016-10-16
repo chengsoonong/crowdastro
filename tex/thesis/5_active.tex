@@ -91,8 +91,24 @@ the galaxy classification task and to the Radio Galaxy Zoo project.
     \subsection{Query-by-Committee}
     \label{sec:qbc}
 
+        Query-by-committee (QBC)
+
 \section{Query-by-Committee on the Galaxy Classification Task}
 \label{sec:rgz-qbc}
+
+    We tested QBC active learning on the galaxy classification task described in Chapter \ref{cha:cross-identification}, comparing QBC to passive (i.e. random) selection as a query strategy.
+
+    We used a committee of 20 logistic regression classifiers for the QBC test.
+    Each was presented with 75\% of the known labels at random, stratified by the labels.
+
+    For the passive test, we sampled 100 galaxies at random (stratified by the
+    labels) and trained a logistic regression classifier on these. We then drew
+    a batch of new labels, added these to the existing label set, and then
+    retrained the classifier. This was repeated until the classifier had seen
+    the entire training set ($10^4$ labels). The process for testing QBC was
+    identical, except that instead of drawing new labels at random, the new
+    labels were drawn in order of highest to lowest disagreement of the
+    committee.
 
     \begin{figure}
         \centering

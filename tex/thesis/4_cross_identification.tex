@@ -124,7 +124,34 @@
   describes the design and test sets used for the experiments that appear in the
   following sections.
 
-  \todo{Write}
+  To generate the \citeauthor{norris06} and \citeauthor{fan15} label sets, we
+  matched each location identified by \citeauthor{norris06} and
+  \citeauthor{fan15} to the nearest candidate host in WISE. These galaxies were
+  labelled $1$. All other candidate hosts were labelled $0$.
+
+  We generated test sets by first finding all candidate hosts for which the
+  \citeauthor{norris06} label and the \citeauthor{fan15} label agree. To
+  generate a test set, we followed the following method:
+  \begin{enumerate}
+    \item Find all ATLAS objects where \citeauthor{norris06} and
+    \citeauthor{fan15} agree on the labels of all galaxies within 1'.
+    \item Draw randomly without replacement 50\% of the ATLAS objects.
+    \item If a candidate host is within 1' of a drawn ATLAS object, add it to
+    the test set.
+  \end{enumerate}
+  This method resulted in a test set with similar class distribution to the true
+  data and no feature overlap between training objects and testing objects. We
+  drew 10 test sets with this method.
+
+  To train and test a method, we followed the following method:
+  \begin{enumerate}
+    \item Choose a test set.
+    \item Add all candidate hosts not in this test set to the training set.
+    \item Train the method using the selected training set.
+    \item Evaluate performance with balanced accuracy against the test set.
+    \item Repeat for all other test sets.
+  \end{enumerate}
+  We report the mean balanced accuracy and standard deviation.
 
 \section{Feature Selection}
 \label{sec:features}
@@ -334,6 +361,15 @@
 \section{Handling Crowd Labels}
 \label{sec:rgz-crowd-labels}
 
+  \begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{images/experiments/rgz_raykar}
+    \caption{Comparison of logistic regression and \citeauthor{raykar10} on the
+      galaxy classification task with different numbers of labellers.}
+    \label{fig:rgz-raykar}
+  \end{figure}
+
+
   While we want to train a classifier on the crowdsourced labels from the Radio
   Galaxy Zoo, it is unclear how we should aggregate the labels. Some methods for
   aggregation are described in Section \ref{sec:crowd-labels}. Which method will
@@ -354,37 +390,28 @@
   on the majority vote of just these labellers. The results are shown in Figure
   \ref{fig:rgz-raykar}.
 
-  \begin{figure}[!ht]
-    \centering
-    \includegraphics[width=\textwidth]{images/experiments/rgz_raykar}
-    \caption{Comparison of logistic regression and \citeauthor{raykar10} on the
-      galaxy classification task with different numbers of labellers.}
-    \label{fig:rgz-raykar}
-  \end{figure}
+  With $T = 10$ labellers, the \citeauthor{raykar10} algorithm took $83 \pm 36$
+  seconds to run. When the number of labellers was increased to $T = 15$, the
+  \citeauthor{raykar10} algorithm took $152 \pm 115$ seconds to run. This helps
+  to highlight how slow the algorithm becomes with increasing $T$.
 
-\section{Galaxy Classification Performance}
+\section{Galaxy Classification}
 \label{sec:rgz-results}
 
-  \todo{Make this writing considerably less terrible.}
+  In this section, we present results using methods developed in this chapter.
 
-  The infrared objects were partitioned into a testing set and a training set
-  as follows. First, the radio objects were partitioned into a radio testing
-  set and a radio training set, with the radio testing set containing $452$
-  objects and the radio training set containing $1811$ objects. Infrared
-  objects were then added to the infrared testing set if they were within $1'$
-  of a radio object in the radio testing set, and added to the infrared
-  training set otherwise. This was done because infrared objects that were
-  close together had overlapping radio features, and thus random partitioning
-  would result in the training set containing many of the features found in
-  the testing set. The partitioning resulted in $5922$ objects in the testing
-  set and $18218$ objects in the training set.
+  \subsection{Comparison of Methods}
+  \label{sec:comparison-predictors}
 
-  For each infrared object, features and labels were generated as described in
-  Sections \ref{sec:features} and \ref{sec:consensuses}, respectively. Note
-  that the labels were sourced from the Radio Galaxy Zoo. A logistic
-  regression classifier was then trained on the training set using binary
-  cross-entropy loss, with loss of each data point weighted based on the
-  frequency of its label.
+  We trained logistic regression classifiers on three training sets:
+  \begin{itemize}
+    \item the \citeauthor{norris06} labels,
+    \item the \citeauthor{fan15} labels, and
+    \item the Radio Galaxy Zoo majority vote.
+  \end{itemize}
+  We also trained the \citeauthor{raykar10} algorithm with the Radio Galaxy Zoo
+  labels. Each volunteer was assigned a unique index and the algorithm was run
+  with $T = 2014$ total labellers.
 
   The classifier was then used to classify the objects in the testing set. The
   labels were compared to those found by \citet{norris06} as described in

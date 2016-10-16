@@ -184,11 +184,11 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
             vertical_scatter_ba(
                     results,
                     crowdastro_h5['/wise/cdfs/norris_labels'].value,
-                    rotation=45, x_tick_offset=-0.5)
+                    rotation=45, x_tick_offset=-0.5, violin=True)
             # Add a little space for the labels.
             plt.subplots_adjust(bottom=0.3)
-            matplotlib.rcParams['figure.figsize'] = [8.0, 8.0]
-            plt.ylim((0, 1))
+            matplotlib.rcParams['figure.figsize'] = [6.0, 6.0]
+            plt.ylim((0, 100))
             plt.show()
 
 
