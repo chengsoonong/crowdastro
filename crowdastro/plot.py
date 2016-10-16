@@ -158,8 +158,8 @@ def violinplot(xs, ys, rotation='horizontal', points=100,
     plt.xlim((0.5, len(xs) + 0.5))  # Adds a little buffer.
 
 
-def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), violin=False,
-                        minorticks=False, **kwargs):
+def vertical_scatter_ba(results, targets, ylim=(70, 100), violin=False,
+                        minorticks=False, percentage=True, **kwargs):
     """Plot a vertical scatter plot of balanced accuracies.
 
     results: Results object.
@@ -167,6 +167,7 @@ def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), violin=False,
     ylim: (lower, upper) y axis.
     violin: Plot a violin plot instead. Default False.
     minorticks: Use minor ticks. Default False.
+    percentage: Plot percentage rather than raw balanced accuracy. Default True.
     kwargs: Keyword arguments passed to vertical_scatter.
     """
     xs = sorted(results.method_idx, key=results.method_idx.get)
@@ -185,6 +186,8 @@ def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), violin=False,
             n, p = cm.sum(axis=1)
             tn = cm[0, 0]
             ba = (tp / p + tn / n) / 2
+            if percentage:
+                ba *= 100
             y.append(ba)
         logging.info('Average balanced accuracy ({}): {:.02%}'.format(
                 method, numpy.mean(y)))
@@ -201,7 +204,8 @@ def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), violin=False,
              alpha=0.5)
     if minorticks:
         plt.minorticks_on()
-    plt.ylabel('Balanced accuracy (%)')
+    plt.tick_params(axis='x', which='minor', length=0)
+    plt.ylabel('Balanced accuracy' + (' (%)' if percentage else ''))
 
 
 def fillbetween(xs, ys, facecolour='lightgreen', edgecolour='green',
