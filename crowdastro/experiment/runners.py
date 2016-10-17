@@ -93,8 +93,11 @@ def lr(results, method_name, split_id, features, targets, test_indices, C=1.0,
             train_indices, train_size=n_train, stratify=targets[train_indices])
         train_indices.sort()
 
-    lr = sklearn.linear_model.LogisticRegression(class_weight='balanced', C=C)
+    lr = sklearn.linear_model.LogisticRegression(class_weight='balanced', C=C,
+                                                 n_jobs=-1)
+    logging.debug('Fitting {} instances.'.format(len(features)))
     lr.fit(features[train_indices], targets[train_indices])
+    logging.debug('Fit complete. Storing...'.format(len(features)))
     results.store_trial(
         method_name, split_id,
         lr.predict_proba(features[test_indices])[:, 1],
