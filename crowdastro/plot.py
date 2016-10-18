@@ -136,7 +136,7 @@ def vertical_scatter(xs, ys, style='bx', rotation='horizontal',
                 plt.plot(xs, ys_t[y])
 
 
-def violinplot(xs, ys, rotation='horizontal', points=100,
+def violinplot(xs, ys, rotation='horizontal', points=100, x_tick_offset=0,
                facecolour='lightgreen', edgecolour='green'):
     """Plots a vertical scatter plot.
 
@@ -144,6 +144,7 @@ def violinplot(xs, ys, rotation='horizontal', points=100,
     ys: List of lists of points to scatter vertically.
     rotation: x label rotation. Default 'horizontal'.
     points: Number of points to use in the density estimate.
+    x_tick_offset: How far to offset the x tick labels. Default 0.
     facecolour: Colour of the violin plots. Default light green.
     edgecolour: Colour of the violin lines. Default green.
     """
@@ -154,12 +155,13 @@ def violinplot(xs, ys, rotation='horizontal', points=100,
         pc.set_facecolor(facecolour)
         pc.set_edgecolor(edgecolour)
     vp['cmeans'].set_color(edgecolour)
-    plt.xticks([1 + i for i in range(len(xs))], xs, rotation=rotation)
+    plt.xticks([1 + i + x_tick_offset for i in range(len(xs))],
+               xs, rotation=rotation)
     plt.xlim((0.5, len(xs) + 0.5))  # Adds a little buffer.
 
 
-def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), violin=False,
-                        minorticks=False, **kwargs):
+def vertical_scatter_ba(results, targets, ylim=(70, 100), violin=False,
+                        minorticks=False, percentage=True, **kwargs):
     """Plot a vertical scatter plot of balanced accuracies.
 
     results: Results object.
@@ -167,6 +169,7 @@ def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), violin=False,
     ylim: (lower, upper) y axis.
     violin: Plot a violin plot instead. Default False.
     minorticks: Use minor ticks. Default False.
+    percentage: Plot percentage rather than raw balanced accuracy. Default True.
     kwargs: Keyword arguments passed to vertical_scatter.
     """
     xs = sorted(results.method_idx, key=results.method_idx.get)
@@ -185,6 +188,8 @@ def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), violin=False,
             n, p = cm.sum(axis=1)
             tn = cm[0, 0]
             ba = (tp / p + tn / n) / 2
+            if percentage:
+                ba *= 100
             y.append(ba)
         logging.info('Average balanced accuracy ({}): {:.02%}'.format(
                 method, numpy.mean(y)))
@@ -201,11 +206,12 @@ def vertical_scatter_ba(results, targets, ylim=(0.7, 1.0), violin=False,
              alpha=0.5)
     if minorticks:
         plt.minorticks_on()
-    plt.ylabel('Balanced accuracy (%)')
+    plt.tick_params(axis='x', which='minor', length=0)
+    plt.ylabel('Balanced accuracy' + (' (%)' if percentage else ''))
 
 
 def fillbetween(xs, ys, facecolour='lightgreen', edgecolour='green',
-                marker='x', **kwargs):
+                marker='x', facealpha=1.0, **kwargs):
     """Plots a line plot with error represented by filled-between lines.
 
     xs: List of x values.
@@ -213,9 +219,11 @@ def fillbetween(xs, ys, facecolour='lightgreen', edgecolour='green',
     facecolour: Colour of the filled-between lines. Default light green.
     edgecolour: Colour of the central line. Default green.
     marker: Point marker. Default 'x'.
+    facealpha: Alpha value of filled section. Default 1.0.
     kwargs: Keyword arguments passed to plot.
     """
     means = numpy.mean(ys, axis=1)
     stds = numpy.std(ys, axis=1)
     plt.plot(xs, means, color=edgecolour, marker=marker, **kwargs)
-    plt.fill_between(xs, means - stds, means + stds, color=facecolour)
+    plt.fill_between(xs, means - stds, means + stds, color=facecolour,
+                     alpha=facealpha)

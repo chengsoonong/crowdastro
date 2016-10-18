@@ -3,30 +3,39 @@
 \label{cha:astro}
 
     Modern astronomy relies on observations of deep space. Telescopes image the
-    sky in different wavelengths, with different wavelengths carrying different
-    physical meanings. Infrared surveys detect star formation and dust in
-    distant galaxies, and radio surveys detect massive objects called active
-    galactic nuclei. In this section, we describe what we see when we look at
-    the sky in these wavelengths, as well as introducing specific radio and
-    infrared surveys relevant to this thesis. We also discuss the motivation
-    behind cross-identifying active galactic nuclei with their host galaxies, as
-    well as the inherent difficulty in doing so, and hence provide the
-    motivation behind this thesis.
+    sky in different wavelengths, with different wavelengths each carrying
+    different physical meanings. Infrared surveys detect star formation and dust
+    in distant galaxies, and radio surveys detect massive objects called active
+    galactic nuclei. In this section, we describe what in radio and infrared
+    surveys, as well as introducing specific radio and infrared surveys relevant
+    to this thesis. We also discuss the motivation behind cross-identifying
+    active galactic nuclei with their host galaxies, as well as the inherent
+    difficulty in doing so, and hence provide the motivation for this thesis.
 
     \section{Radio Active Galactic Nuclei}
     \label{sec:agns}
 
         \begin{figure}[!ht]
             \centering
-            \includegraphics[width=0.8\textwidth]
+            \includegraphics[height=0.2\textheight]
                 {images/accretion_disk_artist_impression.jpg}
             \caption{An artist's impression of the accretion disk of an active
                 galactic nucleus. \emph{Image: NASA/JPL-Caltech}}
             \label{fig:accretion-disk}
         \end{figure}
 
-        Many galaxies contain a supermassive black hole in their centre. These
-        black holes accrete matter from the surrounding galaxy in an
+        \begin{figure}[!ht]
+            \centering
+            \includegraphics[height=0.3\textheight]
+                {images/ESO_Centaurus_A_LABOCA.jpg}
+            \caption{Centaurus A, a relatively close radio active galactic
+                nucleus. \emph{Image: ESO/WFI (Optical); MPIfR/ESO/APEX/A.Weiss
+                et al. (Submillimetre); NASA/CXC/CfA/R.Kraft et al. (X-ray)}}
+            \label{fig:centaurus-a}
+        \end{figure}
+
+        Many galaxies contain a supermassive black hole in their centre \citeme.
+        These black holes accrete matter from the surrounding galaxy in an
         \emph{accretion disk} (Figure \ref{fig:accretion-disk}). The accretion
         process emits huge amounts of light through different physical
         processes. These light-emitting black holes are called active galactic
@@ -35,16 +44,15 @@
         entire galaxy emits \citep{begelman84}. AGNs are found throughout the
         universe: The closest known AGN is Centaurus A (shown in Figure
         \ref{fig:centaurus-a}), with $z \approx 0.0018$, and AGNs have been
-        detected up to redshifts of $z \approx 7$ \citeme.
+        detected up to redshifts of $z \approx 7$ \citeme \todo{Convert this
+        into a non-redshift distance}.
 
-        \begin{figure}[!ht]
+        \begin{figure}
             \centering
-            \includegraphics[width=0.5\textwidth]
-                {images/ESO_Centaurus_A_LABOCA.jpg}
-            \caption{Centaurus A, a relatively close radio active galactic
-                nucleus. \emph{Image: ESO/WFI (Optical); MPIfR/ESO/APEX/A.Weiss
-                et al. (Submillimetre); NASA/CXC/CfA/R.Kraft et al. (X-ray)}}
-            \label{fig:centaurus-a}
+            \includegraphics[height=0.3\textheight]{images/M87_jet.jpg}
+            \caption{M87, a giant elliptical galaxy with a jet. \emph{Image:
+                NASA and The Hubble Heritage Team (STScI/AURA)}}
+            \label{fig:m87}
         \end{figure}
 
         AGNs produce \emph{jets} from their accretion disk. Jets are long, thin
@@ -53,53 +61,45 @@
         length \citep{saripalli05}. The process through which jets are emitted
         is currently unknown \citeme.
 
-        \begin{figure}[!ht]
-            \centering
-            \includegraphics[width=0.5\textwidth]{images/M87_jet.jpg}
-            \caption{M87, a giant elliptical galaxy with a jet. \emph{Image:
-                NASA and The Hubble Heritage Team (STScI/AURA)}}
-            \label{fig:m87}
-        \end{figure}
+        Electrons in jets can produce \emph{synchrotron radiation}. This is a
+        form of radiation emitted by charged particles travelling at
+        relativistic speeds as they accelerate in a magnetic field \citeme.
+        Synchrotron radiation is emitted in radio wavelengths, and so AGNs
+        emitting synchrotron radiation are called \emph{radio AGNs}. As radio
+        AGNs are the focus of this thesis, from this point on ``AGN'' will refer
+        only to radio AGNs.
 
-        Electrons in jets can produce \emph{synchrotron radiation}, a form of
-        radiation emitted by charged particles as they accelerate at
-        relativistic speeds in a magnetic field \citeme. This
-        radiation is emitted in radio wavelengths, and so AGNs emitting this
-        kind of radiation are called \emph{radio AGNs}. As radio AGNs are the
-        focus of this thesis, from this point on ``AGN'' will refer only to
-        radio AGNs.
-
-        To fully understand these objects, astronomers need data from more than
+        To fully understand these objects astronomers need data from more than
         just radio surveys. Combining observations of objects in multiple
-        wavelengths is thus a common problem in astronomy, and is called
-        \emph{cross-identification} \citep{fan15}. For point sources of light,
+        wavelengths is therefore a common problem in astronomy, and is called
+        \emph{cross-identification} \citep{fan15}. For point sources of light
         this can be straightforward --- the coordinates of each source on the
         sky are well-known and can often be immediately matched throughout
-        surveys --- but as we can only observe AGNs by observing their jets,
-        AGNs are effectively not point sources. We discuss this in detail in
-        Section \ref{sec:radio-cross-identification}.
+        surveys --- but as it is the jets of AGNs that emit radio, AGNs are not
+        point sources. We discuss this in detail in Section
+        \ref{sec:radio-cross-identification}.
 
     \section{Astronomical Observations}
     \label{sec:astronomical-observations}
 
-        When observing the sky, we can think about the sky as a spherical
-        surface surrounding the earth. All objects we see with telescopes are
-        flat on the sky, and we only have limited tools to determine their
-        distances and scales. In this section, we describe the coordinate
-        systems and units used to describe these objects.
+        When observing the sky, we can think about the sky as being projected
+        onto a spherical surface surrounding the earth. All objects we see with
+        telescopes are flat on the sky, and we only have limited tools to
+        determine their distances and scales. In this section, we describe the
+        coordinate systems and units used to describe these objects.
 
         \subsection{Astronomical Coordinates}
         \label{sec:coordinates}
 
-            Astronomy uses a coordinate system called the \emph{equatorial
-            coordinate system} to describe the positions of objects on the sky.
-            Each position on the sky is described by two numbers: the
-            \emph{right ascension} (RA) and the \emph{declination} (dec).
+            Astronomy uses the \emph{equatorial coordinate system} to describe
+            the positions of objects on the sky. Each position on the sky is
+            described by two numbers: the \emph{right ascension} (RA) and the
+            \emph{declination} (dec).
 
             \begin{figure}[!ht]
                 \centering
                 \includegraphics[width=0.5\textwidth]{images/ra-dec}
-                \caption{The equatorial coordinate system.}
+                \caption{The equatorial coordinate system used in astronomy.}
                 \label{fig:equatorial-coordinates}
             \end{figure}
 
@@ -130,16 +130,31 @@
         \subsection{Wavelength and Frequency}
         \label{sec:wavelength}
 
-            \emph{Wavelength} is a property of radiation corresponding to its
-            colour. Wavelength is measured in metres (m) and is usually denoted $\lambda$. Ranges of wavelengths are given common names such as
-            infrared, optical, and radio.
+            Light is an electromagnetic wave, and like all waves, it has
+            \emph{wavelength} and \emph{frequency}. The wavelength of light is
+            the distance between two neighbouring peaks; it is measured in
+            metres (m) and usually denoted $\lambda$. The frequency of light is
+            the number of waves per second; it is measured in hertz (Hz) and
+            usually denoted $\nu$. Wavelength and frequency are related by the
+            formula
+            \[
+                c = \lambda \nu,
+            \]
+            where $c$ is the speed of light.
 
-            When objects emit radiation, the wavelength of the emitted radiation
-            depends on the process by which it was emitted. For example, thermal
-            radiation is emitted by all objects based entirely on the
-            temperature of the object, with hotter objects emitting light with
-            shorter wavelengths. Another example is synchrotron radiation
-            (Section \ref{sec:agns}), which is emitted in radio wavelengths.
+            Humans can see a limited range of wavelengths of light. In this
+            range, the wavelength of light corresponds to its colour: Blue light
+            has shorter wavelength (and higher frequency) than red light.
+            Outside of this range, light still has various different
+            ``colours'', but we cannot see them. Different ranges of wavelength
+            are assigned different names, such as infrared, x-ray, and radio.
+
+            When objects emit light, the wavelength depends on the process by
+            which the light was emitted. For example, thermal radiation is
+            emitted by all objects based entirely on the temperature of the
+            object, with hotter objects emitting light with shorter wavelengths.
+            Another example is synchrotron radiation (Section \ref{sec:agns}),
+            which is emitted in radio wavelengths.
 
             Since telescopes generally only detect brightnesses of objects in
             the sky, and different wavelengths of radiation require different
@@ -147,38 +162,32 @@
             only at specific ranges of wavelengths. Separate measurements of
             wavelength are later combined for analysis.
 
-            \emph{Frequency} is another common property of radiation. It is
-            measured in hertz (Hz) and usually denoted $\nu$. Wavelength and
-            frequency are interchangeable using the formula
-            \[
-                c = \lambda \nu
-            \]
-            where $c$ is the speed of light.
-
         \subsection{Flux and Magnitude}
 
-            The \emph{flux density} $f$ of an object is its energy output per
-            unit time per unit area, and is measured in $\text{W m}^{-2}$. The
-            flux density is given by
+            The \emph{flux density} of an object is its energy output per unit
+            time per unit area. It is denoted $f$ and is measured in $\text{W
+            m}^{-2}$. The flux density is given by
             \[
                 f = \frac{1}{A}\frac{\text{d}E}{\text{d}t}
             \]
-            We cannot usually measure the flux over all frequencies, so usually
-            flux is observed over a specific frequency range $\Delta \nu$. The
+            where $E$ is the energy received from the object and $t$ is the
+            time. We cannot usually measure the flux over all frequencies, so
+            usually flux is observed over a specific frequency range $\Delta
+            \nu$. The
             \emph{spectral flux density} is then the limit of this as the
             frequency range approaches zero, i.e.
             \[
                 f_\nu = \frac{1}{A}\frac{\text{d}^2E}{\text{d}\nu\text{d}t}
             \]
-            where $E$ is the energy received from the object, $A$ is the area of
-            the object on the sky, and $\nu$ is the frequency. The spectral flux
+            where $A$ is the area of the object on the sky. The spectral flux
             density is measured in janskys (Jy), an astronomical unit equal to
             $10^{-26} \text{ W m}^{-2} \text{ Hz}^{-1}$ \citep{francis08}.
 
-            The \emph{apparent magitude} $m$ of an object is a logarithmic
+            The \emph{apparent magitude}, $m$, of an object is a logarithmic
             measure of its apparent brightness seen from Earth, relative to the
             star Vega \citep{francis08}. The difference between the magnitudes
-            of two objects represents the ratio of their flux densities
+            of two objects, $m_1$ and $m_2$, represents the logarithm of the
+            ratio of their flux densities
             \begin{equation}
                 \label{eq:magnitude-difference}
                 m_2 - m_1 = -2.5 \log_{10} \left(\frac{f_2}{f_1}\right)
@@ -201,42 +210,45 @@
 
         \begin{figure}[!ht]
             \centering
-            \includegraphics[width=0.8\textwidth]{images/skymap.pdf}
+            \includegraphics[width=0.8\textwidth]{images/skymap2.pdf}
             \caption{A map of the sky, showing the FIRST and EMU radio surveys,
-                and the WISE and SWIRE infrared surveys. The ATLAS radio survey
-                covers both the CDFS and ELAIS-S1 fields.}
+                and the SWIRE infrared survey. The ATLAS radio survey
+                covers both the CDFS and ELAIS-S1 fields. The WISE infrared
+                survey covers the entire sky.}
         \end{figure}
 
         \subsection{EMU: Evolutionary Map of the Universe}
         \label{sec:emu}
 
             The largest existing radio survey is currently the NRAO VLA Sky
-            Survey (NVSS) \citep{condon98}, which covered the entire northern
-            sky as far south as $-40^\circ$. However, NVSS is very shallow, only
-            detecting objects brighter than $2.5$ mJy, and only resolving
-            objects to $45''$. The deepest existing radio survey is of the SWIRE
-            fields \citep{owen08}, which only covered around $0.1$ deg$^2$ of
-            the sky, but to a depth of $0.015$ mJy with an angular resolution of
-            $1.6''$. The Evolutionary Map of the Universe (EMU) is an upcoming
-            deep radio survey that aims to provide both deep and wide coverage
+            Survey (NVSS) \citep{condon98}, which covers the entire northern sky
+            as far south as $-40^\circ$. However, NVSS has low sensitivity, only
+            detecting objects brighter than $2.5$ mJy. NVSS also has relatively
+            low resolution, only resolving objects to $45''$. The most sensitive
+            existing radio survey is of the Lockman hole \citep{owen08}, which
+            only covered around $0.1$ square degrees of the sky, but detected
+            objects as dim as $0.015$ mJy with an angular resolution of $1.6''$.
+            The Evolutionary Map of the Universe (EMU) is an upcoming deep radio
+            survey that aims to provide both high sensitivity and wide coverage
             of the radio sky \citep{norris11}. EMU will be sensitive to objects
             to around $0.015$ mJy with an angular resolution of around $10''$,
             and cover the entire southern sky as far north as $30^\circ$. The
             survey is expected to find huge numbers of radio objects --- while
-            ATLAS (Section \ref{sec:atlas}) has detected around 4000 radio
-            objects, EMU is expected to find \emph{70 million} \citep{banfield15}. Such large
-            numbers of radio objects make analysis of the data considerably more
-            difficult than analysis of existing surveys has been. Analysis of
-            EMU is far too large to be done by hand, and as such will require
-            algorithms to process the data. With such large numbers of new
-            objects, it is likely that many objects will not fit existing
-            models, meaning that model-based approaches to data processing may
-            be ineffective. It is this problem that motivates the development of
-            new, machine-learned algorithms for processing astronomical data at
-            these large scales. While the EMU survey data is not yet released,
-            development of such algorithms can begin by looking at other
-            datasets with similar sensitivity and resolution, such as ATLAS
-            (Section \ref{sec:atlas}).
+            the Australia Telescope Large Area Survey [ATLAS] (which has similar
+            resolution and sensitivity to EMU) has detected around 4000 radio
+            objects, EMU is expected to find \emph{70 million}
+            \citep{banfield15}. Such a large number of detected objects will
+            make analysis of the data considerably more difficult than analysis
+            of existing surveys has been. Analysis of EMU will be impossible by
+            hand, and will therefore require algorithms to process the data.
+            With so many new objects it is likely that many objects will not fit
+            existing models, meaning that model-based approaches to data
+            processing may be ineffective. It is this problem that motivates the
+            development of new, machine-learned algorithms for processing
+            astronomical data at these large scales. While the EMU survey data
+            is not yet released, development of such algorithms can begin by
+            looking at other datasets with similar sensitivity and resolution,
+            such as ATLAS (Section \ref{sec:atlas}).
 
             EMU aims to fulfil a number of scientific goals, including:
             \begin{itemize}
@@ -256,25 +268,26 @@
         \label{sec:atlas}
 
             \begin{figure}[!ht]
-              \centering
-              \includegraphics[width=0.8\linewidth,]{images/CDFS_bitmap}
-              \caption{ATLAS observations of CDFS. Reproduced from \citet{franzen15}.}.
-              \label{fig:cdfs}
+                \centering
+                \includegraphics[width=0.8\linewidth,]{images/CDFS_bitmap}
+                \caption{ATLAS observations of CDFS.
+                    Reproduced from \citet{franzen15}.}.
+                \label{fig:cdfs}
             \end{figure}
 
-            The Australia Telescope Large Area Survey (ATLAS) is a deep survey
-            of two small areas of the sky in radio wavelengths, which aims to
-            help understand the evolution of early galaxies \citep{norris06}.
-            The Australia Telescope Compact Array was used to image the Chandra
-            Deep Field South (CDFS) and the European Large Area ISO Survey -
-            South 1 (ELAIS-S1) fields. These fields are areas of the sky with
-            few nearby objects, meaning that observations in these fields are of
-            very old, distant objects. These fields were chosen because they are
-            the two fields imaged in the Spitzer Wide-area Infrared
-            Extragalactic Survey (SWIRE, Section \ref{sec:swire}) visible from
-            the southern hemisphere. SWIRE produced high-resolution infrared
-            images of its fields, allowing all objects detected in the ATLAS
-            radio images to be cross-identified with their infrared
+            The Australia Telescope Large Area Survey (ATLAS) is a high
+            sensitivity radio survey which aims to help understand the evolution
+            of early galaxies \citep{norris06}. The Australia Telescope Compact
+            Array was used to image two small areas of the sky: the Chandra Deep
+            Field South (CDFS), and the European Large Area ISO Survey - South 1
+            (ELAIS-S1) field. CDFS and ELAIS-S1 are areas of the sky with few
+            nearby objects, meaning that observations in these fields are of
+            very old, distant objects. These fields in particular were chosen
+            because they are the two fields imaged in the Spitzer Wide-area
+            Infrared Extragalactic Survey (SWIRE, Section \ref{sec:swire})
+            visible from the southern hemisphere. SWIRE produced high-resolution
+            infrared images of its fields, allowing all objects detected in the
+            ATLAS radio images to be cross-identified with their infrared
             counterparts.
 
             ATLAS is considered a pilot survey for EMU. EMU and ATLAS image the
@@ -284,15 +297,24 @@
 
             ATLAS provides both a catalogue of detected radio objects and a
             radio image of the CDFS and ELAIS-S1 fields. The CDFS image covers a
-            total area of 3.7 deg$^2$ and the ELAIS-S1 image covers a total area
-            of 2.7 deg$^2$. The CDFS image is shown in Figure \ref{fig:cdfs}.
-            The catalogue is a list of all objects detected in the images with a
-            peak or integrated flux more than 5 times the background noise
-            levels. Each object has an associated survey identifier, an IAU
-            name, a position on the sky of the peak flux, a peak flux density,
-            an integrated flux density, an angular size, whether the object is
-            extended or compact, and a spectral index, as well as uncertainties
-            associated with each measurement \citep{franzen15}.
+            total area of 3.7 square degrees and the ELAIS-S1 image covers a
+            total area of 2.7 square degrees. The CDFS image is shown in Figure
+            \ref{fig:cdfs}. The catalogue is a list of all objects detected in
+            the images with a peak or integrated flux more than 5 times the
+            background noise levels. For each object, the catalogue lists
+            \begin{itemize}
+                \setlength\itemsep{0 pt}
+                \item an survey identifier,
+                \item an IAU name,
+                \item a position on the sky of the peak flux,
+                \item a peak flux density,
+                \item an integrated flux density,
+                \item an angular size,
+                \item whether the object is extended or compact, and
+                \item a spectral index,
+            \end{itemize}
+            as well as uncertainties associated with each measurement
+            \citep{franzen15}.
 
     \section{Infrared Surveys}
     \label{sec:infrared-surveys}
@@ -311,21 +333,28 @@
 
             The Wide-field Infrared Survey Explorer (WISE) is an orbital
             infrared telescope. In 2009--2010 it was used to survey the entire
-            sky in four wavelengths, 3.4 $\mu$m, 4.6 $\mu$m, 12 $\mu$m, and 22
+            sky in four wavelengths: 3.4 $\mu$m, 4.6 $\mu$m, 12 $\mu$m, and 22
             $\mu$m. These wavelengths are referred to as WISE bands $w1$, $w2$,
             $w3$, and $w4$, respectively. WISE images have resolutions of
             $6''$--$12''$, with sensitivity between $0.08$ and $6$ mJy,
             corresponding to the detection of sources between $16.5$ and $7.9$
             magnitude \citep{wright10}.
 
-            The main goal of the WISE survey is to provide a map of the whole
-            sky in infrared wavelengths for many different reasons: infrared
+            The AllWISE catalogue \citep{cutri13} is the most recent WISE
+            catalogue. For each object detected, the catalogue includes the
+            magnitudes in each WISE band, as well as a number of other features
+            we do not make use of in this thesis. We will refer to the
+            magnitudes in each band by the names of the bands (i.e. $w1$ --
+            $w4$).
+
+            The main goal of WISE was to provide a map of the whole sky in
+            infrared wavelengths for many different reasons: infrared
             measurements may be used to detect and classify distant galaxies,
             measurements can be cross-identified to complement other surveys,
             and so on. There are many other scientific goals of WISE; these are
             described in detail by \citet{wright10}.
 
-        \subsection{SWIRE: Spitzer Wide-Area Infrared Extragalactic Survey}
+        \subsection{SWIRE: Spitzer Wide-area Infrared Extragalactic Survey}
         \label{sec:swire}
 
             \begin{figure}[!ht]
@@ -394,7 +423,41 @@
     \section{Radio Galaxy Zoo}
     \label{sec:radio-galaxy-zoo}
 
-        % \begin{itemize}
+        \begin{figure}
+            \centering
+            \begin{subfigure}[t]{0.3\textwidth}
+                \centering
+                \includegraphics[height=2in]{images/rgz_radio.png}
+                % These empty captions give us something to reference later.
+                \caption{}
+                \label{fig:rgz-interface-a}
+            \end{subfigure}%
+            ~
+            \begin{subfigure}[t]{0.3\textwidth}
+                \centering
+                \includegraphics[height=2in]{images/rgz_ir.png}
+                \caption{}
+                \label{fig:rgz-interface-b}
+            \end{subfigure}%
+            ~
+            \begin{subfigure}[t]{0.3\textwidth}
+                \centering
+                \includegraphics[height=2in]{images/rgz_done.png}
+                \caption{}
+                \label{fig:rgz-interface-c}
+            \end{subfigure}
+            \caption{Radio Galaxy Zoo volunteer workflow.\\
+                \protect\makebox[1.5cm][r]{\ref{fig:rgz-interface-a}}
+                    Volunteers are first asked to identify associated radio
+                    objects.\\
+                \protect\makebox[1.5cm][r]{\ref{fig:rgz-interface-b}}
+                    Volunteers then cross-identify the radio objects with the
+                    corresponding host galaxy.\\
+                \protect\makebox[1.5cm][r]{\ref{fig:rgz-interface-c}}
+                    This is repeated for all radio objects in the image.}
+            \label{fig:rgz-interface}
+        \end{figure}
+
             % \item The Norris catalogue is manual expert classifications, which scales terribly (especially for EMU)
             % \item The Fan catalogue is model-based, so might miss things that are unusual
             % \item Radio Galaxy Zoo is an attempt to generate a catalogue of cross-identifications for the ATLAS and FIRST surveys using crowdsourcing
@@ -411,14 +474,14 @@
     The \citeauthor{norris06} catalogue is highly accurate, but manual expert
     cross-identification of radio surveys is impractical for large surveys. The
     CDFS field examined by \citeauthor{norris06} only contains around 2400 radio
-    objects, which is small even compared to existing surveys --- FIRST
-    \citep{becker95} found 946 000 radio sources, and EMU is expected to find 70
-    million. Automated algorithms such as \citeauthor{fan15} scale better, but
-    most such algorithms are still in their infancy \citeauthor{norris16} and
-    many are model-based, potentially missing many sources that do not fit the
-    models. The Radio Galaxy Zoo project \citep{banfield15} provides a different
-    approach: Allow many non-expert volunteers to manually cross-identify radio
-    sources with their infrared host galaxies.
+    objects, which is small even compared to existing surveys (e.g. FIRST
+    \citep{becker95} found 946 000 radio sources). Automated algorithms such as
+    \citeauthor{fan15} scale better, but most such algorithms are still in their
+    infancy \citeauthor{norris16} and many are model-based, potentially missing
+    many sources that do not fit the models. The Radio Galaxy Zoo project
+    \citep{banfield15} provides a different approach: Allow many non-expert
+    volunteers to manually cross-identify radio sources with their infrared host
+    galaxies.
 
     Radio Galaxy Zoo is a website where volunteers are presented with a radio
     image from ATLAS or FIRST and a corresponding infrared image from SWIRE or
@@ -430,52 +493,26 @@
     for this thesis. An example of the workflow presented to volunteers is shown
     in Figure \ref{fig:rgz-interface}.
 
-    Since its launch in December 2013, the Radio Galaxy Zoo project has labelled over 100 000 radio objects. One particularly notable result is the discovery of one of the largest known wide-angled tail AGNs by two citizen scientists, which would be impossible to detect in current automated algorithms \citep{banfield16}.
+    Since its launch in December 2013, the Radio Galaxy Zoo project has labelled
+    over 100~000 radio objects. One particularly notable result is the discovery
+    of one of the largest known wide-angled tail AGNs by two volunteers, which
+    would be impossible to detect in current automated algorithms
+    \citep{banfield16}.
 
-    \begin{figure}[!ht]
-        \centering
-        \begin{subfigure}[t]{0.3\textwidth}
-            \centering
-            \includegraphics[height=2in]{images/rgz_radio.png}
-            % These empty captions give us something to reference later.
-            \caption{}
-            \label{fig:rgz-interface-a}
-        \end{subfigure}%
-        ~
-        \begin{subfigure}[t]{0.3\textwidth}
-            \centering
-            \includegraphics[height=2in]{images/rgz_ir.png}
-            \caption{}
-            \label{fig:rgz-interface-b}
-        \end{subfigure}%
-        ~
-        \begin{subfigure}[t]{0.3\textwidth}
-            \centering
-            \includegraphics[height=2in]{images/rgz_done.png}
-            \caption{}
-            \label{fig:rgz-interface-c}
-        \end{subfigure}
-        \caption{Radio Galaxy Zoo volunteer workflow.\\\ref{fig:rgz-interface-a}
-          Volunteers are first asked to identify associated radio objects.
-          \\\ref{fig:rgz-interface-b} Volunteers then cross-identify the radio
-          objects with the corresponding host galaxy.\\\ref{fig:rgz-interface-c}
-          This is repeated for all radio objects in the image.}
-        \label{fig:rgz-interface}
-    \end{figure}
-
-    The Radio Galaxy Zoo dataset contains around 177 000 images from FIRST, and
+    The Radio Galaxy Zoo dataset contains around 177~000 images from FIRST, and
     2400 images of the CDFS field from ATLAS. The ATLAS images of the ELAIS-S1
-    field are not included, and may be used as a testing set for cross-
-    identification algorithms trained on the Radio Galaxy Zoo in the future. Each image is a 2 arcminute-wide square.
+    field are not included, and may be used as a testing set for
+    cross-identification algorithms trained on the Radio Galaxy Zoo in the
+    future. Each image is a 2 arcminute-wide square.
 
     To help reduce noise in the labels, each compact radio object is shown to 5
     volunteers, and each complex radio object is shown to 20 volunteers.
 
     The labels are stored in a MongoDB database as a collection of associated
-    radio objects and the corresponding pixel locations that volunteers clicked
-    on, as well as the right ascension and declination of the radio object. The
-    radio and infrared image patches associated with each radio object are also
-    included alongside the database.
+    radio objects and the corresponding pixel locations of the volunteers'
+    clicks, as well as the right ascension and declination of the radio object.
+    The radio and infrared image patches associated with each radio object are
+    also included alongside the database.
 
     In this thesis, we will train machine learning algorithms to perform the
     cross-identification task trained on ATLAS-CDFS labels from the Radio Galaxy

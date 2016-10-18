@@ -29,8 +29,10 @@ def _top_n_accurate_targets(crowdastro_h5, y_true, n_annotators=5,
                             threshold=700):
     """Get the labels of the top n most accurate annotators assessed against
     y_true, above a threshold number of annotations."""
-    labels = crowdastro_h5['/wise/cdfs/rgz_raw_labels'].value
-    labels_mask = crowdastro_h5['/wise/cdfs/rgz_raw_labels_mask'].value
+    ir_survey = crowdastro_h5.attrs['ir_survey']
+    labels = crowdastro_h5['/{}/cdfs/rgz_raw_labels'.format(ir_survey)].value
+    labels_mask = crowdastro_h5[
+        '/{}/cdfs/rgz_raw_labels_mask'.format(ir_survey)].value
     labels = numpy.ma.MaskedArray(labels, mask=labels_mask)
     # Compare each annotator to the Norris labels. Get their balanced accuracy.
     annotator_accuracies = []
@@ -59,7 +61,8 @@ def top_n_accurate_targets(crowdastro_h5, n_annotators=5, threshold=700):
     """Get the labels of the top n most accurate annotators, assessed
     against the groundtruth, above a threshold number of annotations.
     """
-    norris = crowdastro_h5['/wise/cdfs/norris_labels'].value
+    ir_survey = crowdastro_h5.attrs['ir_survey']
+    norris = crowdastro_h5['/{}/cdfs/norris_labels'.format(ir_survey)].value
     return _top_n_accurate_targets(crowdastro_h5, norris,
                                    n_annotators=n_annotators,
                                    threshold=threshold)
@@ -69,8 +72,10 @@ def top_n_mv_accurate_targets(crowdastro_h5, n_annotators=5, threshold=700):
     """Get the labels of the top n most accurate annotators, assessed
     against the majority vote, above a threshold number of annotations.
     """
-    labels = crowdastro_h5['/wise/cdfs/rgz_raw_labels'].value
-    labels_mask = crowdastro_h5['/wise/cdfs/rgz_raw_labels_mask'].value
+    ir_survey = crowdastro_h5.attrs['ir_survey']
+    labels = crowdastro_h5['/{}/cdfs/rgz_raw_labels'.format(ir_survey)].value
+    labels_mask = crowdastro_h5[
+        '/{}/cdfs/rgz_raw_labels_mask'.format(ir_survey)].value
     labels = numpy.ma.MaskedArray(labels, mask=labels_mask)
     mv = majority_vote(labels)
     return _top_n_accurate_targets(crowdastro_h5, mv,
@@ -184,11 +189,11 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
             vertical_scatter_ba(
                     results,
                     crowdastro_h5['/wise/cdfs/norris_labels'].value,
-                    rotation=45, x_tick_offset=-0.5)
+                    rotation=45, x_tick_offset=-0.5, violin=True)
             # Add a little space for the labels.
             plt.subplots_adjust(bottom=0.3)
-            matplotlib.rcParams['figure.figsize'] = [8.0, 8.0]
-            plt.ylim((0, 1))
+            matplotlib.rcParams['figure.figsize'] = [6.0, 6.0]
+            plt.ylim((0, 100))
             plt.show()
 
 

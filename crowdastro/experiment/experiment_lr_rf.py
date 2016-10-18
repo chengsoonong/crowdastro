@@ -17,6 +17,7 @@ import sklearn
 
 from . import runners
 from .results import Results
+from ..config import config
 from ..plot import vertical_scatter_ba
 
 
@@ -24,8 +25,11 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
          overwrite=False, plot=False):
     with h5py.File(crowdastro_h5_path, 'r') as crowdastro_h5, \
             h5py.File(training_h5_path, 'r') as training_h5:
+        ir_survey = training_h5.attrs['ir_survey']
+        ir_survey_ = crowdastro_h5.attrs['ir_survey']
+        assert ir_survey == ir_survey_
 
-        n_splits = crowdastro_h5['/wise/cdfs/test_sets'].shape[0]
+        n_splits = crowdastro_h5['/{}/cdfs/test_sets'.format(ir_survey)].shape[0]
         n_examples, n_params = training_h5['features'].shape
         n_params += 1  # Bias term.
         methods = ['LR(Norris)', 'LR(Fan)', 'RF(Norris)', 'RF(Fan)']
@@ -38,14 +42,18 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
         features = collections.defaultdict(
                 lambda: training_h5['features'].value)
         targets = {
-            'LR(Norris)': crowdastro_h5['/wise/cdfs/norris_labels'],
-            'LR(Fan)': crowdastro_h5['/wise/cdfs/fan_labels'],
-            'RF(Norris)': crowdastro_h5['/wise/cdfs/norris_labels'],
-            'RF(Fan)': crowdastro_h5['/wise/cdfs/fan_labels'],
+            'LR(Norris)':
+                crowdastro_h5['/{}/cdfs/norris_labels'.format(ir_survey)],
+            'LR(Fan)':
+                crowdastro_h5['/{}/cdfs/fan_labels'.format(ir_survey)],
+            'RF(Norris)':
+                crowdastro_h5['/{}/cdfs/norris_labels'.format(ir_survey)],
+            'RF(Fan)':
+                crowdastro_h5['/{}/cdfs/fan_labels'.format(ir_survey)],
         }
 
         for split_id, test_set in enumerate(
-                    crowdastro_h5['/wise/cdfs/test_sets']):
+                    crowdastro_h5['/{}/cdfs/test_sets'.format(ir_survey)]):
             logging.info('Test {}/{}'.format(split_id + 1, n_splits))
             for method_id, method in enumerate(methods):
                 if method.startswith('LR'):
@@ -55,7 +63,19 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
 
                 logging.info('Method {} ({}/{})'.format(method, method_id + 1,
                                                         len(methods)))
-                runner(results, method, split_id, features[method],
+
+                if ir_survey == 'swire':
+                    features_ = numpy.nan_to_num(features[method])
+                    p2, p98 = numpy.percentile(
+                        features_[:config['surveys']['swire']['n_features']],
+                        [2, 98])
+                    features_[features_ > p98] = p98
+                    features_[features_ < 2] = p2
+                    logging.info('Clamping to range {} -- {}'.format(p2, p98))
+                else:
+                    features_ = features[method]
+
+                runner(results, method, split_id, features_,
                        targets[method], list(test_set), overwrite=overwrite)
 
         if plot:
@@ -63,7 +83,7 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
             matplotlib.rcParams['font.serif'] = ['Palatino Linotype']
             vertical_scatter_ba(
                 results,
-                crowdastro_h5['/wise/cdfs/norris_labels'].value,
+                crowdastro_h5['/{}/cdfs/norris_labels'.format(ir_survey)].value,
                 violin=True)
             plt.show()
 

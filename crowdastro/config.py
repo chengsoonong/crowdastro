@@ -21,8 +21,12 @@ config = json.loads(pkg_resources.resource_string(
 # TODO(MatthewJA): Also don't hardcode these.
 config['data_sources']['atlas_catalogue'] = os.path.normpath(
         os.path.join(os.getcwd(), config['data_sources']['atlas_catalogue']))
-config['data_sources']['swire_catalogue'] = os.path.normpath(
-        os.path.join(os.getcwd(), config['data_sources']['swire_catalogue']))
+config['data_sources']['swire_cdfs_catalogue'] = os.path.normpath(
+        os.path.join(os.getcwd(),
+                     config['data_sources']['swire_cdfs_catalogue']))
+config['data_sources']['swire_elais_catalogue'] = os.path.normpath(
+        os.path.join(os.getcwd(),
+                     config['data_sources']['swire_elais_catalogue']))
 config['data_sources']['atlas_cdfs_image'] = os.path.normpath(
         os.path.join(os.getcwd(), config['data_sources']['atlas_cdfs_image']))
 config['data_sources']['atlas_elais_image'] = os.path.normpath(

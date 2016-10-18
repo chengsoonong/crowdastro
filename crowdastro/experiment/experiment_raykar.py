@@ -105,8 +105,10 @@ def main(input_csv_path, results_h5_path, overwrite=False, plot=False,
         if plot:
             matplotlib.rcParams['font.family'] = 'serif'
             matplotlib.rcParams['font.serif'] = ['Palatino Linotype']
+            plt.figure(figsize=(4, 3))  # Shrink it a little for thesis.
             vertical_scatter_ba(results, labels, violin=True, minorticks=False)
-            plt.ylim((0, 1))
+            plt.ylim((0, 100))
+            plt.subplots_adjust(left=0.15)
             plt.show()
 
 

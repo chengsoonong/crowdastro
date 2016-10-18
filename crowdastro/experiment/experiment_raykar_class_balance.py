@@ -89,18 +89,27 @@ def main(results_h5_path, overwrite=False, plot=False, n_trials=5,
         matplotlib.rcParams['font.family'] = 'serif'
         matplotlib.rcParams['font.serif'] = ['Palatino Linotype']
 
-        violinplot(methods, [bas[m] for m in methods])
-        plt.ylim((0.5, 1))
-        plt.ylabel('Balanced accuracy')
+        plt.figure(figsize=(6, 3))  # Shrink it a little for thesis.
+        violinplot(methods, [[ba * 100 for ba in bas[m]] for m in methods])
+        plt.ylim((50, 100))
+        plt.grid(b=True, which='both', axis='y', color='grey', linestyle='-',
+                 alpha=0.5)
+        plt.subplots_adjust(left=0.15, bottom=0.18)
+        plt.ylabel('Balanced accuracy (%)')
         plt.xlabel('Negative:positive ratio')
         plt.show()
 
+        plt.figure(figsize=(6, 6))
         plt.subplot(2, 1, 1)
         violinplot(methods, [alphas[m] for m in methods])
+        plt.grid(b=True, which='both', axis='y', color='grey', linestyle='-',
+                 alpha=0.5)
         plt.ylim((0, 1))
         plt.ylabel('$\\alpha$')
         plt.subplot(2, 1, 2)
         violinplot(methods, [betas[m] for m in methods])
+        plt.grid(b=True, which='both', axis='y', color='grey', linestyle='-',
+                 alpha=0.5)
         plt.ylim((0, 1))
         plt.ylabel('$\\beta$')
         plt.xlabel('Negative:positive ratio')

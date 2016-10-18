@@ -38,10 +38,19 @@ def generate(f_h5, out_f_h5, field='cdfs'):
     ir_survey = f_h5.attrs['ir_survey']
     if ir_survey == 'swire':
         swire = f_h5['/swire/{}/numeric'.format(field)]
-        astro_features = swire[:, 2:8]
+        fluxes = swire[:, 2:7]
+        # Skip stellarities.
         distances = swire[:, 8].reshape((-1, 1))
         images = swire[:, 9:]
         coords = swire[:, :2]
+        s1_s2 = fluxes[:, 0] / fluxes[:, 1]
+        s2_s3 = fluxes[:, 1] / fluxes[:, 2]
+        s3_s4 = fluxes[:, 2] / fluxes[:, 3]
+        astro_features = numpy.concatenate(
+                [fluxes,
+                 s1_s2.reshape((-1, 1)),
+                 s2_s3.reshape((-1, 1)),
+                 s3_s4.reshape((-1, 1))], axis=1)
     elif ir_survey == 'wise':
         wise = f_h5['/wise/{}/numeric'.format(field)]
         magnitudes = wise[:, 2:6]

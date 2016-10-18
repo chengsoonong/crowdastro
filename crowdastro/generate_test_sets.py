@@ -30,6 +30,8 @@ def get_nearby_galaxies(atlas_vector, radius=1/60):
 
 def main(c_h5, t_h5, n, p, p_cnn=0.1, add=False):
     ir_survey = c_h5.attrs['ir_survey']
+    ir_survey_ = t_h5.attrs['ir_survey']
+    assert ir_survey == ir_survey_
     fan_labels = c_h5['/{}/cdfs/fan_labels'.format(ir_survey)].value
     norris_labels = c_h5['/{}/cdfs/norris_labels'.format(ir_survey)].value
 
@@ -83,11 +85,24 @@ def main(c_h5, t_h5, n, p, p_cnn=0.1, add=False):
         # Select at random, without replacement, candidate ATLAS objects.
         candidates_ = list(set(candidates) - cnn_train_set_atlas)
         numpy.random.shuffle(candidates_)
-        atlas_test_set = candidates_[:int(n_atlas * p)]
+        atlas_test_set = []
+        while len(atlas_test_set) < int(n_atlas * p):
+            for atlas_id in candidates_:
+                assert atlas_id not in cnn_train_set_atlas
+                nearby = get_nearby_galaxies(
+                    c_h5['/atlas/cdfs/numeric'][atlas_id])
+                for j in nearby:
+                    # Check for overlaps.
+                    if j in cnn_train_set_:
+                        break
+                else:
+                    # No overlaps!
+                    atlas_test_set.append(atlas_id)
 
         # Get all nearby galaxies and add all nearby galaxies to the test set.
         test_set = []
         for atlas_id in atlas_test_set:
+            assert atlas_id not in cnn_train_set_atlas
             nearby = get_nearby_galaxies(c_h5['/atlas/cdfs/numeric'][atlas_id])
             for j in nearby:
                 # Have to make sure there's no overlaps here.

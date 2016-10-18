@@ -3,7 +3,7 @@
 \chapter{Radio Cross-identification}
 \label{cha:cross-identification}
 
-  In this chapter, we develop a machine learning approach to the radio cross-
+  In this chapter, we develop a machine learning approach to the radio cross-%
   identification problem. First, we discuss different ways to train and use
   a classifier for the task, in particular framing the cross-identification
   problem as an object localisation problem. We then discuss the available
@@ -47,7 +47,7 @@
 
     This may be slow depending on the size of the image. One way to improve upon
     this approach is to first identify a small number of candidate locations,
-    and then only examine patches around these locations. For the cross-
+    and then only examine patches around these locations. For the cross-%
     identification problem, we can use galaxy locations as candidate pixels,
     with galaxies found in infrared surveys such as WISE and SWIRE.
     Additionally, astronomical measurements such as magnitude are included in
@@ -82,33 +82,76 @@
   require human insight to discover \citep{banfield16}.
 
 \section{Evaluating Performance Without Groundtruth}
-\label{sec:norris-as-groundtruth}
-  
-  Our training labels for the classification task will come from the Radio
-  Galaxy Zoo. While these labels can be aggregated in a number of ways to
-  approximate the groundtruth (Section \ref{sec:rgz-crowd-labels}), these
-  aggregates are \emph{not} the groundtruth and may contain high noise. This
-  becomes a problem when we want to assess the performance of a trained
-  classifier --- we want our classifier to be capable of finding the best
-  approximation to the groundtruth, not to the noisy inputs, and evaluation
-  should reflect that. We therefore cannot use aggregated crowd labels for
-  evaluation.
+  \label{sec:norris-as-groundtruth}
 
-  In general, though, we \emph{don't} have groundtruth for this problem, and
-  while the groundtruth exists (a galaxy either has an AGN or does not), it is
+  In general, we do not have groundtruth for the cross-identification problem.
+  While the groundtruth exists (a galaxy either has an AGN or does not), it is
   impossible for us to measure this accurately. Even expert catalogues, such as
   those provided by \citeauthor{norris06} (Section \ref{sec:norris}), are noisy
   --- \citep{norris06} estimate that their cross-identifications have a $9.02\%$
   false positive rate.
+  
+  Our primary source of labels for the classification task is the Radio Galaxy
+  Zoo. These labels have been provided by non-experts, and as such are even more
+  noisy. This leads to two problems: A classifier trained on the noisy labels
+  may be inaccurate, and evaluating the performance of a trained classifier
+  against noisy labels will not accurately reflect the true performance of the
+  classifier. We address the former in Section \ref{sec:rgz-crowd-labels}, and
+  the latter here.
+
+  The obvious way to evaluate classifier performance without groundtruth is to
+  aggregate the Radio Galaxy Zoo crowd labels in some way to approximate the
+  groundtruth, and then use that for evaluation. While there are many ways that
+  we could aggregate the labels (Section \ref{sec:rgz-crowd-labels}), these
+  aggregates are \emph{not} the groundtruth and may still contain high noise. We
+  want our classifier to be capable of finding the best approximation to the
+  groundtruth, not to the noisy inputs, and evaluation should reflect that. We
+  therefore cannot use aggregated crowd labels for evaluation.
 
   To attempt to mitigate this problem, we chose a test set with as little noise
-  as possible by combining the \citeauthor{fan15} catalogue (Section
-  \ref{sec:fan}) with the \citeauthor{norris06} catalogue (Section
-  \ref{sec:norris}) to find all galaxies for which the two catalogues agree.
+  as possible by combining the \citeauthor{norris06} catalogue (Section
+  \ref{sec:norris}) with the \citeauthor{fan15} catalogue (Section
+  \ref{sec:fan}) to find all galaxies for which the two catalogues agree.
   Test sets were drawn from only these galaxies. This does mean that the test
   instances will be ``easier'' than a test set drawn from the entire data set,
   but any tests performed against these test sets should be more reliable than
   would otherwise be the case.
+
+\section{Experiment Design}
+\label{sec:experiment-design}
+
+  To guide our classifier design, we needed to run experiments. This section
+  describes the design and test sets used for the experiments that appear in the
+  following sections.
+
+  To generate the \citeauthor{norris06} and \citeauthor{fan15} label sets, we
+  matched each location identified by \citeauthor{norris06} and
+  \citeauthor{fan15} to the nearest candidate host in WISE. These galaxies were
+  labelled $1$. All other candidate hosts were labelled $0$.
+
+  We generated test sets by first finding all candidate hosts for which the
+  \citeauthor{norris06} label and the \citeauthor{fan15} label agree. To
+  generate a test set, we followed the following method:
+  \begin{enumerate}
+    \item Find all ATLAS objects where \citeauthor{norris06} and
+    \citeauthor{fan15} agree on the labels of all galaxies within 1'.
+    \item Draw randomly without replacement 50\% of the ATLAS objects.
+    \item If a candidate host is within 1' of a drawn ATLAS object, add it to
+    the test set.
+  \end{enumerate}
+  This method resulted in a test set with similar class distribution to the true
+  data and no feature overlap between training objects and testing objects. We
+  drew 10 test sets with this method.
+
+  To train and test a method, we followed the following method:
+  \begin{enumerate}
+    \item Choose a test set.
+    \item Add all candidate hosts not in this test set to the training set.
+    \item Train the method using the selected training set.
+    \item Evaluate performance with balanced accuracy against the test set.
+    \item Repeat for all other test sets.
+  \end{enumerate}
+  We report the mean balanced accuracy and standard deviation.
 
 \section{Feature Selection}
 \label{sec:features}
@@ -121,32 +164,7 @@
   \subsection{Infrared Features}
   \label{sec:ir-features}
 
-    As described in Section \ref{sec:cross-identification-formalism}, we need
-    candidate host galaxies from an infrared catalogue. We have two choices here
-    --- the SWIRE catalogue (Section \ref{sec:swire}) and the WISE catalogue
-    (Section \ref{sec:wise}). SWIRE has higher resolution and sensitivity, and
-    thus would give more accurate galaxies, but it does not cover the whole sky.
-    WISE is lower resolution and less sensitive, but is the survey that will be
-    used to cross-identify EMU (Section \ref{sec:emu}) sources when they are
-    available. Here, we describe our choice of features for both.
-
-    The WISE catalogue contains magnitude information for each object. There are
-    four such magnitudes --- $w1$, $w2$, $w3$, and $w4$ --- each representing
-    the amount of light emitted by the object in a different range of
-    wavelengths.
-
-    We chose to use all four magnitudes as features. Since the features are
-    magnitudes, they are on a logarithmic scale, and we found that in practice
-    classification performance improved when the magnitudes were converted to
-    fluxes. We performed this conversion with the formula
-    \[
-      f = 10^{-0.4m}
-    \]
-    where $f$ is the flux and $m$ is the magnitude. This is the inverse of
-    Equation \ref{eq:apparent-magnitude}, and gives the flux in arbitrary, but
-    linear, units.
-
-    \begin{figure}[!ht]
+    \begin{figure}
       \centering
       \includegraphics[width=0.5\textwidth]{images/wise_colour-colour}
       \caption{WISE colour-colour diagram showing the colours of various
@@ -155,13 +173,36 @@
       \label{fig:wise-colour-colour}
     \end{figure}
 
+    As described in Section \ref{sec:cross-identification-formalism}, we need
+    candidate host galaxies from an infrared catalogue. We have two choices here
+    --- the WISE catalogue (Section \ref{sec:wise}) and the SWIRE catalogue
+    (Section \ref{sec:swire}). WISE is lower resolution and less sensitive, but
+    is the survey that will be used to cross-identify EMU (Section
+    \ref{sec:emu}) sources when they are available. SWIRE has higher
+    resolution and sensitivity, and thus would give more accurate galaxies, but
+    it does not cover the whole sky. Here, we describe our choice of features
+    for both.
+
+    For WISE, we chose to use all four WISE band magnitudes ($w1, w2, w3,$ and
+    $w4$) as features. Since the features are magnitudes, they are on a
+    logarithmic scale, and we found that in practice classification performance
+    improved when the magnitudes were converted to their corresponding flux
+    value. We performed this conversion with the formula
+    \begin{equation}
+      \label{eq:mag-to-flux}
+      f = 10^{-0.4m}.
+    \end{equation}
+    This is the inverse of Equation \ref{eq:apparent-magnitude} with the flux in
+    linear units of $f_{\text{Vega}}$ Jy.
+
     The ratios between infrared fluxes are indicators of physical galactic
     properties such as star formation and dust \todo{Find a source on this ---
     Probably the WISE paper wright10}. In practice, the $w1 - w2$ and $w2 - w3$
     ratios are most commonly used (such as in Figure
     \ref{fig:wise-colour-colour}), so we chose to use these ratios as features.
     Once again, we used a linear scale, computing the ratios using equation
-    \ref{eq:magnitude-difference}.
+    \ref{eq:magnitude-difference} and converting them to linear units with
+    Equation \ref{eq:mag-to-flux}.
 
     Also available were the unprocessed infrared images captured in the survey.
     Under the assumption that the large scale infrared structure of a galaxy is
@@ -192,17 +233,26 @@
     % probably also showing that the other features are good}.
 
   \subsection{Radio Features}
-  \label{sec:image-features}
+  \label{sec:radio-features}
 
     While the infrared catalogues include measurements on individual galaxies,
     the ATLAS radio catalogue does not. This is because galaxies are not
     visible in radio, so while galaxies are directly represented in an infrared
     catalogue they are not in a radio catalogue. Galactic features must thus be
     extracted from the radio images directly. We chose to use a convolutional
-    neural network, as described in Section \ref{sec:image-features}.
+    neural network, as described in Section \ref{sec:image-feature-extraction}.
 
     \subsubsection{Building a Model for Feature Extraction}
     \label{sec:feature-extraction-model}
+
+      \begin{figure}[!ht]
+         \centering
+         \includegraphics[width=\textwidth]{images/cnn_new.pdf}
+         \caption{Convolutional neural network for radio feature extraction. The
+           leftmost square represents the input image; the rightmost rectangle
+           is the output.}
+         \label{fig:radio-cnn}
+       \end{figure}
 
       We chose to use a convolutional neural network (CNN) with three
       convolutional and max pooling layers, shown in Figure \ref{fig:radio-cnn}.
@@ -212,13 +262,6 @@
       training the CNN, to ensure later testing data would not overlap the
       training set. The entire network was then trained to match the consensus
       Radio Galaxy Zoo labels of the galaxies nearest the reserved training set.
-
-      \begin{figure}[!ht]
-         \centering
-         \includegraphics[width=\textwidth]{images/cnn_new.pdf}
-         \caption{Convolutional neural network for radio feature extraction.}
-         \label{fig:radio-cnn}
-       \end{figure}
 
       A better approach would be to use a convolutional autoencoder, which would
       allow training on all the radio data, and data with no labels at all, but
@@ -248,7 +291,7 @@
     the WISE magnitude features, we also held out the CNN features, since we
     found that the CNN features tended to dominate results. These results are
     plotted in Figure \ref{fig:feature-ablation} and the means and standard
-    deviations of the balanced accuracies are tabled in Table
+    deviations of the balanced accuracies can be found in Table
     \ref{tab:feature-ablation}.
 
     \begin{figure}[!ht]
@@ -265,20 +308,20 @@
     \begin{table}[!ht]
       \centering
       \begin{tabular}{r|c}
-        \textbf{Features} & \textbf{Mean Balanced Accuracy}\\\hline
-        No distance & $(88.82 \pm 0.70)\%$\\
-        All features & $(88.74 \pm 0.78)\%$\\
-        No magnitudes & $(88.73 \pm 0.83)\%$\\
-        CNN only & $(88.66 \pm 0.81)\%$\\
-        No CNN + no $w1 - w2$ & $(81.32 \pm 0.81)\%$\\
-        Distance only & $(79.01 \pm 0.58)\%$\\
-        No CNN & $(71.67 \pm 1.71)\%$\\
-        No CNN + no $w1$ & $(71.67 \pm 1.71)\%$\\
-        No CNN + no $w2$ & $(71.67 \pm 1.71)\%$\\
-        No CNN + no $w3$ & $(71.67 \pm 1.71)\%$\\
-        No CNN + no $w4$ & $(71.67 \pm 1.70)\%$\\
-        No CNN + no $w2 - w3$ & $(71.15 \pm 2.16)\%$\\
-        Magnitudes only & $(56.47 \pm 0.70)\%$\\
+        \textbf{Features} & \textbf{Mean Balanced Accuracy (\%)}\\\hline
+        No distance & $88.82 \pm 0.70$\\
+        All features & $88.74 \pm 0.78$\\
+        No magnitudes & $88.73 \pm 0.83$\\
+        CNN only & $88.66 \pm 0.81$\\
+        No CNN + no $w1 - w2$ & $81.32 \pm 0.81$\\
+        Distance only & $79.01 \pm 0.58$\\
+        No CNN & $71.67 \pm 1.71$\\
+        No CNN + no $w1$ & $71.67 \pm 1.71$\\
+        No CNN + no $w2$ & $71.67 \pm 1.71$\\
+        No CNN + no $w3$ & $71.67 \pm 1.71$\\
+        No CNN + no $w4$ & $71.67 \pm 1.70$\\
+        No CNN + no $w2 - w3$ & $71.15 \pm 2.16$\\
+        Magnitudes only & $56.47 \pm 0.70$\\
       \end{tabular}
       \caption{Balanced accuracy of logistic regression trained on the
         \citeauthor{norris06} label set with different subsets of features. The
@@ -298,30 +341,49 @@
   \end{figure}
 
   To compare the performance of logistic regression with random forests on the
-  galaxy classification task, I performed the following experiment. First, I
+  galaxy classification task, we performed the following experiment. We first
   generated five test sets of WISE objects. Then, using all other WISE objects
-  as a training set, I trained a logistic regression classifier for each test
-  set, first using labels from \citet{norris06}, and then, separately, using
-  labels from \citet{fan15}. I then computed the balanced accuracy for each
-  classifier. Finally, I repeated the experiment for random forests.
+  as a training set, we trained a logistic regression classifier with $L2$
+  regularisation for each test set, first using labels from \citet{norris06},
+  and separately using labels from \citet{fan15}. We then computed the balanced
+  accuracy for each classifier. This was repeated for random forests, with each
+  tree using $\sqrt{D}$ features.
 
-  \begin{itemize}
-    \item LR used L2 regularisation with C = 1 strength
-    \item RF used sqrt(features)
-  \end{itemize}
-
-  To generate the test sets, I first selected at random half of all ATLAS
-  objects. I then added all WISE objects within $1'$ of a selected ATLAS object
+  To generate the test sets, we first selected at random half of all ATLAS
+  objects. We then added all WISE objects within $1'$ of a selected ATLAS object
   to the test set. This was repeated for each test set. The motivation for first
   selecting ATLAS objects rather than drawing WISE objects directly is that WISE
-  objects have overlapping features since radio features are taken from a patch
+  objects have overlapping features, since radio features are taken from a patch
   of sky centred on each object, and WISE objects tend to be close together.
   Objects from the test sets were then removed at random until all test sets
-  were the same size. Each test set contained $13605$ WISE objects.
-  \todo{Check numbers.}
+  were the same size.
 
 \section{Handling Crowd Labels}
 \label{sec:rgz-crowd-labels}
+
+  \begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{images/experiments/rgz_raykar}
+    \caption{Comparison of logistic regression and \citeauthor{raykar10} on the
+      galaxy classification task with different numbers of labellers.}
+    \label{fig:rgz-raykar}
+  \end{figure}
+
+  \begin{table}
+    \centering
+    \begin{tabular}{r|c}
+      \textbf{Method(Training Set)} & \textbf{Mean Balanced Accuracy (\%)}\\\hline
+      Raykar(Top-15-prolific) & $46.34 \pm 18.45$\\
+      LR(Top-15-prolific-MV) & $51.98 \pm 3.87$\\
+      Raykar(Top-15-accurate) & $86.43 \pm 0.10$\\
+      LR(Top-15-accurate-MV) & $86.76 \pm 1.01$\\
+      Raykar(Top-15-est-accurate) & $87.25 \pm 0.74$\\
+      LR(Top-15-est-accurate-MV) & $87.25 \pm 0.90$\\
+    \end{tabular}
+    \caption{Comparison of logistic regression and \citeauthor{raykar10} on the
+      galaxy classification task with different numbers of labellers.}
+    \label{tab:rgz-raykar}
+  \end{table}
 
   While we want to train a classifier on the crowdsourced labels from the Radio
   Galaxy Zoo, it is unclear how we should aggregate the labels. Some methods for
@@ -331,8 +393,8 @@
   galaxy classification task.
 
   One key problem with the use of the \citeauthor{raykar10} algorithm is that it
-  is very slow with large numbers of labellers. To help mitigate this problem,
-  we tested the algorithm on a subset of labellers, chosen by three different
+  is very slow with large numbers of labellers. To mitigate this problem, we
+  tested the algorithm on a subset of labellers, chosen by three different
   measures: the 10 labellers with the most labels, the 10 labellers with the
   highest balanced accuracy assessed against the \citeauthor{norris06} labels,
   and the 10 labellers with the highest balanced accuracy assessed against the
@@ -341,66 +403,68 @@
   treat this test as a ``best-case'' method. For each subset of labellers, the
   \citeauthor{raykar10} algorithm was tested against logistic regression trained
   on the majority vote of just these labellers. The results are shown in Figure
-  \ref{fig:rgz-raykar}.
+  \ref{fig:rgz-raykar} and Table \ref{tab:rgz-raykar}.
 
-  \begin{figure}[!ht]
-    \centering
-    \includegraphics[width=\textwidth]{images/experiments/rgz_raykar}
-    \caption{Comparison of logistic regression and \citeauthor{raykar10} on the
-      galaxy classification task with different numbers of labellers.}
-    \label{fig:rgz-raykar}
-  \end{figure}
+  With $T = 10$ labellers, the \citeauthor{raykar10} algorithm took $83 \pm 36$
+  seconds to run. When the number of labellers was increased to $T = 15$, the
+  \citeauthor{raykar10} algorithm took $152 \pm 115$ seconds to run. This helps
+  to highlight how slow the algorithm becomes with increasing $T$.
 
-\section{Galaxy Classification Performance}
+\section{Galaxy Classification}
 \label{sec:rgz-results}
 
-  \todo{Make this writing considerably less terrible.}
+  In this section, we present results using methods developed in this chapter.
 
-  The infrared objects were partitioned into a testing set and a training set
-  as follows. First, the radio objects were partitioned into a radio testing
-  set and a radio training set, with the radio testing set containing $452$
-  objects and the radio training set containing $1811$ objects. Infrared
-  objects were then added to the infrared testing set if they were within $1'$
-  of a radio object in the radio testing set, and added to the infrared
-  training set otherwise. This was done because infrared objects that were
-  close together had overlapping radio features, and thus random partitioning
-  would result in the training set containing many of the features found in
-  the testing set. The partitioning resulted in $5922$ objects in the testing
-  set and $18218$ objects in the training set.
+  \subsection{Comparison of Methods}
+  \label{sec:comparison-predictors}
 
-  For each infrared object, features and labels were generated as described in
-  Sections \ref{sec:features} and \ref{sec:consensuses}, respectively. Note
-  that the labels were sourced from the Radio Galaxy Zoo. A logistic
-  regression classifier was then trained on the training set using binary
-  cross-entropy loss, with loss of each data point weighted based on the
-  frequency of its label.
-
-  The classifier was then used to classify the objects in the testing set. The
-  labels were compared to those found by \citet{norris06} as described in
-  Section \ref{sec:norris}, resulting in $80.14\%$ balanced accuracy.
-  \todo{This number is out of date.}
-
-  \todo{ROC/precision--recall curves}
-
-  \begin{figure}[!ht]
+  \begin{figure}
     \centering
     \includegraphics[width=\textwidth]{images/experiments/predictors.pdf}
-    \caption{Performance of logistic regression on the galaxy classification
-      task, trained on different sets of labels and tested on the galaxies
-      where \citeauthor{norris06} and \citeauthor{fan15} labels agree. LR($Y$)
-      indicates logistic regression trained on $Y$. RGZ-MV is the set of
-      majority vote labels from the Radio Galaxy Zoo. RGZ-Raw-MV is the
-      majority vote of all crowd labels and is included for comparison.}
+    \caption{Performance of logistic regression and the \citeauthor{raykar10}
+      algorithm on the galaxy classification task, trained on different sets of
+      labels and tested on the galaxies where \citeauthor{norris06} and
+      \citeauthor{fan15} labels agree. LR($Y$) indicates logistic regression
+      trained on $Y$. RGZ-MV is the set of majority vote labels from the Radio
+      Galaxy Zoo. RGZ-Raw-MV is the majority vote of all crowd labels and is
+      included for comparison.}
+    \label{fig:predictors}
   \end{figure}
 
-\section{Number of Training Examples}
-
-  \begin{figure}[!ht]
+  \begin{table}
     \centering
-    \includegraphics[width=\textwidth]{images/experiments/passive.pdf}
-    \caption{Performance of logistic regression on the galaxy classification
-      task, trained on different amounts of the \citeauthor{norris06} label
-      set.}
-  \end{figure}
+    \begin{tabular}{r|c}
+      \textbf{Method(Training Set)} & \textbf{Mean Balanced Accuracy (\%)}\\\hline
+      LR(Norris) & $88.74 +- 0.77$\\
+      LR(Fan) & $88.44 +- 0.89$\\
+      LR(RGZ-MV) & $87.17 +- 0.90$\\
+      Raykar(RGZ-Top-20) & $85.76 +- 1.28$\\
+      RGZ-Raw-MV & $85.89 +- 0.00$\\
+    \end{tabular}
+    \caption{Performance of logistic regression and the \citeauthor{raykar10}
+      algorithm on the galaxy classification task, as in Figure
+      \ref{fig:predictors}.}
+    \label{tab:predictors}
+  \end{table}
+
+  We trained logistic regression classifiers on three training sets:
+  \begin{itemize}
+    \item the \citeauthor{norris06} labels,
+    \item the \citeauthor{fan15} labels, and
+    \item the Radio Galaxy Zoo majority vote.
+  \end{itemize}
+  We also trained the \citeauthor{raykar10} algorithm with the Radio Galaxy Zoo
+  labels. Each volunteer was assigned a unique index and the algorithm was run
+  with the best $T = 20$ labellers, computed against the Radio Galaxy Zoo
+  majority vote. Finally, we compared the predictions of all classifiers to the
+  Radio Galaxy Zoo majority vote. These results are plotted in Figure
+  \ref{fig:predictors} and shown in Table \ref{tab:predictors}.
+
+  % The classifier was then used to classify the objects in the testing set. The
+  % labels were compared to those found by \citet{norris06} as described in
+  % Section \ref{sec:norris}, resulting in $80.14\%$ balanced accuracy.
+  % \todo{This number is out of date.}
+
+  \todo{ROC/precision--recall curves}
 
   \todo{Discuss results}
