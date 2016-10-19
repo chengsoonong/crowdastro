@@ -381,6 +381,8 @@
         point sources. We discuss this in detail in Section
         \ref{sec:radio-cross-identification}.
 
+        \todo{discuss what these actually look like in radio}
+
     \section{Radio Cross-identification}
     \label{sec:radio-cross-identification}
 
@@ -402,15 +404,31 @@
         \subsection{Norris et al. Catalogue}
         \label{sec:norris}
 
-            Along with a catalogue of radio objects found in the CDFS field by the ATLAS survey, \citetitle{norris06} produced a catalogue of cross-identifications of these radio objects. 
+            Along with a catalogue of radio objects found in the CDFS field by
+            the ATLAS survey, \citet{norris06} produced a catalogue of
+            cross-identifications of these radio objects. The catalogue lists
+            ATLAS objects and their corresponding SWIRE objects.
 
-            \begin{itemize}
-                \item Norris provided a catalogue of cross-identifications
-                \item The catalogue is ``expert'' data, so sorted through by actual astronomers
-                \item The catalogue contains the names and locations of each component and matches them to the corresponding SWIRE objects
-                \item The catalogue also contains the flux associated with the SWIRE object
-                \item Estimated $9.02\%$ false cross-identifications
-            \end{itemize}
+            The cross-identification process was semi-automated.
+            \citeauthor{norris06} first matched each ATLAS object to the nearest
+            SWIRE object. After this step, around half of the radio objects were
+            matched to a SWIRE object within $1''$, and $79\%$ were matched to a
+            SWIRE object within $3''$. Radio objects greater than $3''$ away
+            from a SWIRE object were then cross-identified manually; radio
+            doubles \todo{define} and radio triples \todo{define} were matched
+            to the SWIRE object nearest their centre.
+
+            \citeauthor{norris06} estimated the probability of false cross-
+            identifications by displacing all radio objects by $1'$ and
+            repeating the cross-identification process. From the results of this
+            test, they estimated that $9.02\%$ of the cross-identifications are
+            false.
+
+            We consider these cross-identifications \emph{expert} cross-
+            identifications, i.e., they are the best possible cross-
+            identifications available for radio objects in the CDFS field.
+            Throughout this thesis, we will use these as an approximation to the
+            unobservable groundtruth cross-identifications.
 
         \subsection{Fan et al. Catalogue}
         \label{sec:fan}
@@ -515,6 +533,8 @@
     clicks, as well as the right ascension and declination of the radio object.
     The radio and infrared image patches associated with each radio object are
     also included alongside the database.
+
+    For detailed analysis of these labels, see \citet{atlas-ml}.
 
     In this thesis, we will train machine learning algorithms to perform the
     cross-identification task trained on ATLAS-CDFS labels from the Radio Galaxy

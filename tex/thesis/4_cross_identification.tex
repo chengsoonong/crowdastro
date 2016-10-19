@@ -108,12 +108,17 @@
   groundtruth, not to the noisy inputs, and evaluation should reflect that. We
   therefore cannot use aggregated crowd labels for evaluation.
 
-  To attempt to mitigate this problem, we chose a test set with as little noise
-  as possible by combining the \citeauthor{norris06} catalogue (Section
-  \ref{sec:norris}) with the \citeauthor{fan15} catalogue (Section
-  \ref{sec:fan}) to find all galaxies for which the two catalogues agree.
-  Test sets were drawn from only these galaxies. This does mean that the test
-  instances will be ``easier'' than a test set drawn from the entire data set,
+  To attempt to mitigate this problem, we combined the \citeauthor{norris06}
+  catalogue (Section \ref{sec:norris}) with the \citeauthor{fan15} catalogue
+  (Section \ref{sec:fan}) to obtain a test set with as little noise as possible.
+  Each galaxy identified as hosting an AGN in the catalogues was matched to the
+  nearest WISE or SWIRE object. Each matched object was then labelled $1$. All
+  other galaxies in the infrared survey were labelled $0$. This produced two
+  label sets, which we refer to as the \citeauthor{norris06} labels and the
+  \citeauthor{fan15} labels respectively. We then took the intersection of these
+  label sets to find a set of galaxies for which the label sets agree. Test sets
+  were drawn only from this set of galaxies. This results in a test set where
+  test instances are ``easier'' than a test set drawn from the entire data set,
   but any tests performed against these test sets should be more reliable than
   would otherwise be the case.
 
