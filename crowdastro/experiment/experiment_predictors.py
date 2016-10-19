@@ -18,6 +18,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy
 import sklearn
+import sklearn.metrics
 
 from .. import __version__
 from . import runners
@@ -120,6 +121,15 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
                 violin=True, rotation=45, x_tick_offset=-0.5)
             plt.subplots_adjust(bottom=0.33)
             plt.show()
+
+        for method in methods:
+            probs = results[method].mean(axis=0)
+            assert probs.shape == targets['LR(Norris)'].shape
+            cm = sklearn.metrics.confusion_matrix(
+                targets['LR(Norris)'],
+                probs.round())
+            cm /= cm.sum(axis=1)
+            print(method, '\n', cm)
 
 
 if __name__ == '__main__':
