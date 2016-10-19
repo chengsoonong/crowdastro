@@ -29,7 +29,7 @@ def main(crowdastro_h5_path, training_h5_path, results_npy_path,
             n_splits, n_test_instances = crowdastro_h5[
                 '/wise/cdfs/test_sets'].shape
             n_train_indices = n_instances - n_test_instances
-            n_methods = 2
+            n_methods = 3  # QBC, Passive, Stratified Passive
             instance_counts = [int(i) for i in numpy.logspace(
                 numpy.log10(100), numpy.log10(n_train_indices), n_trials)]
             results = numpy.zeros((n_methods, n_splits, n_trials))
@@ -43,7 +43,8 @@ def main(crowdastro_h5_path, training_h5_path, results_npy_path,
                     results = numpy.load(f, allow_pickle=False)
             else:
                 for method_index, Sampler in enumerate([
-                        qbc_sampler.QBCSampler, random_sampler.RandomSampler]):
+                        qbc_sampler.QBCSampler, random_sampler.RandomSampler,
+                        random_sampler.BalancedSampler]):
                     logging.debug(str(Sampler))
                     for split_id, split in enumerate(
                             crowdastro_h5['/wise/cdfs/test_sets'].value):
@@ -106,13 +107,15 @@ def main(crowdastro_h5_path, training_h5_path, results_npy_path,
             fillbetween(instance_counts, list(zip(*results[0, :])))
             fillbetween(instance_counts, list(zip(*results[1, :])),
                         facecolour='blue', edgecolour='blue', facealpha=0.2)
+            fillbetween(instance_counts, list(zip(*results[2, :])),
+                        facecolour='red', edgecolour='red', facealpha=0.2)
             plt.grid(b=True, which='both', axis='y', color='grey',
                      linestyle='-', alpha=0.5)
             plt.ylim((70, 100))
             plt.xlim((10**2, 10**4))
             plt.xlabel('Number of training instances')
             plt.ylabel('Balanced accuracy (%)')
-            plt.legend(['QBC', 'Passive'])
+            plt.legend(['QBC', 'Passive', 'Balanced Passive'])
             plt.xscale('log')
             plt.show()
 
