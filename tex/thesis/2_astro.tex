@@ -194,25 +194,52 @@
 
         \begin{figure}
             \centering
-            \includegraphics[height=0.3\textheight]
-                {images/FIRST_093244.58+161050.7.PNG}
-            \caption{An image of a radio AGN taken by the NRAO Very Large Array,
-                centred on FIRSTJ093244.5+161050.}
+            \begin{subfigure}{0.4\textwidth}
+                \includegraphics[width=\textwidth]
+                    {images/FIRST_093244.58+161050.7.PNG}
+                \caption{FIRSTJ093244.5+161050.}
+                \label{fig:first-triple}
+            \end{subfigure}%
+            ~
+            \begin{subfigure}{0.4\textwidth}
+                \includegraphics[width=\textwidth]
+                    {images/FIRST_130117.5+104121.PNG}
+                \caption{FIRSTJ130117.5+104121.}
+                \label{fig:first-double}
+            \end{subfigure}%
+            \caption{Two radio AGNs imaged by the NRAO Very Large Array.}
+            \label{fig:first-agn}
         \end{figure}
 
-        We can observe the jets of radio AGNs with radio telescopes.
+        We can observe the jets of radio AGNs with radio telescopes, such as in
+        Figure \ref{fig:first-agn}. The jets may appear to be separate objects,
+        and there may or may not be a radio source in the middle of the AGN
+        system. If the system is composed of two separate objects such as in
+        Figure \ref{fig:first-double} (one object for each lobe of the jets),
+        then it is called a \emph{radio double}; if a central source is also
+        visible, then it is called a \emph{radio triple}.
 
-        To fully understand these objects astronomers need data from more than
-        just radio surveys. Combining observations of objects in multiple
-        wavelengths is therefore a common problem in astronomy, and is called
-        \emph{cross-identification} \citep{fan15}. For point sources of light
-        this can be straightforward --- the coordinates of each source on the
-        sky are well-known and can often be immediately matched throughout
-        surveys --- but as it is the jets of AGNs that emit radio, AGNs are not
-        point sources. We discuss this in detail in Section
-        \ref{sec:radio-cross-identification}.
+        Since these jets are not point-like sources
+        of light, and viewing the jets is the only way to observe radio AGNs,
+        common astronomical problems such as cross-identification (Section
+        \ref{sec:radio-cross-identification}) can be very difficult, as the true
+        location of the AGN is unclear.
+        % Most of the radio objects that we have seen in radio surveys conducted
+        % so far are these jets \citep{norris11}. Since these jets are the only
+        % way to observe radio AGNs, radio AGNs do not appear at all in surveys
+        % at other wavelengths.
 
-        \todo{discuss what these actually look like in radio}
+        % An important part of astronomical surveys is matching objects 
+
+        % To fully understand these objects astronomers need data from more than
+        % just radio surveys. Combining observations of objects in multiple
+        % wavelengths is therefore a common problem in astronomy, and is called
+        % \emph{cross-identification} \citep{fan15}. For point sources of light
+        % this can be straightforward --- the coordinates of each source on the
+        % sky are well-known and can often be immediately matched throughout
+        % surveys --- but as it is the jets of AGNs that emit radio, AGNs are not
+        % point sources. We discuss this in detail in Section
+        % \ref{sec:radio-cross-identification}.
 
     \section{Radio Surveys}
     \label{sec:radio-surveys}
@@ -399,20 +426,43 @@
     \section{Radio Cross-identification}
     \label{sec:radio-cross-identification}
 
-        \subsection{Motivation}
-        \label{sec:cross-identification-motivation}
+        % \subsection{Motivation}
+        % \label{sec:cross-identification-motivation}
 
+        Observations of astronomical objects in different wavelengths give us
+        information on different physical properties of the objects. We can only
+        make use of this information, however, if we can match observations of
+        the same object in different surveys. This is called
+        \emph{cross-identification}.
+
+        The specific cross-identification task we focus on in this thesis is
+        that of cross-identifying a radio object with its infrared counterpart.
+        Most often in current radio surveys, a radio object will be a jet from
+        an AGN \citep{norris11}. In this case, we refer to the infrared
+        counterpart as the \emph{host galaxy} of the AGN. In this thesis we will
+        assume that all radio objects are AGNs.
         The main goal of cross-identifying AGNs is to better understand the
         relationship between AGNs and star-forming activity in their host
         galaxies \citep{norris06}.
 
-        While we cannot observe the black holes of AGNs directly, we can observe
-        the radio emissions from their jets. These could then be matched to the
-        galaxies hosting the black holes, allowing us to learn more about the
-        galaxy, the black hole, and the surrounding environment. These host
-        galaxies are not visible in radio wavelengths,
+        Sometimes, cross-identification is easy: We may have point-like sources
+        of light, and we can simply overlay two surveys and identify overlapping
+        objects. In the case of cross-identifying radio AGNs, though, we do not
+        have point-like sources of light, and cross-identification can be very
+        difficult. AGN jets may be arbitrarily large and complex, and often show
+        up as multiple disconnected radio objects. As such, past attempts to
+        cross-identify radio objects have required human insight
+        \citep{norris06,fan15}.
 
-        \todo{Rewrite + finish}
+        In this section, we look at two different ways astronomers have
+        cross-identified radio objects in the CDFS field of the ATLAS survey. We
+        will make use of the resulting catalogues later in this thesis.
+
+        % While we cannot observe the black holes of AGNs directly, we can observe
+        % the radio emissions from their jets. These could then be matched to the
+        % galaxies hosting the black holes, allowing us to learn more about the
+        % galaxy, the black hole, and the surrounding environment. These host
+        % galaxies are not visible in radio wavelengths,
 
         \subsection{Norris et al. Catalogue}
         \label{sec:norris}
@@ -428,8 +478,8 @@
             matched to a SWIRE object within $1''$, and $79\%$ were matched to a
             SWIRE object within $3''$. Radio objects greater than $3''$ away
             from a SWIRE object were then cross-identified manually; radio
-            doubles \todo{define} and radio triples \todo{define} were matched
-            to the SWIRE object nearest their centre.
+            doubles and radio triples were matched to the SWIRE object nearest
+            their centre.
 
             Additionally, \citeauthor{norris06} found between 8 and 22 radio
             objects with no identifiable host galaxy in the infrared. These are
@@ -511,27 +561,15 @@
             \label{fig:rgz-interface}
         \end{figure}
 
-            % \item The Norris catalogue is manual expert classifications, which scales terribly (especially for EMU)
-            % \item The Fan catalogue is model-based, so might miss things that are unusual
-            % \item Radio Galaxy Zoo is an attempt to generate a catalogue of cross-identifications for the ATLAS and FIRST surveys using crowdsourcing
-            % \item This is an example of citizen science, see also Lintott et al. Galaxy Zoo
-            % \item Aims to have non-experts classify radio objects \cite{norris16}
-            % \item 20 classifications for complex objects, 5 for compact \cite{banfield15}
-            % \item Launched in December 2013
-            % \item Resulted in x cross-identifications of FIRST and ATLAS
-            % \item Brief description of how it works
-            % \item Citizen scientists also found one of the largest known WATs \cite{banfield16}
-        %     \item The plan is to use RGZ as a training set for next-generation cross-identification and classification algorithms
-        % \end{itemize}
-
     The \citeauthor{norris06} catalogue is highly accurate, but manual expert
     cross-identification of radio surveys is impractical for large surveys. The
     CDFS field examined by \citeauthor{norris06} only contains around 2400 radio
-    objects, which is small even compared to existing surveys (e.g. FIRST
-    \citep{becker95} found 946 000 radio sources). Automated algorithms such as
-    \citeauthor{fan15} scale better, but most such algorithms are still in their
-    infancy \citeauthor{norris16} and many are model-based, potentially missing
-    many sources that do not fit the models. The Radio Galaxy Zoo project
+    objects, which is small even compared to existing surveys (e.g. Faint Images
+    of the Radio Sky at Twenty-Centimeters (FIRST) \citep{becker95} found
+    946~000 radio sources). Automated algorithms such as \citeauthor{fan15}
+    scale better, but most such algorithms are still in their infancy
+    \citeauthor{norris16} and many are model-based, potentially missing many
+    sources that do not fit the models. The Radio Galaxy Zoo project
     \citep{banfield15} provides a different approach: Allow many non-expert
     volunteers to manually cross-identify radio sources with their infrared host
     galaxies.
@@ -540,7 +578,9 @@
     image from ATLAS or FIRST and a corresponding infrared image from SWIRE or
     WISE, and are tasked with matching the radio source with its host galaxy, as
     well as identifying which radio objects are associated with the same host
-    galaxy (e.g., two radio objects may represent two jets of one AGN). While
+    galaxy (e.g., two radio objects may represent two jets of one AGN). To help
+    reduce noise in these matches, each compact radio object is shown to 5
+    volunteers, and each complex radio object is shown to 20 volunteers. While
     both the cross-identification task and the radio object association task are
     astronomically interesting, we focus only on the cross-identification task
     for this thesis. An example of the workflow presented to volunteers is shown
@@ -558,16 +598,12 @@
     cross-identification algorithms trained on the Radio Galaxy Zoo in the
     future. Each image is a 2 arcminute-wide square.
 
-    To help reduce noise in the labels, each compact radio object is shown to 5
-    volunteers, and each complex radio object is shown to 20 volunteers.
-
-    The labels are stored in a MongoDB database as a collection of associated
-    radio objects and the corresponding pixel locations of the volunteers'
-    clicks, as well as the right ascension and declination of the radio object.
-    The radio and infrared image patches associated with each radio object are
-    also included alongside the database.
-
-    For detailed analysis of these labels, see \citet{atlas-ml}.
+    The cross-identifications are stored in a MongoDB database as a collection
+    of associated radio objects and the corresponding pixel locations of the
+    volunteers' clicks, as well as the right ascension and declination of the
+    radio object. The radio and infrared image patches associated with each
+    radio object are also included alongside the database. For detailed analysis
+    of these labels, see \citet{atlas-ml}.
 
     In this thesis, we will train machine learning algorithms to perform the
     cross-identification task trained on ATLAS-CDFS labels from the Radio Galaxy
