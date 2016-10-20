@@ -4,13 +4,24 @@
 
     Modern astronomy relies on observations of deep space. Telescopes image the
     sky in different wavelengths, with different wavelengths each carrying
-    different physical meanings. Infrared surveys detect star formation and dust
+    different physical meanings: Infrared surveys detect star formation and dust
     in distant galaxies, and radio surveys detect massive objects called active
-    galactic nuclei. In this section, we describe what in radio and infrared
-    surveys, as well as introducing specific radio and infrared surveys relevant
-    to this thesis. We also discuss the motivation behind cross-identifying
-    active galactic nuclei with their host galaxies, as well as the inherent
-    difficulty in doing so, and hence provide the motivation for this thesis.
+    galactic nuclei. In this section, we describe what we see in radio and
+    infrared surveys, as well as introducing specific radio and infrared surveys
+    relevant to this thesis. We also discuss the motivation behind
+    cross-identifying active galactic nuclei with their host galaxies, as well
+    as the inherent difficulty in doing so, and hence provide the motivation for
+    this thesis.
+
+    \begin{figure}[!ht]
+        \centering
+        \includegraphics[height=0.3\textheight]
+            {images/ESO_Centaurus_A_LABOCA.jpg}
+        \caption{Centaurus A, a relatively close radio active galactic
+            nucleus. \emph{Image: ESO/WFI (Optical); MPIfR/ESO/APEX/A.Weiss
+            et al. (Submillimetre); NASA/CXC/CfA/R.Kraft et al. (X-ray)}}
+        \label{fig:centaurus-a}
+    \end{figure}
 
     \section{Astronomical Observations}
     \label{sec:astronomical-observations}
@@ -24,17 +35,17 @@
         \subsection{Astronomical Coordinates}
         \label{sec:coordinates}
 
-            Astronomy uses the \emph{equatorial coordinate system} to describe
-            the positions of objects on the sky. Each position on the sky is
-            described by two numbers: the \emph{right ascension} (RA) and the
-            \emph{declination} (dec).
-
-            \begin{figure}[!ht]
+            \begin{figure}
                 \centering
                 \includegraphics[width=0.5\textwidth]{images/ra-dec}
                 \caption{The equatorial coordinate system used in astronomy.}
                 \label{fig:equatorial-coordinates}
             \end{figure}
+
+            Astronomy uses the \emph{equatorial coordinate system} to describe
+            the positions of objects on the sky. Each position on the sky is
+            described by two numbers: the \emph{right ascension} (RA) and the
+            \emph{declination} (dec).
 
             The right ascension of an object is the angle eastward from the
             vernal equinox to the object along the celestial equator. It is
@@ -63,7 +74,7 @@
         \subsection{Wavelength and Frequency}
         \label{sec:wavelength}
 
-            Light is an electromagnetic wave, and like all waves, it has
+            Light is an electromagnetic wave, and like all waves it has
             \emph{wavelength} and \emph{frequency}. The wavelength of light is
             the distance between two neighbouring peaks; it is measured in
             metres (m) and usually denoted $\lambda$. The frequency of light is
@@ -106,9 +117,8 @@
             where $E$ is the energy received from the object and $t$ is the
             time. We cannot usually measure the flux over all frequencies, so
             usually flux is observed over a specific frequency range $\Delta
-            \nu$. The
-            \emph{spectral flux density} is then the limit of this as the
-            frequency range approaches zero, i.e.
+            \nu$. The \emph{spectral flux density} is then the limit of this as
+            the frequency range approaches zero, i.e.
             \[
                 f_\nu = \frac{1}{A}\frac{\text{d}^2E}{\text{d}\nu\text{d}t}
             \]
@@ -132,6 +142,77 @@
             \end{equation}
             where $f$ is the flux density of the object and $f_{\text{Vega}}$ is
             the flux density of Vega, measured at the same frequency.
+
+    \section{Radio Active Galactic Nuclei}
+    \label{sec:agns}
+
+        \begin{figure}[!ht]
+            \centering
+            \includegraphics[height=0.2\textheight]
+                {images/accretion_disk_artist_impression.jpg}
+            \caption{An artist's impression of the accretion disk of an active
+                galactic nucleus. \emph{Image: NASA/JPL-Caltech}}
+            \label{fig:accretion-disk}
+        \end{figure}
+
+        Many galaxies contain a supermassive black hole in their centre
+        \citep{richstone98}. These black holes may accrete matter from the
+        surrounding galaxy in an \emph{accretion disk} (Figure
+        \ref{fig:accretion-disk}). The accretion process emits huge amounts of
+        light through different physical processes. These light-emitting black
+        holes are called active galactic nuclei (AGNs). AGNs can be extremely
+        bright, emitting up to $10^{39}$ J of energy every second --- nearly a
+        thousand times more energy than our entire galaxy emits
+        \citep{begelman84}. AGNs are found throughout the universe: The closest
+        known AGN is Centaurus A (Figure \ref{fig:centaurus-a}), with a distance
+        of around $2.4 \times 10^{20}$ km, and AGNs have been detected up to
+        redshifts of $z \approx 7$ \citeme \todo{Convert this into a
+        non-redshift distance}.
+
+        \begin{figure}
+            \centering
+            \includegraphics[height=0.3\textheight]{images/M87_jet.jpg}
+            \caption{M87, a giant elliptical galaxy with a jet. \emph{Image:
+                NASA and The Hubble Heritage Team (STScI/AURA)}}
+            \label{fig:m87}
+        \end{figure}
+
+        Around 10\% of AGNs produce \emph{jets} from their accretion disk
+        \citep{fabian99}. Jets are long, thin streams of matter such as the one
+        shown in Figure \ref{fig:m87}. These jets can be very large, with
+        ``giant'' AGNs emitting jets nearly $1$ Mpc ($3 \times 10^{19}$ km) in
+        length \citep{saripalli05}. The process through which jets are emitted
+        is currently unknown \citeme.
+
+        Electrons in jets produce \emph{synchrotron radiation}. This is a
+        form of radiation emitted by charged particles travelling at
+        relativistic speeds as they accelerate in a magnetic field
+        \citep{sokolov67}. Synchrotron radiation is emitted in radio
+        wavelengths, and so AGNs emitting synchrotron radiation are called
+        \emph{radio AGNs}. As radio AGNs are the focus of this thesis, ``AGN''
+        will refer only to radio AGNs unless otherwise specified.
+
+        \begin{figure}
+            \centering
+            \includegraphics[height=0.3\textheight]
+                {images/FIRST_093244.58+161050.7.PNG}
+            \caption{An image of a radio AGN taken by the NRAO Very Large Array,
+                centred on FIRSTJ093244.5+161050.}
+        \end{figure}
+
+        We can observe the jets of radio AGNs with radio telescopes.
+
+        To fully understand these objects astronomers need data from more than
+        just radio surveys. Combining observations of objects in multiple
+        wavelengths is therefore a common problem in astronomy, and is called
+        \emph{cross-identification} \citep{fan15}. For point sources of light
+        this can be straightforward --- the coordinates of each source on the
+        sky are well-known and can often be immediately matched throughout
+        surveys --- but as it is the jets of AGNs that emit radio, AGNs are not
+        point sources. We discuss this in detail in Section
+        \ref{sec:radio-cross-identification}.
+
+        \todo{discuss what these actually look like in radio}
 
     \section{Radio Surveys}
     \label{sec:radio-surveys}
@@ -302,86 +383,18 @@
             infrared survey of seven fields of the sky
             \citep{lonsdale03}. These fields --- ELAIS-S1, ELAIS-N1, ELAIS-N2,
             Lockman, CDFS, and Lonsdale --- are called the \emph{SWIRE fields},
-            totalling 63.2 $\deg^2$ in area. ELAIS-S1 and CDFS are in the
+            totalling 63.2 square degrees in area. ELAIS-S1 and CDFS are in the
             southern sky; all other fields are in the northern sky. SWIRE is a
             multi-wavelength survey, observing at four wavelengths: 3.6 $\mu$m,
             4.5 $\mu$m, 5.8 $\mu$m, and 8.0 $\mu$m.
 
             While SWIRE covers far less area of the sky than WISE, it does so at
-            considerably higher resolution and sensitivity: \todo{Find
-            resolution of SWIRE} and $7.3 - 32.5$ $\mu$Jy, respectively.
+            considerably higher resolution and sensitivity: $1.2''$ and
+            $7.3$--$32.5$ $\mu$Jy, respectively
+            \citep{irac-pocket-guide, surace05}.
 
             SWIRE aimed to investigate the evolution of galaxies and AGNs and
             the relationship between galaxies and AGNs \citep{surace05}.
-
-    \section{Radio Active Galactic Nuclei}
-    \label{sec:agns}
-
-        \begin{figure}[!ht]
-            \centering
-            \includegraphics[height=0.2\textheight]
-                {images/accretion_disk_artist_impression.jpg}
-            \caption{An artist's impression of the accretion disk of an active
-                galactic nucleus. \emph{Image: NASA/JPL-Caltech}}
-            \label{fig:accretion-disk}
-        \end{figure}
-
-        \begin{figure}[!ht]
-            \centering
-            \includegraphics[height=0.3\textheight]
-                {images/ESO_Centaurus_A_LABOCA.jpg}
-            \caption{Centaurus A, a relatively close radio active galactic
-                nucleus. \emph{Image: ESO/WFI (Optical); MPIfR/ESO/APEX/A.Weiss
-                et al. (Submillimetre); NASA/CXC/CfA/R.Kraft et al. (X-ray)}}
-            \label{fig:centaurus-a}
-        \end{figure}
-
-        Many galaxies contain a supermassive black hole in their centre \citeme.
-        These black holes accrete matter from the surrounding galaxy in an
-        \emph{accretion disk} (Figure \ref{fig:accretion-disk}). The accretion
-        process emits huge amounts of light through different physical
-        processes. These light-emitting black holes are called active galactic
-        nuclei (AGNs). AGNs can be extremely bright, emitting up to $10^{39}$ J
-        of energy every second --- nearly a thousand times more energy than our
-        entire galaxy emits \citep{begelman84}. AGNs are found throughout the
-        universe: The closest known AGN is Centaurus A (shown in Figure
-        \ref{fig:centaurus-a}), with $z \approx 0.0018$, and AGNs have been
-        detected up to redshifts of $z \approx 7$ \citeme \todo{Convert this
-        into a non-redshift distance}.
-
-        \begin{figure}
-            \centering
-            \includegraphics[height=0.3\textheight]{images/M87_jet.jpg}
-            \caption{M87, a giant elliptical galaxy with a jet. \emph{Image:
-                NASA and The Hubble Heritage Team (STScI/AURA)}}
-            \label{fig:m87}
-        \end{figure}
-
-        AGNs produce \emph{jets} from their accretion disk. Jets are long, thin
-        streams of matter such as the one shown in Figure \ref{fig:m87}. These
-        jets can be very long, with ``giant'' AGNs emitting jets nearly 1 Mpc in
-        length \citep{saripalli05}. The process through which jets are emitted
-        is currently unknown \citeme.
-
-        Electrons in jets can produce \emph{synchrotron radiation}. This is a
-        form of radiation emitted by charged particles travelling at
-        relativistic speeds as they accelerate in a magnetic field \citeme.
-        Synchrotron radiation is emitted in radio wavelengths, and so AGNs
-        emitting synchrotron radiation are called \emph{radio AGNs}. As radio
-        AGNs are the focus of this thesis, from this point on ``AGN'' will refer
-        only to radio AGNs.
-
-        To fully understand these objects astronomers need data from more than
-        just radio surveys. Combining observations of objects in multiple
-        wavelengths is therefore a common problem in astronomy, and is called
-        \emph{cross-identification} \citep{fan15}. For point sources of light
-        this can be straightforward --- the coordinates of each source on the
-        sky are well-known and can often be immediately matched throughout
-        surveys --- but as it is the jets of AGNs that emit radio, AGNs are not
-        point sources. We discuss this in detail in Section
-        \ref{sec:radio-cross-identification}.
-
-        \todo{discuss what these actually look like in radio}
 
     \section{Radio Cross-identification}
     \label{sec:radio-cross-identification}
@@ -418,6 +431,10 @@
             doubles \todo{define} and radio triples \todo{define} were matched
             to the SWIRE object nearest their centre.
 
+            Additionally, \citeauthor{norris06} found between 8 and 22 radio
+            objects with no identifiable host galaxy in the infrared. These are
+            called ``infrared-faint'' radio objects.
+
             \citeauthor{norris06} estimated the probability of false cross-
             identifications by displacing all radio objects by $1'$ and
             repeating the cross-identification process. From the results of this
@@ -433,12 +450,28 @@
         \subsection{Fan et al. Catalogue}
         \label{sec:fan}
 
-            \begin{itemize}
-                \item Bayesian hypothesis testing to fit models to the ATLAS catalogue
-                \item Doesn't detect IR sources not in catalogue
-                \item Matches within 2'
-                \item Matched 564 radio objects identically to Norris, missed 31 Norris identified, and identified an additional 62
-            \end{itemize}
+            \citet{fan15} developed an automated cross-identification algorithm
+            that fits astronomical models of AGNs to the radio sky.
+
+            The algorithm examines each infrared object in turn. Under the
+            assumption that the infrared object is a host galaxy, it then
+            searches in a $2'$ radius for potential radio components of AGN
+            jets. The radio components with highest likelihood according to a
+            Bayesian model are selected using a greedy algorithm.
+
+            This method has some clear limitations --- it is model-based, and
+            thus may fail for unexpected radio objects like those we might find
+            in EMU, and it is not able to cross-identify infrared-faint radio
+            objects. Nevertheless, it performs very well when applied to the
+            ATLAS-CDFS field, making 564 cross-identifications identically to
+            \citeauthor{norris06}, missing 31 cross-identifications that
+            \citeauthor{norris06} reported, and cross-identifying an additional
+            62 radio objects.
+
+            In this thesis, we consider the \citeauthor{fan15}
+            cross-identifications of ATLAS-CDFS as an alternative source of
+            expert cross-identifications, due to the high (but not total)
+            agreement with \citeauthor{norris06}.
 
     \section{Radio Galaxy Zoo}
     \label{sec:radio-galaxy-zoo}
