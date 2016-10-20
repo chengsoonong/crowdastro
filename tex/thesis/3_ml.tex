@@ -961,4 +961,8 @@ from crowds.
         the \citeauthor{yan10} algorithm considerably outperforms logistic
         regression, indicating that in situations with high, feature-dependent
         noise, the \citeauthor{yan10} algorithm may be a good choice of
-        classification algorithm.
+        classification algorithm. However, this choice of labeller model may not
+        be ideal with large numbers of labellers. There are $ND$ parameters, so
+        the expectation-maximisation algorithm may converge considerably slower
+        and the number of local minima may quickly increase with increasing
+        numbers of labellers.
