@@ -91,14 +91,16 @@ with open(first_path) as f:
     f.readline()
     f.readline()
     for line in f:
+        if numpy.random.random() < 0.90:
+            continue
         cols = line.split()
         rh, rm, rs, dd, dm, ds = cols[:6]
         coord = SkyCoord(
             ra='{}h{}m{}s'.format(rh,rm,rs),
             dec='{}d{}m{}s'.format(dd,dm,ds))
-        ras.append(coord.ra.rad)
+        ras.append(coord.ra.rad - numpy.pi)
         decs.append(coord.dec.rad)
-plt.scatter(ras, decs, marker='.', color='blue')
+plt.scatter(ras, decs, marker='.', color='blue', alpha=0.5, s=10)
 
 # legend
 emu_patch = patches.Patch(color='lightgreen', label='EMU')

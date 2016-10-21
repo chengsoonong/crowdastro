@@ -417,6 +417,13 @@
   \citeauthor{raykar10} algorithm took $152 \pm 115$ seconds to run. This helps
   to highlight how slow the algorithm becomes with increasing $T$.
 
+  We also tried using all of the crowd labels directly with logistic regression,
+  without aggregation. In principle, training logistic regression on such a
+  label set may ``average'' over the conflicting labels and give reasonable
+  results. This was not the case in practice; we found that this method resulted
+  in a balanced accuracy of $50\%$ (i.e. random chance) as the classifier
+  learned to always output 0.
+
 \section{Galaxy Classification}
 \label{sec:rgz-results}
 
@@ -442,16 +449,75 @@
     \centering
     \begin{tabular}{r|c}
       \textbf{Method(Training Set)} & \textbf{Mean Balanced Accuracy (\%)}\\\hline
-      LR(Norris) & $88.74 +- 0.77$\\
-      LR(Fan) & $88.44 +- 0.89$\\
-      LR(RGZ-MV) & $87.17 +- 0.90$\\
-      Raykar(RGZ-Top-20) & $85.76 +- 1.28$\\
-      RGZ-Raw-MV & $85.89 +- 0.00$\\
+      LR(Norris) & $88.74 \pm 0.77$\\
+      LR(Fan) & $88.44 \pm 0.89$\\
+      LR(RGZ-MV) & $87.17 \pm 0.90$\\
+      Raykar(RGZ-Top-20) & $85.76 \pm 1.28$\\
+      RGZ-Raw-MV & $85.89 \pm 0.00$\\
     \end{tabular}
     \caption{Performance of logistic regression and the \citeauthor{raykar10}
       algorithm on the galaxy classification task, as in Figure
-      \ref{fig:predictors}.}
+      \ref{fig:predictors}. Uncertainties are standard deviations.}
     \label{tab:predictors}
+  \end{table}
+
+  \begin{table}
+    \centering
+    \begin{tabular}{l|ll}
+        & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
+        $z = 0$ & $94.57 \pm 0.28$ & $5.43 \pm 0.28$\\
+        $z = 1$ & $17.08 \pm 1.69$ & $82.92 \pm 1.69$
+    \end{tabular}
+    \caption{Confusion matrix for logistic regression trained on
+      \citeauthor{norris06}.}
+    \label{tab:cm-lr-norris}
+  \end{table}
+
+  \begin{table}
+    \centering
+    \begin{tabular}{l|ll}
+        & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
+        $z = 0$ & $95.93 \pm 0.26$ & $4.07 \pm 0.26$\\
+        $z = 1$ & $19.03 \pm 1.94$ & $80.97 \pm 1.94$
+    \end{tabular}
+    \caption{Confusion matrix for logistic regression trained on
+      \citeauthor{fan15}.}
+    \label{tab:cm-lr-fan}
+  \end{table}
+
+  \begin{table}
+    \centering
+    \begin{tabular}{l|ll}
+        & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
+        $z = 0$ & $90.60 \pm 0.55$ & $9.40 \pm 0.55$\\
+        $z = 1$ & $16.25 \pm 1.72$ & $83.75 \pm 1.72$\\
+    \end{tabular}
+    \caption{Confusion matrix for logistic regression trained on the Radio
+      Galaxy Zoo majority vote.}
+    \label{tab:cm-lr-rgz-mv}
+  \end{table}
+
+  \begin{table}
+    \centering
+    \begin{tabular}{l|ll}
+        & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
+        $z = 0$ & $87.88 \pm 1.34$ & $12.12 \pm 1.34$\\
+        $z = 1$ & $16.09 \pm 1.42$ & $83.91 \pm 1.42$\\
+    \end{tabular}
+    \caption{Confusion matrix for the \citeauthor{raykar10} algorithm trained on
+      the Radio Galaxy Zoo labels.}
+    \label{tab:cm-raykar-rgz-raw}
+  \end{table}
+
+  \begin{table}
+    \centering
+    \begin{tabular}{l|ll}
+        & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
+        $z = 0$ & $92.47$ & $07.53$ \\
+        $z = 1$ & $20.67$ & $79.33$ \\
+    \end{tabular}
+    \caption{Confusion matrix for Radio Galaxy Majority vote.}
+    \label{tab:cm-rgz-raw-mv}
   \end{table}
 
   We trained logistic regression classifiers on three training sets:
@@ -462,16 +528,15 @@
   \end{itemize}
   We also trained the \citeauthor{raykar10} algorithm with the Radio Galaxy Zoo
   labels. Each volunteer was assigned a unique index and the algorithm was run
-  with the best $T = 20$ labellers, computed against the Radio Galaxy Zoo
+  with the best $T = 50$ labellers, computed against the Radio Galaxy Zoo
   majority vote. Finally, we compared the predictions of all classifiers to the
   Radio Galaxy Zoo majority vote. These results are plotted in Figure
-  \ref{fig:predictors} and shown in Table \ref{tab:predictors}.
+  \ref{fig:predictors} and shown in Table \ref{tab:predictors}. The average
+  confusion matrices normalised by class size are shown in
 
   % The classifier was then used to classify the objects in the testing set. The
   % labels were compared to those found by \citet{norris06} as described in
   % Section \ref{sec:norris}, resulting in $80.14\%$ balanced accuracy.
   % \todo{This number is out of date.}
-
-  \todo{ROC/precision--recall curves}
 
   \todo{Discuss results}
