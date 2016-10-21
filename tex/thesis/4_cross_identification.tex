@@ -432,111 +432,152 @@
   \subsection{Comparison of Methods}
   \label{sec:comparison-predictors}
 
-  \begin{figure}
-    \centering
-    \includegraphics[width=\textwidth]{images/experiments/predictors.pdf}
-    \caption{Performance of logistic regression and the \citeauthor{raykar10}
-      algorithm on the galaxy classification task, trained on different sets of
-      labels and tested on the galaxies where \citeauthor{norris06} and
-      \citeauthor{fan15} labels agree. LR($Y$) indicates logistic regression
-      trained on $Y$. RGZ-MV is the set of majority vote labels from the Radio
-      Galaxy Zoo. RGZ-Raw-MV is the majority vote of all crowd labels and is
-      included for comparison.}
-    \label{fig:predictors}
-  \end{figure}
+    \begin{figure}
+      \centering
+      \includegraphics[width=\textwidth]{images/experiments/predictors.pdf}
+      \caption{Performance of logistic regression and the \citeauthor{raykar10}
+        algorithm on the galaxy classification task, trained on different sets of
+        labels and tested on the galaxies where \citeauthor{norris06} and
+        \citeauthor{fan15} labels agree. LR($Y$) indicates logistic regression
+        trained on $Y$. RGZ-MV is the set of majority vote labels from the Radio
+        Galaxy Zoo. RGZ-Raw-MV is the majority vote of all crowd labels and is
+        included for comparison.}
+      \label{fig:predictors}
+    \end{figure}
 
-  \begin{table}
-    \centering
-    \begin{tabular}{r|c}
-      \textbf{Method(Training Set)} & \textbf{Mean Balanced Accuracy (\%)}\\\hline
-      LR(Norris) & $88.74 \pm 0.77$\\
-      LR(Fan) & $88.44 \pm 0.89$\\
-      LR(RGZ-MV) & $87.17 \pm 0.90$\\
-      Raykar(RGZ-Top-20) & $85.76 \pm 1.28$\\
-      RGZ-Raw-MV & $85.89 \pm 0.00$\\
-    \end{tabular}
-    \caption{Performance of logistic regression and the \citeauthor{raykar10}
-      algorithm on the galaxy classification task, as in Figure
-      \ref{fig:predictors}. Uncertainties are standard deviations.}
-    \label{tab:predictors}
-  \end{table}
+    \begin{table}
+      \centering
+      \begin{tabular}{r|c}
+        \textbf{Method(Training Set)} & \textbf{Mean Balanced Accuracy (\%)}\\\hline
+        LR(Norris) & $88.74 \pm 0.77$\\
+        LR(Fan) & $88.44 \pm 0.89$\\
+        LR(RGZ-MV) & $87.17 \pm 0.90$\\
+        Raykar(RGZ-Top-20) & $85.76 \pm 1.28$\\
+        RGZ-Raw-MV & $85.89 \pm 0.00$\\
+      \end{tabular}
+      \caption{Performance of logistic regression and the \citeauthor{raykar10}
+        algorithm on the galaxy classification task, as in Figure
+        \ref{fig:predictors}. Uncertainties are standard deviations.}
+      \label{tab:predictors}
+    \end{table}
 
-  \begin{table}
-    \centering
-    \begin{tabular}{l|ll}
-        & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
-        $z = 0$ & $94.57 \pm 0.28$ & $5.43 \pm 0.28$\\
-        $z = 1$ & $17.08 \pm 1.69$ & $82.92 \pm 1.69$
-    \end{tabular}
-    \caption{Confusion matrix for logistic regression trained on
-      \citeauthor{norris06}.}
-    \label{tab:cm-lr-norris}
-  \end{table}
+    \begin{table}
+      \centering
+      \begin{tabular}{l|ll}
+          & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
+          $z = 0$ & $94.57 \pm 0.28$ & $5.43 \pm 0.28$\\
+          $z = 1$ & $17.08 \pm 1.69$ & $82.92 \pm 1.69$
+      \end{tabular}
+      \caption{Confusion matrix for logistic regression trained on
+        \citeauthor{norris06}.}
+      \label{tab:cm-lr-norris}
+    \end{table}
 
-  \begin{table}
-    \centering
-    \begin{tabular}{l|ll}
-        & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
-        $z = 0$ & $95.93 \pm 0.26$ & $4.07 \pm 0.26$\\
-        $z = 1$ & $19.03 \pm 1.94$ & $80.97 \pm 1.94$
-    \end{tabular}
-    \caption{Confusion matrix for logistic regression trained on
-      \citeauthor{fan15}.}
-    \label{tab:cm-lr-fan}
-  \end{table}
+    \begin{table}
+      \centering
+      \begin{tabular}{l|ll}
+          & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
+          $z = 0$ & $95.93 \pm 0.26$ & $4.07 \pm 0.26$\\
+          $z = 1$ & $19.03 \pm 1.94$ & $80.97 \pm 1.94$
+      \end{tabular}
+      \caption{Confusion matrix for logistic regression trained on
+        \citeauthor{fan15}.}
+      \label{tab:cm-lr-fan}
+    \end{table}
 
-  \begin{table}
-    \centering
-    \begin{tabular}{l|ll}
-        & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
-        $z = 0$ & $90.60 \pm 0.55$ & $9.40 \pm 0.55$\\
-        $z = 1$ & $16.25 \pm 1.72$ & $83.75 \pm 1.72$\\
-    \end{tabular}
-    \caption{Confusion matrix for logistic regression trained on the Radio
-      Galaxy Zoo majority vote.}
-    \label{tab:cm-lr-rgz-mv}
-  \end{table}
+    \begin{table}
+      \centering
+      \begin{tabular}{l|ll}
+          & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
+          $z = 0$ & $90.60 \pm 0.55$ & $9.40 \pm 0.55$\\
+          $z = 1$ & $16.25 \pm 1.72$ & $83.75 \pm 1.72$\\
+      \end{tabular}
+      \caption{Confusion matrix for logistic regression trained on the Radio
+        Galaxy Zoo majority vote.}
+      \label{tab:cm-lr-rgz-mv}
+    \end{table}
 
-  \begin{table}
-    \centering
-    \begin{tabular}{l|ll}
-        & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
-        $z = 0$ & $87.88 \pm 1.34$ & $12.12 \pm 1.34$\\
-        $z = 1$ & $16.09 \pm 1.42$ & $83.91 \pm 1.42$\\
-    \end{tabular}
-    \caption{Confusion matrix for the \citeauthor{raykar10} algorithm trained on
-      the Radio Galaxy Zoo labels.}
-    \label{tab:cm-raykar-rgz-raw}
-  \end{table}
+    \begin{table}
+      \centering
+      \begin{tabular}{l|ll}
+          & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
+          $z = 0$ & $87.88 \pm 1.34$ & $12.12 \pm 1.34$\\
+          $z = 1$ & $16.09 \pm 1.42$ & $83.91 \pm 1.42$\\
+      \end{tabular}
+      \caption{Confusion matrix for the \citeauthor{raykar10} algorithm trained
+        on the Radio Galaxy Zoo labels.}
+      \label{tab:cm-raykar-rgz-raw}
+    \end{table}
 
-  \begin{table}
-    \centering
-    \begin{tabular}{l|ll}
-        & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
-        $z = 0$ & $92.47$ & $07.53$ \\
-        $z = 1$ & $20.67$ & $79.33$ \\
-    \end{tabular}
-    \caption{Confusion matrix for Radio Galaxy Majority vote.}
-    \label{tab:cm-rgz-raw-mv}
-  \end{table}
+    \begin{table}
+      \centering
+      \begin{tabular}{l|ll}
+          & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
+          $z = 0$ & $92.47$ & $07.53$ \\
+          $z = 1$ & $20.67$ & $79.33$ \\
+      \end{tabular}
+      \caption{Confusion matrix for Radio Galaxy Majority vote.}
+      \label{tab:cm-rgz-raw-mv}
+    \end{table}
 
-  We trained logistic regression classifiers on three training sets:
-  \begin{itemize}
-    \item the \citeauthor{norris06} labels,
-    \item the \citeauthor{fan15} labels, and
-    \item the Radio Galaxy Zoo majority vote.
-  \end{itemize}
-  We also trained the \citeauthor{raykar10} algorithm with the Radio Galaxy Zoo
-  labels. Each volunteer was assigned a unique index and the algorithm was run
-  with the best $T = 50$ labellers, computed against the Radio Galaxy Zoo
-  majority vote. Finally, we compared the predictions of all classifiers to the
-  Radio Galaxy Zoo majority vote. These results are plotted in Figure
-  \ref{fig:predictors} and shown in Table \ref{tab:predictors}. The average
-  confusion matrices normalised by class size are shown in
+    We trained logistic regression classifiers on three training sets:
+    \begin{itemize}
+      \item the \citeauthor{norris06} labels,
+      \item the \citeauthor{fan15} labels, and
+      \item the Radio Galaxy Zoo majority vote.
+    \end{itemize}
+    We also trained the \citeauthor{raykar10} algorithm with the Radio Galaxy
+    Zoo labels. Each volunteer was assigned a unique index and the algorithm was
+    run with the best $T = 50$ labellers, computed against the Radio Galaxy Zoo
+    majority vote. Finally, we compared the predictions of all classifiers to
+    the Radio Galaxy Zoo majority vote. These results are plotted in Figure
+    \ref{fig:predictors} and shown in Table \ref{tab:predictors}. The average
+    confusion matrices normalised by class size are shown in Tables
+    \ref{tab:cm-lr-norris} -- \ref{tab:cm-rgz-raw-mv}.
 
-  % The classifier was then used to classify the objects in the testing set. The
-  % labels were compared to those found by \citet{norris06} as described in
-  % Section \ref{sec:norris}, resulting in $80.14\%$ balanced accuracy.
-  % \todo{This number is out of date.}
+    % The classifier was then used to classify the objects in the testing set.
+    % The labels were compared to those found by \citet{norris06} as described
+    % in Section \ref{sec:norris}, resulting in $80.14\%$ balanced accuracy.
+    % \todo{This number is out of date.}
+
+  \subsection{Raykar-estimated Labeller Accuracies}
+  \label{sec:raykar-estimates-rgz}
+
+    The \citeauthor{raykar10} algorithm estimates a labeller model parametrised
+    by $\alpha$ and $\beta$ (Section \ref{sec:raykar}). In this section, we look
+    at the estimated values of $\alpha$ and $\beta$ for the 50 best Radio Galaxy
+    Zoo volunteers, and compare these to their ``true'' values.
+
+    We computed the true $\alpha$ and true $\beta$ values for each labeller
+    empirically, with $\alpha_t$ given by the true positive rate of labeller $t$
+    and $\beta_t$ given by the true negative rate of labeller $t$. There were no
+    labellers in the best 50 for whom these rates could not be calculated (i.e.
+    the best 50 labellers had always labelled at least one positive and at least
+    one negative galaxy).
+
+    To assess the correlation between the true and predicted values of $\alpha$
+    and $\beta$, we computed the Pearson and Spearman correlation coefficients
+    between the true and predicted values using \texttt{scipy.stats}
+    \citep{scipy}.
+
+    According to the Pearson correlation coefficient, the true and predicted
+    values of $\alpha$ were weakly correlated, with $r = 0.11$ and $p = 0.01$;
+    the true and predicted values of $\beta$ were not, with $r = -0.01$ and $p =
+    0.75$. According to the Spearman correlation coefficient, the true and
+    predicted values of $\alpha$ were weakly correlated, with $r = 0.32$ and $p
+    = 0.00$; the true and predicted values of $\beta$ were also correlated, with
+    $r = 0.21$ and $p = 0.00$.
+
+    We make two notes on these results. First, the Pearson correlation
+    coefficient assumes that the values being tested are normally distributed,
+    which the $\alpha$ and $\beta$ values are not. Second, \texttt{scipy.stats}
+    comments that the output $p$ values are ``not entirely reliable'' though the
+    reliability increases with larger datasets.
+
+    These results may imply that the labeller model does not accurately describe
+    the Radio Galaxy Zoo volunteers. It is possible that a data-dependent model
+    like that proposed by \citeauthor{yan10} may provide a better model, but due
+    to the difficulty and slow speed of trialling labeller models with many
+    parameters, we do not further investigate this problem in this thesis.
 
   \todo{Discuss results}

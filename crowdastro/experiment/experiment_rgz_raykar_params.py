@@ -1,13 +1,13 @@
 import h5py
-import matplotlib.pyplot as plt
 import numpy
+import scipy.stats
 from sklearn.metrics import confusion_matrix
 
 from crowdastro.experiment.results import Results
 from crowdastro.crowd.raykar import RaykarClassifier
 
 
-def raykar_params(crowdastro_path, results_path, method):
+def raykar_params(crowdastro_path, results_path, method, n_annotators=50):
     results = Results.from_path(results_path)
     n_splits = results.n_splits
     assert method in results.methods
@@ -56,31 +56,58 @@ def raykar_params(crowdastro_path, results_path, method):
             true_betas.append(tn / n)
         assert len(annotator_accuracies) == len(true_alphas)
         ranked_annotators = numpy.argsort(annotator_accuracies)
-        top_n_annotators = ranked_annotators[-50:]
+        top_n_annotators = ranked_annotators[-n_annotators:]
         true_alphas = numpy.array(true_alphas)[top_n_annotators]
         true_betas = numpy.array(true_betas)[top_n_annotators]
 
-    plt.subplot(1, 2, 1)
+    print(true_alphas)
+    print(true_betas)
+
+    all_pred_alphas = []
+    all_true_alphas = []
     for alphas_ in alphas:
-        plt.scatter(
-            true_alphas,
-            alphas_,
-            marker='x')
-    plt.xlabel('$\\alpha$')
-    plt.ylabel('Estimated $\\alpha$')
+        # For each trial...
+        all_true_alphas.extend(true_alphas)
+        all_pred_alphas.extend(alphas_)
 
-    plt.subplot(1, 2, 2)
+    all_pred_betas = []
+    all_true_betas = []
     for betas_ in betas:
-        plt.scatter(
-            true_betas,
-            betas_,
-            marker='x')
-    plt.xlabel('$\\beta$')
-    plt.ylabel('Estimated $\\beta$')
+        # For each trial...
+        all_true_betas.extend(true_betas)
+        all_pred_betas.extend(betas_)
 
-    plt.show()
+    pearson_alpha = scipy.stats.pearsonr(all_pred_alphas, all_true_alphas)
+    pearson_beta = scipy.stats.pearsonr(all_pred_betas, all_true_betas)
+    spearman_alpha = scipy.stats.spearmanr(all_pred_alphas, all_true_alphas)
+    spearman_beta = scipy.stats.spearmanr(all_pred_betas, all_true_betas)
+
+    print('Pearson for alpha:', pearson_alpha)
+    print('Pearson for beta:', pearson_beta)
+    print('Spearman for alpha:', spearman_alpha)
+    print('Spearman for beta:', spearman_beta)
+
+    # plt.subplot(1, 2, 1)
+    # for alphas_ in alphas:
+    #     plt.scatter(
+    #         true_alphas,
+    #         alphas_,
+    #         marker='x')
+    # plt.xlabel('$\\alpha$')
+    # plt.ylabel('Estimated $\\alpha$')
+
+    # plt.subplot(1, 2, 2)
+    # for betas_ in betas:
+    #     plt.scatter(
+    #         true_betas,
+    #         betas_,
+    #         marker='x')
+    # plt.xlabel('$\\beta$')
+    # plt.ylabel('Estimated $\\beta$')
+
+    # plt.show()
 
 
 if __name__ == '__main__':
     raykar_params(
-        '../../data/crowdastro.h5', '../../data/results_50.h5', 'Raykar(RGZ-Top-50)')
+        'data/crowdastro.h5', 'data/results_50.h5', 'Raykar(RGZ-Top-50)')
