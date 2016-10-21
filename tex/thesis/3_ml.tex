@@ -757,14 +757,27 @@ from crowds.
             cancer dataset (Section \ref{sec:breast-dataset}). Random samples of
             75\% of the examples were drawn 20 times and used to train both the
             \citeauthor{raykar10} classifier and a logistic regression
-            classifier (using majority vote for the labels). These classifiers
-            were tested against the groundtruth of the remaining 25\%. The
-            results are plotted in Figure \ref{fig:raykar}. The Raykar
-            classifier attained a balanced accuracy of $(58 \pm 8)\%$ and the
-            logistic regression classifier attained a balanced accuracy of $(56
+            classifier (using majority vote for the labels). To help find a good
+            set of parameters, the \citeauthor{raykar10} classifier was
+            retrained 5 times with random initial conditions, and the classifier
+            attaining the highest likelihood was selected. Both logistic
+            regression and \citeauthor{raykar10} classifiers were tested against
+            the groundtruth of the remaining 25\%. The results are plotted in
+            Figure \ref{fig:raykar}. The Raykar classifier attained a balanced
+            accuracy of $(58 \pm 8)\%$ and the logistic regression classifier
+            attained a balanced accuracy of $(56
             \pm 8)\%$.
 
-            \todo{Conclude.}
+            From this experiment, we can see that the \citeauthor{raykar10}
+            algorithm performs comparably to logistic regression, even under
+            high noise. However, training a logistic regression classifier on
+            the majority vote is far simpler and faster, even in an idealised
+            scenario where labeller noise is exactly modelled by the
+            \citeauthor{raykar10} model. This may be an artefact of the
+            expectation-maximisation algorithm, which is never guaranteed to
+            converge to a global maximum. If so, then increasing the number of
+            random restarts may improve results, at the cost of increased
+            training time.
 
         \subsubsection{The Effect of Class Imbalance}
 
