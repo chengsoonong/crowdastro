@@ -27,14 +27,62 @@ submodules available.
 \section{Submodules}
     \label{sec:crowdastro-submodules}
 
-    \subsection{crowdastro.active\_learning.random\_sampler}
-        \label{sec:crowdastro-random-sampler}
-    \subsection{crowdastro.active\_learning.sampler}
-        \label{sec:crowdastro-sampler}
-    \subsection{crowdastro.active\_learning.qbc\_sampler}
+    \subsection{crowdastro.active\_learning}
+    \label{sec:crowdastro-active-learning}
+
+        \texttt{crowdastro.active\_learning} contains classes that simulate
+        active learning tasks with different sampling methods. These all
+        implement the same methods, and so can be used as drop-in replacements
+        for each other.
+
+        Samplers have access to a pool of unlabelled data and an array of known
+        labels. They also have a \texttt{sample\_index} method that returns the
+        index of an unlabelled data point to query an expert for the label, and
+        a \texttt{sample\_indices} method that returns a list of such indices
+        for bulk training. They also have an \texttt{add\_label} method to add
+        the retrieved label to the array of known labels, and a
+        \texttt{add\_labels} method which takes a list of such labels for bulk
+        training.
+
+        \subsubsection{qbc\_sampler}
         \label{sec:crowdastro-qbc-sampler}
-    \subsection{crowdastro.active\_learning.uncertainty\_sampler}
+
+            \texttt{crowdastro.active\_learning.qbc\_sampler} contains a class
+            \texttt{QBCSampler} that simulates query-by-committee as described
+            in Section \ref{sec:qbc}. The committee is composed of a
+            user-defined number of logistic regression classifiers trained on a
+            user-defined percentage of the labelled data. The
+            \texttt{QBCSampler} also keeps a single logistic regression called
+            the \emph{reference classifier} which is trained on all known
+            labels; it is this classifier that is used to compute the balanced
+            accuracy to avoid underreporting of accuracy due to sampling.
+
+        \subsubsection{random\_sampler}
+        \label{sec:crowdastro-random-sampler}
+
+            \texttt{crowdastro.active\_learning.random\_sampler} contains
+            classes that simulate an active learning task with passive sampling.
+            There are two such classes:
+            \begin{itemize}
+                \item \texttt{RandomSampler}, which samples completely at
+                    random,
+                \item \texttt{BalancedSampler}, which samples evenly from binary
+                    classes.
+            \end{itemize}
+
+        \subsubsection{sampler}
+        \label{sec:crowdastro-sampler}
+
+            \texttt{crowdastro.active\_learning.random\_sampler} contains the
+            \texttt{Sampler} base class for other samplers.
+
+        \subsubsection{uncertainty\_sampler}
         \label{sec:crowdastro-uncertainty-sampler}
+
+            \texttt{crowdastro.active\_learning.uncertainty\_sampler} contains a
+            class \texttt{ConfidenceUncertaintySampler} that simulates binary
+            uncertainty sampling as described in Section
+            \ref{sec:uncertainty-sampling}.
 
     \subsection{crowdastro.crowd.raykar}
         \label{sec:crowdastro-raykar}
@@ -42,8 +90,8 @@ submodules available.
         \texttt{crowdastro.crowd.raykar} is an implementation of the crowd
         learning algorithm developed by \citet{raykar10}, described here in
         Section \ref{sec:raykar}. The module provides a
-        \texttt{RaykarClassifier} object which implements a modified scikit-%
-            learn interface.
+        \texttt{RaykarClassifier} object which implements a modified
+        scikit-learn interface.
 
     \subsection{crowdastro.crowd.util}
         \label{sec:crowdastro-util}
@@ -69,5 +117,5 @@ submodules available.
         \texttt{crowdastro.crowd.yan} is an implementation of the crowd
         learning algorithm developed by \citet{yan10}, described here in
         Section \ref{sec:yan}. The module provides a
-        \texttt{YanClassifier} object which implements a modified scikit-%
-            learn interface.
+        \texttt{YanClassifier} object which implements a modified scikit-learn
+        interface.
