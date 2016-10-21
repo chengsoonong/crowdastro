@@ -114,22 +114,30 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
         if plot:
             matplotlib.rcParams['font.family'] = 'serif'
             matplotlib.rcParams['font.serif'] = ['Palatino Linotype']
-            plt.figure(figsize=(6, 4))
+            plt.figure(figsize=(6, 6))
             vertical_scatter_ba(
                 results,
                 crowdastro_h5['/{}/cdfs/norris_labels'.format(ir_survey)].value,
-                violin=True, rotation=45, x_tick_offset=-0.5)
-            plt.subplots_adjust(bottom=0.33)
+                violin=True, rotation='vertical')
+            plt.subplots_adjust(bottom=0.28)
             plt.show()
 
         for method in methods:
-            probs = results[method].mean(axis=0)
-            assert probs.shape == targets['LR(Norris)'].shape
-            cm = sklearn.metrics.confusion_matrix(
-                targets['LR(Norris)'],
-                probs.round())
-            cm /= cm.sum(axis=1)
-            print(method, '\n', cm)
+            total_cm = numpy.zeros((2, 2, n_splits))
+            for split in range(n_splits):
+                probs = results[method, split][results.get_mask(method, split)]
+                assert probs.shape == targets[
+                    'LR(Norris)'][results.get_mask(method, split)].shape
+                total_cm[:, :, split] = sklearn.metrics.confusion_matrix(
+                    targets['LR(Norris)'][results.get_mask(method, split)],
+                    probs.round()).astype(float)
+            # Normalise.
+            total_cm /= total_cm.sum(axis=1).reshape((-1, 1, n_splits))
+            # Compute mean and stdev.
+            mean_cm = total_cm.mean(axis=2)
+            std_cm = total_cm.std(axis=2)
+            print(method, '(mean) \n', mean_cm)
+            print(method, '(std) \n', std_cm)
 
 
 if __name__ == '__main__':
