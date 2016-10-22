@@ -91,14 +91,15 @@ the galaxy classification task and to the Radio Galaxy Zoo project.
     \subsection{Query-by-Committee}
     \label{sec:qbc}
 
-        Query-by-committee (QBC) is an ensemble-based query strategy first
-        proposed by \citet{seung92}. A committee of classifiers is trained on
-        the known labels, with different subsets of the labelled data to ensure
-        variety in the committee. The committee then labels the unlabelled pool
-        of data: Each classifier votes on each data point and the most commonly
-        voted for label is assigned. The information gain associated with each
-        data point is estimated by the disagreement of the committee on the
-        label, and the data point with the most disagreement is queried.
+        \emph{Query-by-committee} (QBC) is an ensemble-based query strategy
+        first proposed by \citet{seung92}. A committee of classifiers is trained
+        on the known labels, with different subsets of the labelled data to
+        ensure variety in the committee. The committee then labels the
+        unlabelled pool of data: Each classifier votes on each data point and
+        the most commonly voted for label is assigned. The information gain
+        associated with each data point is estimated by the disagreement of the
+        committee on the label, and the data point with the most disagreement is
+        queried.
 
         Disagreement can be measured in multiple ways. The most obvious is by
         simply counting the number of classifiers that disagree with the
