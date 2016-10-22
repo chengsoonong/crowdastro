@@ -43,6 +43,9 @@
 
 \usetikzlibrary{arrows}
 
+% Drop the footnote to the bottom of raggedbottom pages.
+\usepackage[bottom]{footmisc}
+
 \setlist{nosep}
 
 % hyperref setup taken from Aladair Tran's thesis:
@@ -137,7 +140,7 @@
 % \nocite{*}
 % \bibliographystyle{acmnew-xref}
 % \bibliographystyle{plainnat}
-\bibliographystyle{unsrtnat}
+\bibliographystyle{unsrtnat_authorabbr}
 \bibliography{../papers}
 
 \printindex

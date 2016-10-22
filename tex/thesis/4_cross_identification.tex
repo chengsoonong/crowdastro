@@ -2,9 +2,9 @@
 \chapter{Automating Radio Cross-identification}
 \label{cha:cross-identification}
 
-  In this chapter, we develop a machine learning approach to the radio cross-%
-  identification problem. First, we discuss different ways to train and use
-  a classifier for the task, in particular framing the cross-identification
+  In this chapter, we develop a machine learning approach to the radio
+  cross-identification problem. First, we discuss different ways to train and
+  use a classifier for the task, in particular framing the cross-identification
   problem as an object localisation problem. We then discuss the available
   training data and how we chose to process it. Finally, we present results
   against a dataset of expert labels, and compare these results to those found
@@ -22,7 +22,7 @@
   Figure \ref{fig:two-hosts}), but we make the assumption that there is only
   one. This greatly simplifies the problem.
 
-  \begin{figure}[!ht]
+  \begin{figure}
     \centering
     \includegraphics[width=0.5\textwidth]{images/CI0370C1_heatmap+contours.png}
     \caption{A radio object (ARG0003ra1) with two host galaxies. This radio
@@ -254,7 +254,7 @@
     \subsubsection{Building a Model for Feature Extraction}
     \label{sec:feature-extraction-model}
 
-      \begin{figure}[!ht]
+      \begin{figure}
          \centering
          \includegraphics[width=\textwidth]{images/cnn_new.pdf}
          \caption{Convolutional neural network for radio feature extraction. The
@@ -279,7 +279,7 @@
       An example of the neural network applied to a radio image is shown in
       Figure \ref{fig:rgz-cnn}.
 
-      \begin{figure}[!ht]
+      \begin{figure}
         \centering
         \includegraphics[width=\textwidth]{images/rgz_cnn}
         \caption{The effects of convolutional layers on an input image. The
@@ -303,7 +303,7 @@
     deviations of the balanced accuracies can be found in Table
     \ref{tab:feature-ablation}.
 
-    \begin{figure}[!ht]
+    \begin{figure}
       \centering
       \includegraphics[width=\textwidth]{%
         images/experiments/feature_ablation.pdf}
@@ -314,7 +314,7 @@
       \label{fig:feature-ablation}
     \end{figure}
 
-    \begin{table}[!ht]
+    \begin{table}
       \centering
       \begin{tabular}{r|c}
         \textbf{Features} & \textbf{Mean Balanced Accuracy (\%)}\\\hline
@@ -341,7 +341,7 @@
 \section{Choosing a Binary Classifier}
 \label{sec:binary-classifiers}
   
-  \begin{figure}[!ht]
+  \begin{figure}
     \centering
     \includegraphics[width=\textwidth]{images/experiments/lr_rf}
     \caption{Comparison of logistic regression and random forests on the galaxy
