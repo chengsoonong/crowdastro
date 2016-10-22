@@ -212,13 +212,25 @@ from crowds.
     \subsection{Random Forests}
     \label{sec:random-forests}
 
-        \begin{itemize}
-            \item Random forests are a classification method using an ensemble of decision trees
-            \item Decision trees are generated with access to only a subset of features or instances
-            \item Each decision tree votes for a classification
-            \item Majority vote
-            \item cite http://math.bu.edu/people/mkon/MA751/L18RandomForests.pdf
-        \end{itemize}
+        A \emph{decision tree} is a classifier that classifies by repeatedly
+        dividing the feature space. The tree itself is a binary tree of
+        decisions. The input space is split along one feature axis, giving two
+        subtrees with one less dimension. This is then recursively applied to
+        the subtrees until each leaf of the tree contains less than a threshold
+        number of examples or until there are no more features to split on. The
+        leaf nodes are then labelled with the most common label of the elements
+        they contain.
+
+        A \emph{random forest} is a classifier that uses an ensemble of decision
+        trees to classify data points \citep{kon16}. A number of decision trees
+        are generated, each with a different subset of features and inputs. This
+        ensures that the decision trees are different. The random forest then
+        classifies by having the decision trees vote on each label, with the
+        most common vote being used as the prediction. The probability of this
+        label being correct can be estimated as the percentage of decision trees
+        in the ensemble that agree with the prediction.
+
+        Random forests are nonlinear classifiers which are resistant to problems of feature scale. This makes them a good off-the-shelf classifier to apply to a generic classification problem.
 
 \section{Feature Extraction from Images}
 \label{sec:image-feature-extraction}
@@ -825,9 +837,11 @@ from crowds.
             $\beta$ values are plotted against the ratios in Figure
             \ref{fig:raykar-class-balance-ab}.
 
-            \todo{Conclude.}
-
-            \clearpage
+            The balanced accuracy is similarly distributed across all trials,
+            with a slight decrease as classes grow more unbalanced. The
+            estimated $\alpha$ and $\beta$ values are also similar across all
+            trials. This shows that our implementation of the
+            \citeauthor{raykar10} algorithm is not sensitive to class imbalance.
 
         \subsubsection{The Effect of Label Noise}
 
@@ -857,8 +871,10 @@ from crowds.
             \ref{fig:raykar-noise}.
 
             As expected, the balanced accuracy increases as label noise
-            decreases. The output $\alpha$ and $\beta$ closely match the true
-            values.
+            decreases, and the output $\alpha$ and $\beta$ closely match the
+            true values. This shows that our implementation of the
+            \citeauthor{raykar10} algorithm is able to recover the noise
+            parameters of our simulated labellers.
 
     \subsection{Yan et al. Model}
     \label{sec:yan}
