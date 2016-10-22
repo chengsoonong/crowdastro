@@ -200,9 +200,9 @@
     linear units of $f_{\text{Vega}}$ Jy.
 
     The ratios between infrared fluxes are indicators of physical galactic
-    properties such as star formation and dust \todo{Find a source on this ---
-    Probably the WISE paper wright10}. In practice, the $w1 - w2$ and $w2 - w3$
-    ratios are most commonly used (such as in Figure
+    properties such as star formation and dust, and can be used to identify
+    different classes of galaxies \citep{wright10}. In practice, the $w1 - w2$
+    and $w2 - w3$ ratios are most commonly used (such as in Figure
     \ref{fig:wise-colour-colour}), so we chose to use these ratios as features.
     Once again, we used a linear scale, computing the ratios using equation
     \ref{eq:magnitude-difference} and converting them to linear units with
@@ -226,15 +226,9 @@
     infrared images may contain more useful information and thus be useful for
     features, but this was not explored in this thesis.
 
-    % The SWIRE catalogue (Section \ref{sec:swire}) also contains colour
-    % information for each contained object, but only fluxes rather than
-    % magnitudes. \todo{Read the SWIRE colour-colour diagram and continue this.}
-
-    % Both WISE and SWIRE catalogues contain the positions of each object. The
-    % distance from each object to the centre of the closest radio object is
-    % used as a feature representing that object. This noticeably improves
-    % classification performance \todo{make an experiment showing this, and
-    % probably also showing that the other features are good}.
+    Both WISE and SWIRE catalogues contain the positions of each object. For the
+    final infrared feature, we use the distance from an infrared object to the
+    centre of the closest radio object.
 
   \subsection{Radio Features}
   \label{sec:radio-features}
@@ -246,7 +240,16 @@
     extracted from the radio images directly. We chose to use a convolutional
     neural network, as described in Section \ref{sec:image-feature-extraction}.
 
-    \todo{Cite Proctor related work}
+    We note that there is existing research on feature representations of radio
+    galaxies. \citet{fan15} used an astronomical model of radio galaxies in
+    ATLAS for cross-identification, and \citet{proctor06} investigated feature
+    selection for radio galaxies in FIRST using hand-designed features. We do
+    not use these methods here for two reasons: First, we wish to investigate
+    automated feature extraction, and second, we wish to avoid dependence on any
+    specific astronomical model. This is because we expect to find completely
+    new objects in EMU that may not fit existing models, and machine learning
+    algorithms like those we develop here will eventually be applied to EMU
+    \citep{banfield15}.
 
     \subsubsection{Building a Model for Feature Extraction}
     \label{sec:feature-extraction-model}
@@ -533,11 +536,6 @@
     \ref{fig:predictors} and shown in Table \ref{tab:predictors}. The average
     confusion matrices normalised by class size are shown in Tables
     \ref{tab:cm-lr-norris} -- \ref{tab:cm-rgz-raw-mv}.
-
-    % The classifier was then used to classify the objects in the testing set.
-    % The labels were compared to those found by \citet{norris06} as described
-    % in Section \ref{sec:norris}, resulting in $80.14\%$ balanced accuracy.
-    % \todo{This number is out of date.}
 
   \subsection{Raykar-estimated Labeller Accuracies}
   \label{sec:raykar-estimates-rgz}
