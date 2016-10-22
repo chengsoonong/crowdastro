@@ -213,13 +213,13 @@ from crowds.
     \label{sec:random-forests}
 
         A \emph{decision tree} is a classifier that classifies by repeatedly
-        dividing the feature space. The tree itself is a binary tree of
-        decisions. The input space is split along one feature axis, giving two
-        subtrees with one less dimension. This is then recursively applied to
-        the subtrees until each leaf of the tree contains less than a threshold
-        number of examples or until there are no more features to split on. The
-        leaf nodes are then labelled with the most common label of the elements
-        they contain.
+        dividing the feature space. Generating the tree proceeds as follows. The
+        tree itself is a binary tree of decisions. The input space is split
+        along one feature axis, giving two subtrees with one less dimension.
+        This is then recursively applied to the subtrees until each leaf of the
+        tree contains less than a given number of examples or until there are no
+        more features to split on. The leaf nodes are then labelled with the
+        most common label of the elements they contain.
 
         A \emph{random forest} is a classifier that uses an ensemble of decision
         trees to classify data points \citep{kon16}. A number of decision trees
