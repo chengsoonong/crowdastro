@@ -2,25 +2,65 @@
 \chapter{Galaxies and Active Galactic Nuclei}
 \label{cha:astro}
 
-    Modern astronomy relies on observations of deep space in different
-    wavelengths, with different wavelengths each carrying different physical
-    meanings. Infrared surveys detect star formation and dust in distant
-    galaxies, and radio surveys detect massive objects called active galactic
-    nuclei. In this section, we describe what we see in radio and infrared
-    surveys, as well as introducing specific radio and infrared surveys relevant
-    to this thesis. We also discuss the motivation behind cross-identifying
-    active galactic nuclei with their host galaxies, as well as the inherent
-    difficulty in doing so, and hence provide the motivation for this thesis.
 
     \begin{figure}[!ht]
         \centering
         \includegraphics[height=0.3\textheight]
             {images/ESO_Centaurus_A_LABOCA.jpg}
-        \caption{Centaurus A, a relatively close radio active galactic
-            nucleus. \emph{Image: ESO/WFI (Optical); MPIfR/ESO/APEX/A.Weiss
-            et al. (Submillimetre); NASA/CXC/CfA/R.Kraft et al. (X-ray)}}
+        \caption{Centaurus A, a nearby radio galaxy with an active galactic
+            nucleus. \emph{Image: ESO/WFI (Optical); MPIfR/ESO/APEX/A.Weiss et
+            al. (Submillimetre); NASA/CXC/CfA/R.Kraft et al. (X-ray)}}
         \label{fig:centaurus-a}
     \end{figure}
+
+
+    This chapter develops the problem of cross-identification in an astronomical
+    context. The outcome of the chapter is a solid understanding of
+    cross-identification, as well as knowledge of four key astronomical
+    datasets. These datasets will be used for developing our machine learning
+    approach to cross-identification in Chapter \ref{cha:cross-identification}.
+
+    Section \ref{sec:astronomical-observations} will introduce concepts required
+    to understand astronomical surveys. We will look at the equatorial
+    coordinate system, used for describing positions of objects on the sky, and
+    we will describe some basic properties and measurements of light used in
+    surveys.
+
+    Section \ref{sec:agns} will briefly discuss the properties and features of
+    radio active galactic nuclei. Radio active galactic nuclei are radio objects
+    that are extremely common in radio surveys. They are also difficult to
+    cross-identify, and as such pose great difficulty to cross-identification
+    algorithms.
+
+    Sections \ref{sec:infrared-surveys} and \ref{sec:radio-surveys} will
+    introduce specific infrared and radio surveys, respectively. These surveys
+    form the datasets we will use in Chapter \ref{cha:cross-identification}, and
+    are also used later in this chapter for existing cross-identification
+    catalogues.
+
+    Section \ref{sec:radio-cross-identification} discusses the problem of radio
+    cross-identification, and introduces two catalogues of cross-identified
+    objects that we will refer to for testing our cross-identification methods.
+
+    Finally, Section \ref{sec:radio-galaxy-zoo} describes the Radio Galaxy Zoo,
+    the source of the training data for our machine learning methods.
+
+    % To develop a method for automated cross-identification of radio objects, it
+    % is important to understand what radio objects \emph{are}.
+    % In this chapter we
+    % introduce active galactic nuclei, one of the most common radio objects
+    % observed in radio surveys, and the most difficult to cross-identify. We will
+    % discuss the cross-identification problem in an astronomical context.
+
+    % Modern astronomy relies on observations of deep space in different
+    % wavelengths, with different wavelengths each carrying different physical
+    % meanings. Infrared surveys detect star formation and dust in distant
+    % galaxies, and radio surveys detect massive objects called active galactic
+    % nuclei. In this section, we describe what we see in radio and infrared
+    % surveys, as well as introducing specific radio and infrared surveys relevant
+    % to this thesis. We also discuss the motivation behind cross-identifying
+    % active galactic nuclei with their host galaxies, as well as the inherent
+    % difficulty in doing so, and hence provide the motivation for this thesis.
 
     \section{Astronomical Observations}
     \label{sec:astronomical-observations}
@@ -73,13 +113,13 @@
         \subsection{Wavelength and Frequency}
         \label{sec:wavelength}
 
-            Light is an electromagnetic wave, and like all waves it has
-            \emph{wavelength} and \emph{frequency}. The wavelength of light is
-            the distance between two neighbouring peaks; it is measured in
-            metres (m) and usually denoted $\lambda$. The frequency of light is
-            the number of waves per second; it is measured in hertz (Hz) and
-            usually denoted $\nu$. Wavelength and frequency are related by the
-            formula
+            Light is an electromagnetic wave and can thus be characterised by
+            its \emph{wavelength} and \emph{frequency} \citep{griffiths99}. The
+            wavelength of light is the distance between two neighbouring peaks;
+            it is measured in metres (m) and usually denoted $\lambda$. The
+            frequency of light is the number of waves per second; it is measured
+            in hertz (Hz) and usually denoted $\nu$. Wavelength and frequency
+            are related by the formula
             \[
                 c = \lambda \nu,
             \]
@@ -102,8 +142,8 @@
             Since telescopes generally only detect brightnesses of objects in
             the sky, and different wavelengths of radiation require different
             mechanisms to detect, telescopes are designed to measure radiation
-            only at specific ranges of wavelengths. Separate measurements of
-            wavelength are later combined for analysis.
+            only at specific ranges of wavelengths. Objects detected in
+            different wavelengths must be cross-identified with each other.
 
         \subsection{Flux and Magnitude}
 
@@ -115,9 +155,9 @@
             \]
             where $E$ is the energy received from the object and $t$ is the
             time. We cannot usually measure the flux over all frequencies, so
-            usually flux is observed over a specific frequency range $\Delta
-            \nu$. The \emph{spectral flux density} is then the limit of this as
-            the frequency range approaches zero, i.e.
+            flux is observed over a specific frequency range $\Delta
+            \nu$. The \emph{spectral flux density} is then the limit as the
+            frequency range approaches zero, i.e.
             \[
                 f_\nu = \frac{1}{A}\frac{\text{d}^2E}{\text{d}\nu\text{d}t}
             \]
@@ -126,21 +166,22 @@
             $10^{-26} \text{ W m}^{-2} \text{ Hz}^{-1}$ \citep{francis08}.
 
             The \emph{apparent magitude}, $m$, of an object is a logarithmic
-            measure of its apparent brightness seen from Earth, relative to the
-            star Vega \citep{francis08}. The difference between the magnitudes
-            of two objects, $m_1$ and $m_2$, represents the logarithm of the
-            ratio of their flux densities
-            \begin{equation}
-                \label{eq:magnitude-difference}
-                m_2 - m_1 = -2.5 \log_{10} \left(\frac{f_2}{f_1}\right)
-            \end{equation}
-            and so the apparent magnitude is given by
+            measure of its flux seen from Earth, relative to the star Vega
+            \citep{francis08}:
             \begin{equation}
                 \label{eq:apparent-magnitude}
-                m = -2.5 \log_{10} \left(\frac{f}{f_{\text{Vega}}}\right)
+                m = -2.5 \log_{10} \left(\frac{f}{f_{\text{Vega}}}\right).
             \end{equation}
-            where $f$ is the flux density of the object and $f_{\text{Vega}}$ is
-            the flux density of Vega, measured at the same frequency.
+            $f$ is the flux density of the object and $f_{\text{Vega}}$ is the
+            flux density of Vega measured at the same frequency.
+
+            The difference between the magnitudes of two objects, $m_1$ and
+            $m_2$, represents the logarithm of the ratio of their flux
+            densities:
+            \begin{equation}
+                \label{eq:magnitude-difference}
+                m_2 - m_1 = -2.5 \log_{10} \left(\frac{f_2}{f_1}\right).
+            \end{equation}
 
     \section{Radio Active Galactic Nuclei}
     \label{sec:agns}
@@ -156,7 +197,7 @@
 
         Many galaxies contain a supermassive black hole in their centre
         \citep{richstone98}. These black holes may accrete matter from the
-        surrounding galaxy in an \emph{accretion disk} (Figure
+        surrounding galaxy into an \emph{accretion disc} (Figure
         \ref{fig:accretion-disk}). The accretion process emits huge amounts of
         light through different physical processes. These light-emitting black
         holes are called active galactic nuclei (AGNs). AGNs can be extremely
@@ -187,7 +228,7 @@
         relativistic speeds as they accelerate in a magnetic field
         \citep{sokolov67}. Synchrotron radiation is emitted in radio
         wavelengths, and so AGNs emitting synchrotron radiation are called
-        \emph{radio AGNs}. As radio AGNs are the focus of this thesis, ``AGN''
+        \emph{radio AGNs}. As radio AGNs are the focus of this work, ``AGN''
         will refer only to radio AGNs unless otherwise specified.
 
         \begin{figure}
@@ -239,13 +280,13 @@
         % point sources. We discuss this in detail in Section
         % \ref{sec:radio-cross-identification}.
 
-    \section{Radio Surveys}
-    \label{sec:radio-surveys}
+    \section{Infrared Surveys}
+    \label{sec:infrared-surveys}
 
         A \emph{survey} is an image of the sky made with repeated observations
         in specific wavelengths, aiming to comprehensively cover some large area
-        of the sky. In this section we look at EMU and ATLAS, two surveys in
-        radio wavelengths that are relevant to this thesis.
+        of the sky. In this section we look at WISE and SWIRE, two surveys in
+        infrared wavelengths that we draw data from for our experiments.
 
         \begin{figure}
             \centering
@@ -256,30 +297,114 @@
                 survey covers the entire sky.}
         \end{figure}
 
+        \subsection{WISE: Wide-field Infrared Survey Explorer}
+        \label{sec:wise}
+
+            \begin{figure}
+                \centering
+                \includegraphics[width=0.5\textwidth]
+                    {images/WISE_3h30m05.24s-28d34m46.3s.png}
+                \caption{Patch of the WISE multi-wavelength composite image
+                    centred on 3h30m05.24s -28d34m46.3s.}
+                \label{fig:wise}
+            \end{figure}
+
+            The Wide-field Infrared Survey Explorer (WISE) is an orbital
+            infrared telescope. In 2009--2010 it was used to survey the entire
+            sky in four wavelengths: 3.4 $\mu$m, 4.6 $\mu$m, 12 $\mu$m, and 22
+            $\mu$m. These wavelengths are referred to as WISE bands $w1$, $w2$,
+            $w3$, and $w4$, respectively. WISE images have resolutions of
+            $6''$--$12''$, with sensitivity between $0.08$ and $6$ mJy,
+            corresponding to the detection of sources between $16.5$ and $7.9$
+            magnitude \citep{wright10}.
+
+            The AllWISE catalogue \citep{cutri13} is the most recent WISE
+            catalogue. For each object detected, the catalogue includes the
+            magnitudes in each WISE band, as well as a number of other features
+            we do not make use of in our methods. We will refer to the
+            magnitudes in each band by the names of the bands (i.e. $w1$ --
+            $w4$).
+
+            The main goal of WISE was to provide a map of the whole sky in
+            infrared wavelengths for many different reasons: infrared
+            measurements may be used to detect and classify distant galaxies,
+            measurements can be cross-identified to complement other surveys,
+            and so on. There are many other scientific goals of WISE; these are
+            described in detail by \citet{wright10}.
+
+        \subsection{SWIRE: Spitzer Wide-area Infrared Extragalactic Survey}
+        \label{sec:swire}
+
+            \begin{figure}
+                \centering
+                \includegraphics[width=0.5\textwidth]{images/swire_small.jpg}
+                \caption{Patch of the SWIRE multi-wavelength composite image
+                    centred on 3h30m05.24s -28d34m46.3s. This is the same region
+                    of the sky as the WISE image in Figure \ref{fig:wise}.}
+            \end{figure}
+
+            The Spitzer Wide-Area Infrared Extragalactic Survey (SWIRE) is an
+            infrared survey of seven fields of the sky
+            \citep{lonsdale03}. These fields --- ELAIS-S1, ELAIS-N1, ELAIS-N2,
+            Lockman, CDFS, and Lonsdale --- are called the \emph{SWIRE fields},
+            totalling 63.2 square degrees in area. The fields contain few nearby
+            objects, meaning that observations in these fields are of very old,
+            distant objects. ELAIS-S1 and CDFS are in the southern sky; all
+            other fields are in the northern sky. SWIRE is a multi-wavelength
+            survey, observing at four wavelengths: 3.6 $\mu$m, 4.5 $\mu$m, 5.8
+            $\mu$m, and 8.0 $\mu$m.
+
+            While SWIRE covers far less area of the sky than WISE, it does so at
+            considerably higher resolution and sensitivity: $1.2''$ and
+            $7.3$--$32.5$ $\mu$Jy, respectively
+            \citep{irac-pocket-guide, surace05}.
+
+            SWIRE aimed to investigate the evolution of galaxies and AGNs and
+            the relationship between galaxies and AGNs \citep{surace05}.
+
+            % In this thesis, we are interested in the Chandra Deep Field South
+            % (CDFS), and the European Large Area ISO Survey - South 1 (ELAIS-S1)
+            % field. We will use these 
+
+    \section{Radio Surveys}
+    \label{sec:radio-surveys}
+
+        In this section we look at the EMU and ATLAS radio surveys. EMU does not
+        yet exist, but motivates our work. We will use ATLAS for the experiments
+        in later chapters.
+
         \subsection{EMU: Evolutionary Map of the Universe}
         \label{sec:emu}
 
-            The largest existing radio survey is currently the NRAO VLA Sky
-            Survey (NVSS) \citep{condon98}, which covers the entire northern sky
-            as far south as $-40^\circ$. However, NVSS has low sensitivity, only
-            detecting objects brighter than $2.5$ mJy. NVSS also has relatively
-            low resolution, only resolving objects to $45''$. The most sensitive
-            existing radio survey is of the Lockman hole \citep{owen08}, which
-            only covered around $0.1$ square degrees of the sky, but detected
-            objects as dim as $0.015$ mJy with an angular resolution of $1.6''$.
+            % The largest existing radio survey is currently the NRAO VLA Sky
+            % Survey (NVSS) \citep{condon98}, which covers the entire northern sky
+            % as far south as $-40^\circ$. However, NVSS has low sensitivity, only
+            % detecting objects brighter than $2.5$ mJy. NVSS also has relatively
+            % low resolution, only resolving objects to $45''$. The most sensitive
+            % existing radio survey is of the Lockman hole \citep{owen08}, which
+            % only covered around $0.1$ square degrees of the sky, but detected
+            % objects as dim as $0.015$ mJy with an angular resolution of $1.6''$.
+
             The Evolutionary Map of the Universe (EMU) is an upcoming deep radio
             survey that aims to provide both high sensitivity and wide coverage
             of the radio sky \citep{norris11}. EMU will be sensitive to objects
             to around $0.015$ mJy with an angular resolution of around $10''$,
-            and cover the entire southern sky as far north as $30^\circ$. The
-            survey is expected to find huge numbers of radio objects --- while
-            the Australia Telescope Large Area Survey [ATLAS] (which has similar
+            and cover the entire southern sky as far north as $30^\circ$. For
+            comparison, the largest existing radio survey is currently NVSS
+            \citep{condon98} with sensitivity of $2.5$ mJy and a resolution of
+            $45''$, which covers a similar area. With the resolution,
+            sensitivity, and scale of EMU, astronomers hope to investigate
+            galactic evolution, to explore large-scale structure and cosmology
+            of the unierse, and to find never-before-seen astronomical objects.
+
+            EMU is expected to find huge numbers of radio objects --- while the
+            Australia Telescope Large Area Survey [ATLAS] (which has similar
             resolution and sensitivity to EMU) has detected around 4000 radio
             objects, EMU is expected to find \emph{70 million}
-            \citep{banfield15}. Such a large number of detected objects will
-            make analysis of the data considerably more difficult than analysis
-            of existing surveys has been. Analysis of EMU will be impossible by
-            hand, and will therefore require algorithms to process the data.
+            \citep{banfield15}. With such a large number of detected objects,
+            analysis of the data from EMU will be considerably more difficult
+            than analysis of existing surveys. This analysis will be impossible
+            by hand, and will therefore require algorithms to process the data.
             With so many new objects it is likely that many objects will not fit
             existing models, meaning that model-based approaches to data
             processing may be ineffective. It is this problem that motivates the
@@ -289,19 +414,9 @@
             looking at other datasets with similar sensitivity and resolution,
             such as ATLAS (Section \ref{sec:atlas}).
 
-            EMU aims to fulfil a number of scientific goals, including:
-            \begin{itemize}
-                \setlength\itemsep{0 pt}
-                \item investigating the evolution of galaxies and supermassive
-                    black holes,
-                \item exploring the large-scale structure and cosmology of the
-                    universe,
-                \item developing a catalogue of radio objects in the southern
-                    sky,
-                \item looking for never-before-seen astronomical objects, and
-                \item testing strategies for dealing with data from the upcoming
-                    Square Kilometre Array (SKA) telescope.
-            \end{itemize}
+            The radio objects found by EMU will eventually be cross-identified
+            with the infrared objects found by WISE (Section \ref{sec:wise}). As
+            such, any algorithms that we develop must work with WISE data.
 
         \subsection{ATLAS: The Australia Telescope Large Area Survey}
         \label{sec:atlas}
@@ -317,16 +432,12 @@
             The Australia Telescope Large Area Survey (ATLAS) is a high
             sensitivity radio survey which aims to help understand the evolution
             of early galaxies \citep{norris06}. The Australia Telescope Compact
-            Array was used to image two small areas of the sky: the Chandra Deep
-            Field South (CDFS), and the European Large Area ISO Survey - South 1
-            (ELAIS-S1) field. CDFS and ELAIS-S1 are areas of the sky with few
-            nearby objects, meaning that observations in these fields are of
-            very old, distant objects. These fields in particular were chosen
-            because they are the two fields imaged in the Spitzer Wide-area
-            Infrared Extragalactic Survey (SWIRE, Section \ref{sec:swire})
-            visible from the southern hemisphere. SWIRE produced high-resolution
-            infrared images of its fields, allowing all objects detected in the
-            ATLAS radio images to be cross-identified with their infrared
+            Array was used to image two small areas of the sky: CDFS and
+            ELAIS-S1. These fields in particular were chosen because they are
+            the two fields imaged in SWIRE (Section \ref{sec:swire}) visible from
+            the southern hemisphere. SWIRE produced high-resolution infrared
+            images of its fields, allowing all objects detected in the ATLAS
+            radio images to be cross-identified with their infrared
             counterparts.
 
             ATLAS is considered a pilot survey for EMU. EMU and ATLAS image the
@@ -355,82 +466,16 @@
             as well as uncertainties associated with each measurement
             \citep{franzen15}.
 
-            The ATLAS survey of the CDFS field is the focus of experiments in
-            this thesis, for three main reasons. It contains around 2400
-            objects, providing enough training data for machine learning
-            methods, but still remaining a manageable size for our
-            resource-limited tests. As a pilot survey for EMU, we expect methods
-            developed on ATLAS to also work on EMU. Finally, we have three sets
-            of cross-identifications for ATLAS-CDFS (see Sections
+            The ATLAS survey of the CDFS field is the focus of our experiments
+            for three main reasons. It contains around 2400 objects, providing
+            enough training data for machine learning methods, but still
+            remaining a manageable size for our resource-limited tests. As a
+            pilot survey for EMU, we expect methods developed on ATLAS to also
+            work on EMU. Finally, we have three sets of cross-identifications
+            for ATLAS-CDFS (see Sections
             \ref{sec:radio-cross-identification} and
             \ref{sec:radio-galaxy-zoo}), allowing us to check the performance of
             methods we develop.
-
-    \section{Infrared Surveys}
-    \label{sec:infrared-surveys}
-
-        \subsection{WISE: Wide-field Infrared Survey Explorer}
-        \label{sec:wise}
-
-            \begin{figure}
-                \centering
-                \includegraphics[width=0.5\textwidth]
-                    {images/WISE_3h30m05.24s-28d34m46.3s.png}
-                \caption{Patch of the WISE multi-wavelength composite image
-                    centred on 3h30m05.24s -28d34m46.3s.}
-                \label{fig:wise}
-            \end{figure}
-
-            The Wide-field Infrared Survey Explorer (WISE) is an orbital
-            infrared telescope. In 2009--2010 it was used to survey the entire
-            sky in four wavelengths: 3.4 $\mu$m, 4.6 $\mu$m, 12 $\mu$m, and 22
-            $\mu$m. These wavelengths are referred to as WISE bands $w1$, $w2$,
-            $w3$, and $w4$, respectively. WISE images have resolutions of
-            $6''$--$12''$, with sensitivity between $0.08$ and $6$ mJy,
-            corresponding to the detection of sources between $16.5$ and $7.9$
-            magnitude \citep{wright10}.
-
-            The AllWISE catalogue \citep{cutri13} is the most recent WISE
-            catalogue. For each object detected, the catalogue includes the
-            magnitudes in each WISE band, as well as a number of other features
-            we do not make use of in this thesis. We will refer to the
-            magnitudes in each band by the names of the bands (i.e. $w1$ --
-            $w4$).
-
-            The main goal of WISE was to provide a map of the whole sky in
-            infrared wavelengths for many different reasons: infrared
-            measurements may be used to detect and classify distant galaxies,
-            measurements can be cross-identified to complement other surveys,
-            and so on. There are many other scientific goals of WISE; these are
-            described in detail by \citet{wright10}.
-
-        \subsection{SWIRE: Spitzer Wide-area Infrared Extragalactic Survey}
-        \label{sec:swire}
-
-            \begin{figure}
-                \centering
-                \includegraphics[width=0.5\textwidth]{images/swire_small.jpg}
-                \caption{Patch of the SWIRE multi-wavelength composite image
-                    centred on 3h30m05.24s -28d34m46.3s. This is the same region
-                    of the sky as the WISE image in Figure \ref{fig:wise}.}
-            \end{figure}
-
-            The Spitzer Wide-Area Infrared Extragalactic Survey (SWIRE) is an
-            infrared survey of seven fields of the sky
-            \citep{lonsdale03}. These fields --- ELAIS-S1, ELAIS-N1, ELAIS-N2,
-            Lockman, CDFS, and Lonsdale --- are called the \emph{SWIRE fields},
-            totalling 63.2 square degrees in area. ELAIS-S1 and CDFS are in the
-            southern sky; all other fields are in the northern sky. SWIRE is a
-            multi-wavelength survey, observing at four wavelengths: 3.6 $\mu$m,
-            4.5 $\mu$m, 5.8 $\mu$m, and 8.0 $\mu$m.
-
-            While SWIRE covers far less area of the sky than WISE, it does so at
-            considerably higher resolution and sensitivity: $1.2''$ and
-            $7.3$--$32.5$ $\mu$Jy, respectively
-            \citep{irac-pocket-guide, surace05}.
-
-            SWIRE aimed to investigate the evolution of galaxies and AGNs and
-            the relationship between galaxies and AGNs \citep{surace05}.
 
     \section{Radio Cross-identification}
     \label{sec:radio-cross-identification}
@@ -448,11 +493,10 @@
         that of cross-identifying a radio object with its infrared counterpart.
         Most often in current radio surveys, a radio object will be a jet from
         an AGN \citep{norris11}. In this case, we refer to the infrared
-        counterpart as the \emph{host galaxy} of the AGN. In this thesis we will
-        assume that all radio objects are AGNs.
-        The main goal of cross-identifying AGNs is to better understand the
-        relationship between AGNs and star-forming activity in their host
-        galaxies \citep{norris06}.
+        counterpart as the \emph{host galaxy} of the AGN. We will assume that
+        all radio objects are AGNs. The main goal of cross-identifying AGNs is
+        to better understand the relationship between AGNs and star-forming
+        activity in their host galaxies \citep{norris06}.
 
         Sometimes, cross-identification is easy: We may have point-like sources
         of light, and we can simply overlay two surveys and identify overlapping
@@ -465,7 +509,9 @@
 
         In this section, we look at two different ways astronomers have
         cross-identified radio objects in the CDFS field of the ATLAS survey. We
-        will make use of the resulting catalogues later in this thesis.
+        will make use of the resulting catalogues for testing our
+        cross-identification methods in Chapters \ref{cha:cross-identification}
+        and \ref{cha:active-learning}.
 
         % While we cannot observe the black holes of AGNs directly, we can observe
         % the radio emissions from their jets. These could then be matched to the
@@ -527,10 +573,10 @@
             \citeauthor{norris06} reported, and cross-identifying an additional
             62 radio objects.
 
-            In this thesis, we consider the \citeauthor{fan15}
-            cross-identifications of ATLAS-CDFS as an alternative source of
-            expert cross-identifications, due to the high (but not total)
-            agreement with \citeauthor{norris06}.
+            We consider the \citeauthor{fan15} cross-identifications of
+            ATLAS-CDFS as an alternative source of expert cross-identifications,
+            due to the high (but not total) agreement with
+            \citeauthor{norris06}.
 
     \section{Radio Galaxy Zoo}
     \label{sec:radio-galaxy-zoo}
@@ -614,9 +660,9 @@
     radio object are also included alongside the database. For detailed analysis
     of these labels, see \citet{atlas-ml}.
 
-    In this thesis, we will train machine learning algorithms to perform the
-    cross-identification task trained on ATLAS-CDFS labels from the Radio Galaxy
-    Zoo.
+    In Chapter \ref{cha:cross-identification}, we will train machine learning
+    algorithms to perform the cross-identification task trained on ATLAS-CDFS
+    labels from the Radio Galaxy Zoo.
 
 %     Radio Galaxy Zoo volunteers are first asked to select combinations of
 %     radio objects that correspond to one radio source, and are then asked to

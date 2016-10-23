@@ -3,64 +3,139 @@
 \chapter{Introduction}
 \label{cha:intro}
 
-Observations of the sky in different wavelengths have led to remarkable
-discoveries and enhanced our knowledge of the universe, but with the development
-of ever more powerful telescopes and data collection methods, we have already
-reached a point where there is simply too much astronomical data to process and
-analyse by hand. The scale of modern astronomical surveys is enormous. Faint
-Images of the Radio Sky at Twenty Centimeters (FIRST) \citep{becker95}, which
-began collecting data as early as 1993, detected around 946 000 distant radio
-objects; the AllWISE catalogue \citep{cutri13}, released in 2013, contains over
-747 million mid-infrared objects.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.24\textwidth]{images/centaurus_a_optical}
+  \includegraphics[width=0.24\textwidth]{images/centaurus_a_infrared}
+  \includegraphics[width=0.24\textwidth]{images/centaurus_a_xray}
+  \includegraphics[width=0.24\textwidth]{images/centaurus_a_radio}
+  \caption{Centaurus A in different wavelengths. From left to right: optical,
+    infrared, X-ray, and radio. \emph{Image: ESO/WFI/M.Rejkuba et al. (Optical);
+    NASA (Infrared); NASA/CXC/U.Birmingham/M.Burke et al. (X-ray);
+    NSF/VLA/Univ.Hertfordshire/M.Hardcastle (Radio)}}
+  \label{fig:different-wavelengths}
+\end{figure}
 
-Even better telescopes are still being developed. It is a particularly exciting
-time in radio astronomy: The Square Kilometre Array (SKA) is expected to be
-built by 2024 \citep{ska}, and it will produce over 160 terabytes of data per
-second. Due to the scale of the SKA, many pathfinder projects have been launched
-to provide testbeds for new technologies to be used in the SKA and for new ways
-to handle the data that the SKA will produce. One such project is the Australian
-SKA Pathfinder (ASKAP), a radio telescope in Western Australia. ASKAP will soon
-be used to conduct the Evolutionary Map of the Universe (EMU), a wide radio
-survey.
+\todo{Find a good introductory line.}
 
-EMU will be huge and sensitive, imaging 75\% of the sky at sensitivities 40
-times higher than the current largest northern sky radio survey. It is expected
-to find 30 times more radio galaxies than we have ever known before, bringing
-the total to over 70 million. Manual expert analysis of the EMU data will
-clearly be intractable.
+An object emits light at different wavelengths depending on its physical
+properties. As such, looking at the sky in different wavelengths gives us very
+different pictures. For example, Figure \ref{fig:different-wavelengths} shows
+Centaurus A imaged in optical, infrared, X-ray, and radio light. The disc of
+the galaxy is only visible in optical and infrared, and the large jets emitted
+from the centre of the galaxy are only visible in X-ray and radio. This shows
+that to fully understand an astronomical object, we have to look at it in many
+different wavelengths.
+
+While it is possible to look at one object in many wavelengths at once, we can
+only do so for one object at a time. However, most astronomical data comes from
+\emph{surveys}, where a telescope images large areas of the sky at once in
+specific wavelengths. These surveys detect many objects, and individually
+observing all of them is impractical. This leads us to the problem of
+\emph{cross-identification}: Given an object detected at one wavelength, what
+is the corresponding object at another wavelength?
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.8\textwidth]{images/herculesA.jpg}
-  \caption{Hercules A, a radio galaxy. We see jets emitted from the supermassive
-    black hole near the centre of the image. The galaxy itself is not visible in
-    radio wavelengths. \emph{Image: B. Saxton, W. Cotton and R. Perley
-    (NRAO/AUI/NSF)}}
-  \label{fig:radio-galaxy}
+  \includegraphics[width=0.3\textwidth]{images/first_FIRSTJ081509.0+270337.jpg}
+  \includegraphics[width=0.3\textwidth]{images/wise_FIRSTJ081509.0+270337.jpg}
+  \caption{The same patch of sky (8h 15m 9.0s +27$^\circ$ 3$'$ 37$''$) imaged in
+    radio (left) and infrared (right). \emph{Image: NRAO VLA (Radio); WISE
+    (Infrared)}}
+  \label{fig:radio-ir-comparison}
 \end{figure}
 
-Objects detected by EMU will need to be cross-identified with their counterparts
-in surveys at other wavelengths. Unfortunately, radio objects can be arbitrarily
-complex --- many radio objects are jets from supermassive black holes at the
-centre of galaxies, and these jets warp as they interact with their environment.
-An example of such an object is shown in Figure \ref{fig:radio-galaxy}. An
-estimated 10\% of EMU radio objects will be too complicated for current
-automated cross-identification algorithms \citep{banfield15, norris11}.
+At first, this might sound easy. We could simply take note of the position of
+the object in an image at one wavelength, and then match it to the same
+position in an image at the other wavelength. This, however, assumes that
+objects appear at the same position in multiple wavelengths. While this is
+true for point-like objects, it is not true in general. Objects that are not
+point-like may stretch across the sky, and only parts of the object may emit
+each wavelength. We can again look to Centaurus A (Figure
+\ref{fig:different-wavelengths}) as an example: The brightest part of
+Centaurus A in infrared is far removed from the brightest parts in radio. When
+objects are very distant, cross-identification becomes even harder. Figure
+\ref{fig:radio-ir-comparison} shows the same patch of sky in both radio and
+infrared. The infrared image shows no obvious counterpart for the object
+visible in the radio image.
 
-\citet{banfield15} created Radio Galaxy Zoo to attempt to address this
-problem. Radio Galaxy Zoo is a citizen science project based on the highly
-successful Galaxy Zoo \citep{lintott08, lintott11}. The Zooniverse
-platform\footnote{\url{http://zooniverse.org/}} created by Galaxy Zoo provides a
-way for non-experts to help researchers label data across a wide range of
-scientific fields, and has resulted in well over 110 publications. In the case
-of Radio Galaxy Zoo, volunteers are invited to cross-identify radio objects
-imaged by the NRAO Very Large Array and the Australia Telescope with their
-infrared counterparts imaged by the Wide-area Infrared Survey Explorer (WISE)
-and Spitzer telescopes. The cross-identification interface is available online
-for anyone to use\footnote{\url{http://radio.galaxyzoo.org/}}. To date, with the
-help of thousands of volunteers, Radio Galaxy Zoo has managed to cross-identify
-over 100 000 radio galaxies. This still does not compare in scale to EMU, but
-the hope is that these cross-identification labels can be used to train
+% Problems involved with cross-identification are compounded by Much like how
+% the human eye can only see red, blue, and green light, telescopes can only
+% see a limited number of
+
+The cross-identification problem is compounded by the sheer size of the
+universe. The scale of modern astronomical surveys is enormous: Astronomers
+have catalogued millions of radio objects \citep{banfield15} and hundreds of
+millions of infrared objects \citep{cutri13}. This makes manual
+cross-identification impossible. Automated cross-identification algorithms
+exist \citep{proctor06, fan15}, but are expected to fail for upcoming radio
+surveys \citep{banfield15}.
+
+The Evolutionary Map of the Universe (EMU) \citep{norris11} is one such survey.
+EMU will use the new Australian SKA Pathfinder (ASKAP) telescope to image 75\%
+of the sky in radio wavelengths, and is expected to find over 70 million radio
+galaxies --- over 30 times the number of radio galaxies we know about today
+\citep{banfield15}! These objects will need to be cross-identified with their
+infrared counterparts, but it is estimated that 10\% of these radio galaxies
+will be too complicated for current automated cross-identification algorithms
+\citep{banfield15, norris11}.
+
+% New telescopes are continually being developed, with higher resolutions and
+% higher sensitivity than ever before. It is a particularly exciting time in radio
+% astronomy: The Square Kilometre Array (SKA) \citep{ska}, an upcoming radio
+% telescope, is expected to be built by 2024. It will be larger and faster than
+% any previous radio telescope, and detect radio objects far dimmer and more
+% distant than those we have detected thus far. Accordingly, it will produce huge
+% amounts of data: over 160 terabytes of data per second \citep{ska}. Due to the
+% scale of the SKA, many pathfinder projects have been launched to provide
+% testbeds for new technologies to be used in the SKA and for new ways to handle
+% the data that the SKA will produce. The Australian SKA Pathfinder (ASKAP) is one
+% such project. It is a recently constructed radio telescope in Western Australia,
+% and it will soon be used to conduct a number of new astronomical studies,
+% including the Evolutionary Map of the Universe (EMU) \citep{norris11}. EMU is a
+% radio survey of incredible size, covering 75\% of the sky at very high
+% resolution and sensitivity. It is expected to find 30 times more radio galaxies
+% than we have ever known before, bringing the total to over 70 million. These
+% radio galaxies will need to be cross-identified with their infrared
+% counterparts, and it is estimated that 10\% of these radio galaxies will be too
+% complicated for current automated cross-identification algorithms
+% \citep{banfield15, norris11}.
+
+% \begin{figure}
+%   \centering
+%   \includegraphics[width=0.8\textwidth]{images/herculesA.jpg}
+%   \caption{Hercules A, a radio galaxy. We see jets emitted from the supermassive
+%     black hole near the centre of the image. The galaxy itself is not visible in
+%     radio wavelengths. \emph{Image: B. Saxton, W. Cotton and R. Perley
+%     (NRAO/AUI/NSF)}}
+%   \label{fig:radio-galaxy}
+% \end{figure}
+
+% Objects detected by EMU will need to be cross-identified with their counterparts
+% in surveys at other wavelengths. Unfortunately, radio objects can be arbitrarily
+% complex --- many radio objects are jets from supermassive black holes at the
+% centre of galaxies, and these jets warp as they interact with their environment.
+% An example of such an object is shown in Figure \ref{fig:radio-galaxy}. An
+% estimated 10\% of EMU radio objects will be too complicated for current
+% automated cross-identification algorithms \citep{banfield15, norris11}.
+
+Radio Galaxy Zoo (RGZ) \citep{banfield15} is a citizen science project that
+attempts to crowdsource the cross-identification problem. Volunteers are
+presented with an image of the sky in both radio and infrared, and are asked to
+identify radio objects and associate them with the corresponding infrared
+object. The cross-identification interface is available online for anyone to
+use\footnote{\url{http://radio.galaxyzoo.org/}}.
+
+RGZ is based on the highly successful Galaxy Zoo \citep{lintott08, lintott11}.
+The Zooniverse platform\footnote{\url{http://zooniverse.org/}} created by Galaxy
+Zoo provides a way for non-experts to help researchers label data across a wide
+range of scientific fields, and has resulted in well over 110
+publications\footnote{See \url{https://www.zooniverse.org/about/publications}
+for a full list.}.
+
+To date, with the help of thousands of volunteers, RGZ has managed to
+cross-identify over 100~000 radio galaxies. While this does not compare in scale
+to EMU, the hope is that these cross-identifications can be used to train
 next-generation machine learning algorithms.
 
 This thesis presents a na\"ive, supervised learning approach to the problem of
@@ -142,3 +217,25 @@ Radio Galaxy Zoo.
   Finally, this thesis had been made possible by the participation of more then
   10~000 volunteers in the Radio Galaxy Zoo project. Their contributions are
   individually acknowledged at http://rgzauthors.galaxyzoo.org.
+
+\section{Glossary of Abbreviations Used in this Thesis}
+  
+  \begin{itemize}
+    \item AGN: Active galactic nucleus (Section \ref{sec:agns})
+    \item AL: Active learning (Chapter \ref{cha:active-learning})
+    \item ATLAS: Australia Telescope Large Area Survey (Section \ref{sec:atlas})
+    \item CDFS: Chandra Deep Field - South (Section \ref{sec:swire})
+    \item Dec: Declination (Section \ref{sec:astronomical-observations})
+    \item ELAIS-S1: European Large Area ISO Survey - South 1 (Section \ref{sec:swire})
+    \item EMU: Evolutionary Map of the Universe (Section \ref{sec:emu})
+    \item FIRST: Faint Images of the Radio Sky at Twenty-Centimeters
+    \item LR: Logistic regression (Section \ref{sec:logistic-regression})
+    \item MV: Majority vote (Section \ref{sec:majority-vote})
+    \item QBC: Query-by-committee (Section \ref{sec:qbc})
+    \item RA: Right ascension (Section \ref{sec:astronomical-observations})
+    \item RF: Random forests (Section \ref{sec:random-forests})
+    \item RGZ: Radio Galaxy Zoo (Section \ref{sec:radio-galaxy-zoo})
+    \item SKA: Square Kilometre Array (Chapter \ref{cha:intro})
+    \item SWIRE: Spitzer Wide-area Infrared Extragalactic Survey (Section \ref{sec:swire})
+    \item WISE: Wide-field Infrared Survey Explorer (Section \ref{sec:wise})
+  \end{itemize}

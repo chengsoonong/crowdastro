@@ -515,7 +515,7 @@
       \centering
       \begin{tabular}{l|ll}
           & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
-          $z = 0$ & $92.47$ & $07.53$ \\
+          $z = 0$ & $92.47$ & $7.53$ \\
           $z = 1$ & $20.67$ & $79.33$ \\
       \end{tabular}
       \caption{Confusion matrix for Radio Galaxy Majority vote.}
@@ -536,6 +536,44 @@
     \ref{fig:predictors} and shown in Table \ref{tab:predictors}. The average
     confusion matrices normalised by class size are shown in Tables
     \ref{tab:cm-lr-norris} -- \ref{tab:cm-rgz-raw-mv}.
+
+    The first observation we make is that logistic regression on our feature set
+    does reasonably well. The \citeauthor{norris06} labels we are testing
+    against are expected to have an error of around 9\%, so accuracies upwards
+    of $85\%$ seem reasonable.
+
+    The second observation we make is that logistic regression trained on the
+    majority vote outperforms the \citeauthor{raykar10} classifier which makes
+    use of the labels with no aggregation. This could occur for three reasons:
+    We could have found a local minimum in the expectation-maximisation
+    algorithm, using a subset of labellers instead of all labellers may lower
+    performance, or the \citeauthor{raykar10} model may simply perform worse at
+    this task than majority vote. Regardless, logistic regression and majority
+    vote are very simple; these results indicate that perhaps we do not need a
+    complicated algorithm for aggregating the Radio Galaxy Zoo labels.
+
+    The third observation we make is that logistic regression trained on the
+    Radio Galaxy Zoo labels performs comparably to logistic regression trained
+    on the expert labels. This is a very good sign for citizen science: Perhaps
+    expert labels are not necessary, and supervised learning works just as
+    effectively with crowd labels as with expert labels? However, it is hard to
+    tell if this is a real effect; with our features set, logistic regression
+    seems to have a maximum accuracy around $90\%$, and all classifiers attain
+    accuracies close to this. It is possible that with better features, training
+    on expert labels may give significantly better results than training on
+    crowd labels.
+
+    It is interesting to note that the \citeauthor{raykar10} classifier tends to
+    overpredict positive labels when compared to the other methods. This may be
+    a side-effect of the labeller model, or perhaps the best annotators are more
+    ``over-eager'' and overpredict positive labels themselves.
+
+    The final observation we make is that logistic regression trained on the
+    Radio Galaxy Zoo majority vote outperforms the Radio Galaxy Zoo majority
+    vote. This could be coincidence, or it could indicate some amount of noise
+    reduction from applying logistic regression --- for example, our logistic
+    regression model was trained with $L2$ regularisation, which could ``smooth
+    over'' noise.
 
   \subsection{Raykar-estimated Labeller Accuracies}
   \label{sec:raykar-estimates-rgz}
@@ -577,4 +615,3 @@
     to the difficulty and slow speed of trialling labeller models with many
     parameters, we do not further investigate this problem in this thesis.
 
-  \todo{Discuss results}

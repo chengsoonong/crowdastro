@@ -2,27 +2,39 @@
 \chapter{Machine Learning on Crowds}
 \label{cha:ml}
 
-In this chapter, we introduce some concepts from machine learning that we will
-use for the rest of this thesis. We introduce the classification problem and
-some common methods for modelling it, explain how convolutional neural networks
-can be used for image feature extraction, discuss the benefits and drawbacks of
-crowdsourcing labelling tasks, and introduce some methods to combat label noise
-from crowds.
+In this chapter we will discuss machine learning. While we introduce a number of
+concepts that will help us develop our cross-identification method, we will not
+yet apply these concepts to astronomical data, instead deferring this to Chapter
+\ref{cha:cross-identification}.
+
+In Section \ref{sec:classification}, we introduce the problem of classification,
+and discuss some common methods of approach. We will later base our
+cross-identification methods on these.
+
+In Section \ref{sec:image-feature-extraction}, we look at automated feature
+extraction from images. Convolutional neural networks will be introduced as
+feature extractors, which we will eventually apply to radio data from ATLAS.
+
+In Section \ref{sec:crowdsourcing}, we discuss the benefits and problems of
+crowdsourcing for obtaining labels for machine learning. Finally, we will then
+look at different ways to handle the problems in Section \ref{sec:crowd-labels}.
 
 \section{Classification}
 \label{sec:classification}
 
-    A common machine learning task, and indeed the machine learning focus of
-    this thesis, is \emph{classification}. Given a set $\mathcal X$ of
-    \emph{instances} and a set $\mathcal Y$ of \emph{labels}, the classification
-    task is to assign a label $y \in \mathcal Y$ to each instance $x \in
-    \mathcal X$. The ``true'' label of an instance is called the
-    \emph{groundtruth}, and is denoted $z$. Classification thus amounts to
-    modelling the conditional distribution $p(z \mid x)$. Some examples of
-    classification include labelling images of digits, where $\mathcal X$ is a
-    set of images and $\mathcal Y = \{0, \dots, 9\}$ \citep{lecun98}; and
-    diagnosing breast cancer in patients, where $\mathcal X$ is a set of sets
-    of medical observations and $\mathcal Y$ is the set $\{\text{malignant},
+    A common machine learning task is \emph{classification}. Given a set
+    $\mathcal X$ of \emph{instances} and a set $\mathcal Y$ of \emph{labels},
+    the classification task is to assign a label $y \in \mathcal Y$ to each
+    instance $x \in \mathcal X$. Effectively, we want to find a map $y :
+    \mathcal X \to \mathcal Y$.
+
+    The ``true'' label of an instance is called the \emph{groundtruth}, and is
+    denoted $z$. Classification thus amounts to modelling the conditional
+    distribution $p(z \mid x)$. An example of classification is labelling images
+    of digits, where $\mathcal X$ is a set of images and $\mathcal Y = \{0,
+    \dots, 9\}$ \citep{lecun98}. A less obvious example is that of diagnosing
+    breast cancer in patients, where $\mathcal X$ is a set of sets of medical
+    observations and $\mathcal Y$ is the set $\{\text{malignant},
     \text{benign}\}$ \citep{wolberg90}.
 
     Modelling $p(z \mid x)$ requires some set of \emph{training data} $\mathcal
@@ -44,9 +56,9 @@ from crowds.
     model to classify instances. The dimensionality of the feature space is
     denoted $D$ and we assume that $\mathcal X \subseteq \mathbb{R}^D$.
 
-    In this section, we look at how to evaluate a classification model, and
-    introduce three common ways of modelling binary classification: logistic
-    regression, neural networks, and random forests.
+    We will now look at how to evaluate a classification model, and introduce
+    three common ways of modelling binary classification: logistic regression,
+    neural networks, and random forests.
 
     \subsection{Evaluating a Classification Model}
     \label{sec:evaluating-classification-model}
@@ -101,17 +113,27 @@ from crowds.
         \emph{bias}, a constant added to all weighted sums of features
         independent of the features themselves. $b$ can be incorporated into
         $\vec w$ by adding an extra feature to $\vec x$ that is always $1$ and
-        increasing the dimension of $\vec w$ by 1. I adopt this convention for
-        the remainder of this thesis whenever $b$ is not explicitly included.
+        increasing the dimension of $\vec w$ by 1. We will adopt this convention
+        whenever $b$ is not explicitly included.
 
-        Logistic regression is differentiable, and so may be trained using
-        \emph{gradient descent}. In gradient descent, $\vec w$ is modified by
-        the update equation
+        Logistic regression is one of the simplest models we can make, and is
+        the classification analogue of linear regression. We can think of it as
+        a linear function with a ``soft'' threshold, with all output values
+        above the threshold approaching $1$ and all other outputs approaching
+        $0$. The logistic sigmoid function causes this threshold effect. While
+        we could instead use a step function, a differentiable function like the
+        logistic sigmoid function means that logistic regression will be
+        differentiable.
+
+        Since logistic regression is differentiable, \emph{gradient descent} can
+        be used to find optimum values of $\vec w$. $\vec w$ is modified by the
+        update equation
         \[
-            \vec w \leftarrow \vec w - \lambda \nabla L(\vec w),
+            \vec w_{t+1} = \vec w_{t} - \lambda \nabla L(\vec w_{t}),
         \]
-        where $L : \mathbb{R}^D \to \mathbb{R}$ is the \emph{loss} function and
-        $\lambda \in (0, 1)$ is the \emph{learning rate}.
+        where $L : \mathbb{R}^D \to \mathbb{R}$ is the \emph{loss} function,
+        $\lambda \in (0, 1)$ is the \emph{learning rate}, and $t$ is the current
+        step. This update is repeated until convergence.
 
         The loss function represents how well the current model fits the
         observations. For binary classification, this is usually given by the
