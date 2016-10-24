@@ -162,9 +162,45 @@ the galaxy classification task and to the Radio Galaxy Zoo project.
     label?''.
 
     \citet{yan11} apply the \citet{yan10} model (Section \ref{sec:yan}) to the
-    problem of active learning from crowds. We remind the reader that this model consists of a label model $p(z \mid x)$ and a data-dependent labeller model $p(y_t | x, z)$, where $x$ is an instance, $y_t$ is the label assigned by labeller $t$, and $z$ is the groundtruth label. To extend this model into active learning, \citeauthor{yan11} introduce a query strategy where not only an instance is requested, but a specific labeller. The labeller and instance to query are chosen as solutions to the following optimisation problem:
+    problem of active learning from crowds. We remind the reader that this model
+    consists of a label model $p(z | \vec x)$ and a data-dependent labeller
+    model $p(y_t | \vec x, z)$, where $\vec x$ is an instance, $y_t$ is the
+    label assigned by labeller $t$, and $z$ is the groundtruth label. To extend
+    this model into active learning, \citeauthor{yan11} introduce a query
+    strategy where not only an instance is requested, but a specific labeller.
+
+    First, uncertainty sampling is used with the label model to choose an ideal
+    point to query. With logistic regression (Equation \ref{eq:raykar-logreg}),
+    the decision boundary between positive and negative labels is a hyperplane
+    $\vec w^T \vec x = 0$; uncertainty sampling would choose to query the point
+    nearest (or on) this hyperplane. The labeller and instance to query are then
+    chosen as solutions to the following optimisation problem:
     \begin{align*}
-        \text{minimise } & p(y_t \mid x_i, z_i)\\
-        \text{s.t. } & 
+        \text{minimise}_{\vec x, t}\ & \eta_t(\vec x)\\
+        \text{s.t. } & \vec w^T \vec x = 0.
     \end{align*}
-    \todo{finish this}
+    Intuitively, we query the instance on the decision hyperplane with the least
+    noisy labeller. While this instance may not actually exist in our pool, we
+    simply choose the instance closest to it (i.e. using Euclidean distance).
+
+    This method has similar drawbacks to the \citeauthor{yan10} passive learning
+    method described in Chapter \ref{cha:ml}: the number of parameters grows
+    large with large numbers of annotators, and the expectation-maximisation
+    algorithm only converges to a local minimum. In our implementation, training
+    was also quite slow, meaning online active learning may be impractical. It
+    also does not account for the possibility of relabelling instances.
+
+    \citet{mozafari12} suggest an approach similar to uncertainty sampling, with
+    uncertainty computed using a bootstrap method. A full description of this
+    method is beyond the scope of this thesis. Instead, we look at the approach
+    they take to handle noise. Noting that crowds may perform worse on some
+    subsets of the data than other subsets, \citeauthor{mozafari12} solve an
+    integer linear program to compute the redundancy required for different
+    subsets of the instance pool. First, they partition the data, then estimate
+    the probability of obtaining a correct crowd label for each partition. This
+    estimation is accomplished by querying the crowd on a sample of instances
+    from each partition. The estimated probability is then used to compute the
+    redundancy required. For full details, we refer the reader to the paper
+    \citep{mozafari12}.
+
+    
