@@ -4,7 +4,20 @@
 \label{cha:active-learning}
 
 In this chapter we discuss active learning and look at its application to both
-the galaxy classification task and to the Radio Galaxy Zoo project.
+the galaxy classification task and to the Radio Galaxy Zoo project. In Section
+\ref{sec:intro-active-learning}, we will briefly describe the key concepts of
+active learning, moving to discuss querying strategies for active learning for
+binary classification in \ref{sec:query-strategies}. We apply these methods in a
+simple experiment in Section \ref{sec:rgz-qbc}, showing that active learning may
+be useful in an astronomical context.
+
+Section \ref{sec:active-learning-on-crowds} extends the active learning
+discussion to a crowdsourcing context, and we discuss how crowdsourcing
+complicates active learning. Finally, in Section \ref{sec:rgz-al-general}, we
+look at the differences between the standard crowdsourcing context and citizen
+science, pointing out how they differ and how this breaks assumptions of
+existing methods. We end with describing an ideal experiment for active learning
+applications in citizen science.
 
 \section{Introduction}
 \label{sec:intro-active-learning}
@@ -202,5 +215,8 @@ the galaxy classification task and to the Radio Galaxy Zoo project.
     from each partition. The estimated probability is then used to compute the
     redundancy required. For full details, we refer the reader to the paper
     \citep{mozafari12}.
+
+\section{Active Learning for Radio Galaxy Zoo}
+\label{sec:rgz-al-general}
 
 \todo{Talk about citizen science and an ideal experiment}
