@@ -3,12 +3,31 @@
 \label{cha:cross-identification}
 
   In this chapter, we develop a machine learning approach to the radio
-  cross-identification problem. First, we discuss different ways to train and
-  use a classifier for the task, in particular framing the cross-identification
-  problem as an object localisation problem. We then discuss the available
-  training data and how we chose to process it. Finally, we present results
-  against a dataset of expert labels, and compare these results to those found
-  by other methods.
+  cross-identification problem.
+
+  We first need to formalise the radio cross-identification problem in a machine
+  learning context. This is the focus of Section
+  \ref{sec:cross-identification-formalism}, where we cast the problem as an
+  object localisation problem that can be solved with standard classification
+  methods. Section \ref{sec:features} discusses how we can represent galaxies as
+  vectors for classification, and Section \ref{sec:binary-classifiers}
+  investigates which classification method should be used for this task.
+
+  We will also need some benchmark to test our methods against; our
+  approach to evaluation of methods without groundtruth is discussed in Section
+  \ref{sec:norris-as-groundtruth}. We describe our experimental design in
+  Section \ref{sec:experiment-design}.
+
+  As the Radio Galaxy Zoo label set is sourced from volunteers, we wish to
+  investigate some of the many methods for dealing with crowdsourced labels.
+  This is the focus of Section \ref{sec:rgz-crowd-labels}, where we look at
+  applying majority vote and the \citeauthor{raykar10} method to the Radio
+  Galaxy Zoo label set.
+
+  In Section \ref{sec:rgz-results} we train our classifiers on expert labels and
+  on the Radio Galaxy Zoo and compare the results. Finally, in Section
+  \ref{sec:cross-identification-conclusion-future-work}, we conclude and suggest
+  some avenues for future work.
 
 \section{Formalism}
 \label{sec:cross-identification-formalism}
@@ -56,29 +75,26 @@
   \subsection{The Galaxy Classification Task}
   \label{sec:galaxy-classification-task}
 
-% \section{Cross-identification as Binary Classification}
-% \label{sec:framing-as-classification}
+    This approach can be formalised as follows. Consider a set $\mathcal X$ of
+    candidate host galaxies, and a radio object $r$ that we want to assign a
+    host galaxy. Let $y : \mathcal X \to \{0, 1\}$ represent whether a given $x
+    \in \mathcal X$ is the host galaxy associated with $r$. Under the assumption
+    that a radio object has exactly one associated host galaxy, then there
+    exists exactly one $x \in \mathcal X$ such that $y(x) = 1$, and for all
+    other $x \in \mathcal X$, $y(x) = 0$. The cross-identification task then
+    amounts to modelling $p(y(x) = 1 \mid x, r)$. Once this distribution is
+    modelled, the host galaxy associated with $r$ is given by
+    \begin{equation}
+        \label{eq:cross-identification}
+        \mbox{host}(r) = \underset{x}{\mbox{argmax}}\ p(y(x) = 1 \mid x, r).
+    \end{equation}
 
-  This approach can be formalised as follows. Consider a set $\mathcal X$ of
-  candidate host galaxies, and a radio object $r$ that we want to assign a
-  host galaxy. Let $y : \mathcal X \to \{0, 1\}$ represent whether a given $x
-  \in \mathcal X$ is the host galaxy associated with $r$. Under the assumption
-  that a radio object has exactly one associated host galaxy, then there exists
-  exactly one $x \in \mathcal X$ such that $y(x) = 1$, and for all other $x \in
-  \mathcal X$, $y(x) = 0$. The cross-identification task then amounts to
-  modelling $p(y(x) = 1 \mid x, r)$. Once this distribution is modelled, the
-  host galaxy associated with $r$ is given by
-  \begin{equation}
-      \label{eq:cross-identification}
-      \mbox{host}(r) = \underset{x}{\mbox{argmax}}\ p(y(x) = 1 \mid x, r).
-  \end{equation}
-
-  Ideally, $\mathcal X$ is the set of all galaxies. This is clearly
-  intractable, so as an approximation we use a catalogue of infrared objects
-  near the radio object of interest, taken from an infrared survey. We also
-  make the assumption that the host galaxy is within $1'$ of the radio object
-  --- while this doesn't hold in general, systems larger than $1'$ are rare and
-  require human insight to discover \citep{banfield16}.
+    Ideally, $\mathcal X$ is the set of all galaxies. This is clearly
+    intractable, so as an approximation we use a catalogue of infrared objects
+    near the radio object of interest, taken from an infrared survey. We also
+    make the assumption that the host galaxy is within $1'$ of the radio object
+    --- while this doesn't hold in general, systems larger than $1'$ are rare
+    and require human insight to discover \citep{banfield16}.
 
 \section{Evaluating Performance Without Groundtruth}
   \label{sec:norris-as-groundtruth}
@@ -615,3 +631,79 @@
     to the difficulty and slow speed of trialling labeller models with many
     parameters, we do not further investigate this problem in this thesis.
 
+\section{Conclusion and Future Work}
+\label{sec:cross-identification-conclusion-future-work}
+  
+  In this chapter, we cast the radio cross-identification problem as a
+  classification problem, and developed a classifier to solve it. We represented
+  galaxies as a combination of astronomical features and features extracted from
+  radio images. We used logistic regression on three different sets of training
+  labels and compared the performance of these to the \citeauthor{raykar10}
+  crowd learning model, finding that logistic regression outperformed the
+  \citeauthor{raykar10} model. Additionally, we found that training logistic
+  regression on non-expert labels results in performance comparable to training
+  on experts. This is a good sign for citizen science, as it indicates that
+  efforts to crowd-label scientific data may generalise just as well as expert
+  labels when machine learning is applied.
+
+  For the remainder of this section, we will briefly discuss the problems in our
+  method and highlight some avenues for future work.
+
+  A clear place that our methods could be improved is in our feature selection.
+  Other studies, such as those by \citet{proctor06} and \citet{fan15}, have made
+  use of hand-selected features for radio classification. These could possibly
+  be incorporated into the galaxy feature set (though as these hand-selected
+  features are features of radio objects rather than of galaxies, doing so may
+  be non-trivial). We may also be able to make use of information from
+  catalogues at wavelengths other than infrared. In particular, we may be able
+  to make use of information from the ATLAS catalogue, which includes values
+  such as the rotation of extended radio sources.
+
+  Our approach to image feature extraction was very simple. We did not fully
+  investigate all of the many different possible architectures for a
+  convolutional neural network, and it is possible that better networks exist
+  for radio data. Improvements may be made in our parameters (filter size,
+  pooling size, etc.) and in our network topology (number and structure of
+  layers, etc.). We could also rescale and rotate training images to ensure
+  rotational and scale invariance in our convolutional features. This was
+  successfully applied to galaxy morphology prediction using Galaxy Zoo data by
+  \citet{dieleman15}, though we note that these results were obtained in optical
+  wavelengths where resolution is higher and images are clearer.
+
+  There may be useful information to extract from the infrared images,
+  particularly in higher resolution surveys like SWIRE. As preliminary results
+  suggested there were no strong features in the infrared images, we ignored
+  them for this work, but this was a very shallow result. One possible avenue
+  for investigation is to include infrared \emph{and} radio images as different
+  channels in our convolutional neural network. These networks are capable of
+  supporting multiple colour channels and radio and infrared are effectively
+  colour channels. This would also allow the full use of multi-wavelength
+  data from telescopes like WISE and Spitzer.
+
+  An obvious drawback of our approach to object localisation is that
+  infrared-faint radio objects are not able to be classified. There is no clear
+  way around this without dramatically increasing the running time of our
+  method. A possible option is to allow the classifier to output an
+  ``undecided'' choice when there is no clear infrared counterpart to a radio
+  object. These radio objects could then be investigated by hand, or distributed
+  to a different algorithm.
+
+  We note that the \citeauthor{raykar10} model performed relatively poorly on
+  the galaxy classification task. In Section \ref{sec:raykar-estimates-rgz} we
+  suggested some reasons that this might be the case. Further investigation of
+  these results is needed, in particular, whether using a different labeller
+  model would improve results. One such model would be the \citeauthor{yan10}
+  model, but as we noted in Section \ref{sec:yan} this is very slow and seems to
+  yield mediocre results for large numbers of annotators. Careful analysis of
+  the Radio Galaxy Zoo data set may reveal ``clusters'' where labellers perform
+  better or worse, and these patterns could be exploited to develop a labeller
+  model that requires less parameters than simply using all features.
+
+  Finally, we did not investigate the problem of determining which radio objects
+  are associated with each other, e.g. detecting when two radio objects are
+  simply two jets of the same object. This is potentially a much harder problem
+  than cross-identification, yet it is important for astronomy. One possible
+  approach is to use a classifier like we have developed, use this to identify
+  galaxies that may contain AGNs, and then search around those galaxies for
+  radio objects. This is similar to the approach taken by \citet{fan15}, though
+  their algorithm was applied across the entirety of the CDFS field.
