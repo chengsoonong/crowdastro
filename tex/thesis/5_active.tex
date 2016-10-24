@@ -110,6 +110,16 @@ the galaxy classification task and to the Radio Galaxy Zoo project.
 \section{Query-by-Committee on the Galaxy Classification Task}
 \label{sec:rgz-qbc}
 
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]
+            {images/experiments/rgz_qbc.pdf}
+        \caption{Logistic regression trained on the \citeauthor{norris06}
+            labels with different amounts of training data and two different
+            query strategies.}
+        \label{fig:rgz-qbc}
+    \end{figure}
+
     We tested QBC active learning on the galaxy classification task described in
     Chapter \ref{cha:cross-identification}, comparing QBC to passive (i.e.
     random) selection as a query strategy.
@@ -127,12 +137,34 @@ the galaxy classification task and to the Radio Galaxy Zoo project.
     labels were drawn in order of highest to lowest disagreement of the
     committee.
 
-    \begin{figure}
-        \centering
-        \includegraphics[width=0.8\textwidth]
-            {images/experiments/rgz_qbc.pdf}
-        \caption{Logistic regression trained on the \citeauthor{norris06}
-            labels with different amounts of training data and two different
-            query strategies.}
-        \label{fig:rgz-qbc}
-    \end{figure}
+    After running the experiment, we observed that QBC outperformed passive
+    selection. We hypothesised that this was because querying at random ignores
+    the fact that there are far more negative examples than positive examples in
+    the galaxy classification task. By this hypothesis, QBC would perform
+    comparably to sampling from the set of positive examples and the set of
+    negative examples at equal rates. To test this, we ran a third test with a
+    random sampler that accounted for class imbalance. We found that this third
+    test performed similarly to QBC.
+
+    All three tested querying strategies are plotted in Figure
+    \ref{fig:rgz-qbc}.
+
+\section{Active Learning on Crowds}
+\label{sec:active-learning-on-crowds}
+    
+    Traditional active learning assumes that we have access to one expert, who
+    always issues correct labels. When labels are sourced from a crowd, these
+    assumptions no longer hold: the crowd are non-experts and can give incorrect
+    labels \citep{mozafari12,yan11}, and there are multiple labellers with
+    different accuracies \citep{yan11}. We can now ask questions deeper than
+    simply ``which label should I request?'' --- we can, for example, ask
+    ``which labeller should I ask?'', or ``do I need to re-request this
+    label?''.
+
+    \citet{yan11} apply the \citet{yan10} model (Section \ref{sec:yan}) to the
+    problem of active learning from crowds. We remind the reader that this model consists of a label model $p(z \mid x)$ and a data-dependent labeller model $p(y_t | x, z)$, where $x$ is an instance, $y_t$ is the label assigned by labeller $t$, and $z$ is the groundtruth label. To extend this model into active learning, \citeauthor{yan11} introduce a query strategy where not only an instance is requested, but a specific labeller. The labeller and instance to query are chosen as solutions to the following optimisation problem:
+    \begin{align*}
+        \text{minimise } & p(y_t \mid x_i, z_i)\\
+        \text{s.t. } & 
+    \end{align*}
+    \todo{finish this}
