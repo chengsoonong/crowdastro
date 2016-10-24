@@ -1,4 +1,4 @@
-%!TeX root=./thesis.tex
+%!TeX root=thesis.tex
 
 \chapter{Active Learning}
 \label{cha:active-learning}
@@ -13,9 +13,9 @@ be useful in an astronomical context.
 
 Section \ref{sec:active-learning-on-crowds} extends the active learning
 discussion to a crowdsourcing context, and we discuss how crowdsourcing
-complicates active learning. Finally, in Section \ref{sec:rgz-al-general}, we
-look at the differences between the standard crowdsourcing context and citizen
-science, pointing out how they differ and how this breaks assumptions of
+complicates active learning. Finally, in Section \ref{sec:al-citizen-science},
+we look at the differences between the standard crowdsourcing context and
+citizen science, pointing out how they differ and how this breaks assumptions of
 existing methods. We end with describing an ideal experiment for active learning
 applications in citizen science.
 
@@ -216,7 +216,65 @@ applications in citizen science.
     redundancy required. For full details, we refer the reader to the paper
     \citep{mozafari12}.
 
-\section{Active Learning for Radio Galaxy Zoo}
-\label{sec:rgz-al-general}
+\section{Active Learning for Citizen Science}
+\label{sec:al-citizen-science}
+    
+    Thus far, we have taken the word ``crowdsourcing'' to mean any scenario
+    where there are multiple labellers. This conflates a number of arguably
+    different scenarios: we may have multiple experts, multiple non-experts with
+    domain knowledge, multiple non-experts without domain knowledge, and so on.
+    The literature often does not disambiguate. \citet{raykar10} consider the
+    problem of multiple experts who disagree; \citet{yan10} and
+    \citet{mozafari12} consider crowdsourcing using a platform such as Amazon
+    Mechanical Turk, where non-experts are paid to label data on a per-label
+    basis. \citet{nguyen15} consider a hybrid scenario where we have access to
+    both non-experts \emph{and} experts.
+
+    The specific scenario we are interested in is citizen science, where
+    volunteers interested in science contribute to labelling scientific data,
+    typically through web interfaces like Galaxy Zoo \citep{lintott11}. With the
+    rise of internet usage and the amount of available data throughout
+    scientific disciplines, citizen science is steadily increasing in popularity
+    and impact \citep{marshall15}. We believe that citizen science is a
+    crowdsourcing scenario unlike those presented in existing literature, and as
+    such, breaks assumptions often made by active learning methods that operate
+    on crowds.
+
+    There is a key difference between citizen science and paid crowdsourcing: In
+    citizen science, we cannot choose our labellers. Using a paid crowdsourcing
+    platform, we have some degree of freedom over who we query; this is (for
+    example) the assumption made in \citet{yan11} and the crux of their methods.
+    We can choose the best labeller and the best instance to query. In citizen
+    science, volunteers request labels from us. These volunteers may be
+    anonymous, making it difficult to estimate the quality of their labels.
+    Indeed, Radio Galaxy Zoo reports that 27\% of their labels come from
+    anonymous volunteers. Another factor to consider is that a large number of
+    labels in citizen science come from volunteers who only label a few
+    instances. This means that trialling volunteers on a ``gold standard'' of
+    instances with known groundtruth is impractical: If we tested every
+    volunteer on a few known instances, then for many volunteers, the known
+    instances would be all that they label! \citet{marshall15} highlight this
+    with respect to Galaxy Zoo 2. They note the importance of designing projects
+    for both recurring and new volunteers, citing the significant contributions
+    of both groups. A visualisation of Galaxy Zoo 2 volunteer contributions is
+    reproduced here in Figure \ref{fig:galaxy-zoo-2-volunteer-distribution}.
+    Finally, citizen science tends to involve a very large number of labellers:
+    Galaxy Zoo has involved several hundred thousand volunteers
+    \citep{marshall15}; Radio Galaxy Zoo has over 2000 volunteers involved with
+    just the ATLAS--CDFS observations that we have looked at in this thesis. For
+    contrast, \citet{raykar10}, on whose methods we based our own crowd
+    experiments, used just 5 labellers in their experiments, and
+    \citet{mozafari12} and \citet{yan11} both used 3--5 labellers in their
+    experiments.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{images/galaxyzoovolunteers}
+        \caption{Label contributions from volunteers in Galaxy Zoo 2. Each
+            square represents a single user, with the area of the square
+            proportional to the number of instances labelled by that user.
+            \emph{Image: K. Willett. Reproduced from \citet{marshall15}.}}
+        \label{fig:galaxy-zoo-2-volunteer-distribution}
+    \end{figure}
 
 \todo{Talk about citizen science and an ideal experiment}
