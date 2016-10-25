@@ -11,11 +11,13 @@ binary classification in \ref{sec:query-strategies}. We apply these methods in a
 simple experiment in Section \ref{sec:rgz-qbc}, showing that active learning may
 be useful in an astronomical context.
 
-Section \ref{sec:active-learning-on-crowds} extends the active learning
-discussion to a crowdsourcing context, and we discuss how crowdsourcing
-complicates active learning. Finally, in Section \ref{sec:al-citizen-science},
-we look at the differences between the standard crowdsourcing context and
-citizen science, pointing out how they differ and how this breaks assumptions of
+In Section \ref{sec:active-learning-on-crowds} we extend the active learning
+discussion to a crowdsourcing context, and discuss how crowdsourcing complicates
+active learning. We propose an experiment for applying active learning to the
+Radio Galaxy Zoo in Section \ref{sec:al-rgz-ideal-experiment}, highlighting some
+difficulties in doing so. Finally, in Section \ref{sec:al-citizen-science}, we
+look at the differences between the standard crowdsourcing context and citizen
+science, pointing out how they differ and how this breaks assumptions of
 existing methods. We end with describing an ideal experiment for active learning
 applications in citizen science.
 
@@ -35,15 +37,16 @@ applications in citizen science.
     cannot label all the data because there is too much, such as in the Galaxy
     Zoo \citep{lintott08} and Radio Galaxy Zoo \citep{banfield15} projects.
 
-    \emph{Active learning} (or \emph{query learning} \citep{settles09, seung92,angluin86})
-    allows a machine learning algorithm to select specific, unlabelled examples
-    to be labelled by an expert. The algorithm effectively chooses its own
-    training set \citep{settles09}. The hope is that the algorithm can choose to
-    label only the most useful examples \citep{mccallum98}, and the expensive
-    process of labelling redundant or useless examples is avoided
-    \citep{engelson99}. Intelligently selecting the training set as in active
-    learning can result in massively reduced labelling costs \citep{lewis94,
-    king04} or even make intractable labelling problems tractable.
+    \emph{Active learning} (or \emph{query learning} \citep{settles09, seung92,
+    angluin86}) allows a machine learning algorithm to select specific,
+    unlabelled examples to be labelled by an expert. The algorithm effectively
+    chooses its own training set \citep{settles09}. The hope is that the
+    algorithm chooses to label only the most useful examples
+    \citep{mccallum98}, and the expensive process of labelling redundant or
+    useless examples is avoided \citep{engelson99}. Intelligently selecting the
+    training set as in active learning can result in massively reduced labelling
+    costs \citep{lewis94, king04} or even make intractable labelling problems
+    tractable.
 
     While there are many variations of active learning scenarios, we focus on
     \emph{pool-based} active learning in this thesis. In pool-based active
@@ -69,32 +72,35 @@ applications in citizen science.
     query-by-committee.
 
     All pool-based query strategies take the same form. We are given some pool
-    of data $\mathcal X$ and a set of labelled data $\mathcal D = \mathcal X
-    \times \mathcal Y$. We want to select $\tilde x \in \mathcal X$ such that
-    labelling $\tilde x$ maximises our information gain.
+    of data $\mathcal X$ and a set of labelled data $\mathcal D \subseteq
+    \mathcal X \times \mathcal Y$. We want to select $\tilde x \in \mathcal X$
+    such that labelling $\tilde x$ maximises our information gain.
 
     \subsection{Uncertainty Sampling}
     \label{sec:uncertainty-sampling}
 
         \emph{Uncertainty sampling} \citep{lewis94} is perhaps the most common
-        query strategy. Given a classification model $y(\vec x) = p(z \mid x)$
-        with the ability to output a probability (including probabilistic
-        classifiers like logistic regression, nearest-neighbour classifiers
-        \citep{lewis94}, and combinations of probabilistic and non-probabilistic
-        classifiers \citep{lewis94b}), the queried point $\tilde x$ is the data
-        point for which the model is least certain of the classification. This
-        is not well-defined and an uncertainty sampling algorithm must choose
-        what ``least certain'' means. There are three common measures of
-        uncertainty --- confidence-, entropy-, and margin-based --- but in the
-        case of binary classification, they all reduce to one strategy
+        query strategy. Given a classification model $y(\vec x) = p(z \mid
+        \vec{x})$ with the ability to output a probability (including
+        probabilistic classifiers like logistic regression, nearest-neighbour
+        classifiers \citep{lewis94}, and combinations of probabilistic and
+        non-probabilistic classifiers \citep{lewis94b}), the queried point
+        $\tilde x$ is the data point for which the model is least certain of the
+        classification. This is not well-defined and an uncertainty sampling
+        algorithm must choose what ``least certain'' means. There are three
+        common measures of uncertainty --- confidence-, entropy-, and
+        margin-based --- but in the case of binary classification, they all
+        reduce to one strategy
         \citep{settles09}:
         \[
-            \tilde x = \underset{\vec x}{\mbox{argmax}}\ 1 - \abs{y(\vec x) - 0.5}.
+            \tilde x = \underset{\vec x}{\mbox{argmax}}\ \left(1 - \abs{y(\vec x) - 0.5}\right).
         \]
         The intuition is that the further a data point is from the decision
         boundary, the more certain the classifier is of the assigned label, so
         choosing the closest data point to the decision boundary is equivalent
-        to choosing the most uncertain data point. Another interpretation is that $1 - \abs{y(\vec x) - 0.5}$ is the expected probability of mislabelling $\vec x$ \citep{settles09}.
+        to choosing the most uncertain data point. Another interpretation is
+        that $1 - \abs{y(\vec x) - 0.5}$ is the expected probability of
+        mislabelling $\vec x$ \citep{settles09}.
 
         % In the confidence-based approach, $\tilde x$ is the data point that is
         % closest to the decision boundary, i.e.
@@ -109,7 +115,7 @@ applications in citizen science.
         on the known labels, with different subsets of the labelled data to
         ensure variety in the committee. The committee then labels the
         unlabelled pool of data: Each classifier votes on each data point and
-        the most commonly voted for label is assigned. The information gain
+        our prediction is the label with the most votes. The information gain
         associated with each data point is estimated by the disagreement of the
         committee on the label, and the data point with the most disagreement is
         queried.
@@ -180,7 +186,8 @@ applications in citizen science.
     model $p(y_t | \vec x, z)$, where $\vec x$ is an instance, $y_t$ is the
     label assigned by labeller $t$, and $z$ is the groundtruth label. To extend
     this model into active learning, \citeauthor{yan11} introduce a query
-    strategy where not only an instance is requested, but a specific labeller.
+    strategy where not only an instance is requested, but also a specific
+    labeller.
 
     First, uncertainty sampling is used with the label model to choose an ideal
     point to query. With logistic regression (Equation \ref{eq:raykar-logreg}),
@@ -189,7 +196,7 @@ applications in citizen science.
     nearest (or on) this hyperplane. The labeller and instance to query are then
     chosen as solutions to the following optimisation problem:
     \begin{align*}
-        \text{minimise}_{\vec x, t}\ & \eta_t(\vec x)\\
+        \underset{\vec x, t}{\text{minimise}}\ & \eta_t(\vec x)\\
         \text{s.t. } & \vec w^T \vec x = 0.
     \end{align*}
     Intuitively, we query the instance on the decision hyperplane with the least
@@ -217,7 +224,7 @@ applications in citizen science.
     \citep{mozafari12}.
 
 \section{Active learning for Radio Galaxy Zoo}
-\label{sec:ideal-experiment}
+\label{sec:al-rgz-ideal-experiment}
     
     Radio Galaxy Zoo \citep{banfield15} is a domain where active learning could
     be very useful. There are many more radio galaxies to classify than there

@@ -236,11 +236,11 @@
     SWIRE also contains colour information, but unlike WISE, the information is
     in the form of fluxes instead of magnitudes. This means that the flux
     information in the catalogue can be used as features directly. The ratios
-    can also be used --- $3.6\ \mu\text{Jy} / 4.5\ \mu\text{Jy}$ and $4.5\
+    can also be used as features: $3.6\ \mu\text{Jy} / 4.5\ \mu\text{Jy}$ and $4.5\
     \mu\text{Jy} / 5.8\ \mu\text{Jy}$ are the SWIRE equivalents of $w1 - w2$ and
-    $w2 - w3$. Since SWIRE is higher resolution than WISE, the
-    infrared images may contain more useful information and thus be useful for
-    features, but this was not explored in this thesis.
+    $w2 - w3$. Since SWIRE is higher resolution than WISE, the infrared images
+    may contain more useful information and thus be useful for features, but
+    this was not explored in this thesis.
 
     Both WISE and SWIRE catalogues contain the positions of each object. For the
     final infrared feature, we use the distance from an infrared object to the
@@ -369,8 +369,8 @@
   galaxy classification task, we performed the following experiment. We first
   generated five test sets of WISE objects. Then, using all other WISE objects
   as a training set, we trained a logistic regression classifier with $L2$
-  regularisation for each test set, first using labels from \citet{norris06},
-  and separately using labels from \citet{fan15}. We then computed the balanced
+  regularisation for each test set, separately using labels from both
+  \citet{norris06} and from \citet{fan15}. We then computed the balanced
   accuracy for each classifier. This was repeated for random forests, with each
   tree using $\sqrt{D}$ features.
 
@@ -437,10 +437,10 @@
 
   We also tried using all of the crowd labels directly with logistic regression,
   without aggregation. In principle, training logistic regression on such a
-  label set may ``average'' over the conflicting labels and give reasonable
-  results. This was not the case in practice; we found that this method resulted
-  in a balanced accuracy of $50\%$ (i.e. random chance) as the classifier
-  learned to always output 0.
+  label set may average over the conflicting labels and give reasonable results.
+  This was not the case in practice; we found that this method resulted in a
+  balanced accuracy of $50\%$ (i.e. random chance) as the classifier learned to
+  always output 0.
 
 \section{Galaxy Classification}
 \label{sec:rgz-results}
@@ -570,14 +570,14 @@
 
     The third observation we make is that logistic regression trained on the
     Radio Galaxy Zoo labels performs comparably to logistic regression trained
-    on the expert labels. This is a very good sign for citizen science: Perhaps
-    expert labels are not necessary, and supervised learning works just as
-    effectively with crowd labels as with expert labels? However, it is hard to
-    tell if this is a real effect; with our features set, logistic regression
-    seems to have a maximum accuracy around $90\%$, and all classifiers attain
-    accuracies close to this. It is possible that with better features, training
-    on expert labels may give significantly better results than training on
-    crowd labels.
+    on the expert labels. This is a very good sign for citizen science,
+    indicating that perhaps expert labels are not necessary, and supervised
+    learning works just as effectively with crowd labels as with expert labels.
+    However, it is hard to tell if this is a real effect; with our features set,
+    logistic regression seems to have a maximum accuracy around $90\%$, and all
+    classifiers attain accuracies close to this. It is possible that with better
+    features, training on expert labels may give significantly better results
+    than training on crowd labels.
 
     It is interesting to note that the \citeauthor{raykar10} classifier tends to
     overpredict positive labels when compared to the other methods. This may be
@@ -642,9 +642,12 @@
   crowd learning model, finding that logistic regression outperformed the
   \citeauthor{raykar10} model. Additionally, we found that training logistic
   regression on non-expert labels results in performance comparable to training
-  on experts. This is a good sign for citizen science, as it indicates that
-  efforts to crowd-label scientific data may generalise just as well as expert
-  labels when machine learning is applied.
+  on experts, showing that efforts to crowd-label scientific data may generalise
+  just as well as expert labels when machine learning is applied.
+
+  % This is a good sign for citizen science, as it indicates that efforts to
+  % crowd-label scientific data may generalise just as well as expert labels
+  % when machine learning is applied.
 
   For the remainder of this section, we will briefly discuss the problems in our
   method and highlight some avenues for future work.
@@ -662,9 +665,9 @@
   Our approach to image feature extraction was very simple. We did not fully
   investigate all of the many different possible architectures for a
   convolutional neural network, and it is possible that better networks exist
-  for radio data. Improvements may be made in our parameters (filter size,
-  pooling size, etc.) and in our network topology (number and structure of
-  layers, etc.). We could also rescale and rotate training images to ensure
+  for radio data. Improvements could be made in our parameters (filter size,
+  pooling size, etc.) and in our network topology (number of layers, structure
+  of layers, etc.). We could also rescale and rotate training images to ensure
   rotational and scale invariance in our convolutional features. This was
   successfully applied to galaxy morphology prediction using Galaxy Zoo data by
   \citet{dieleman15}, though we note that these results were obtained in optical
@@ -673,12 +676,12 @@
   There may be useful information to extract from the infrared images,
   particularly in higher resolution surveys like SWIRE. As preliminary results
   suggested there were no strong features in the infrared images, we ignored
-  them for this work, but this was a very shallow result. One possible avenue
-  for investigation is to include infrared \emph{and} radio images as different
-  channels in our convolutional neural network. These networks are capable of
-  supporting multiple colour channels and radio and infrared are effectively
-  colour channels. This would also allow the full use of multi-wavelength
-  data from telescopes like WISE and Spitzer.
+  them for this work, but this was only a passing investigation of infrared
+  features. One possible avenue for investigation is to include infrared
+  \emph{and} radio images as different channels in our convolutional neural
+  network. These networks are capable of supporting multiple colour channels and
+  radio and infrared are effectively colour channels. This would also allow the
+  full use of multi-wavelength data from telescopes like WISE and Spitzer.
 
   An obvious drawback of our approach to object localisation is that
   infrared-faint radio objects are not able to be classified. There is no clear
@@ -699,11 +702,13 @@
   better or worse, and these patterns could be exploited to develop a labeller
   model that requires less parameters than simply using all features.
 
-  Finally, we did not investigate the problem of determining which radio objects
-  are associated with each other, e.g. detecting when two radio objects are
-  simply two jets of the same object. This is potentially a much harder problem
-  than cross-identification, yet it is important for astronomy. One possible
-  approach is to use a classifier like we have developed, use this to identify
-  galaxies that may contain AGNs, and then search around those galaxies for
-  radio objects. This is similar to the approach taken by \citet{fan15}, though
-  their algorithm was applied across the entirety of the CDFS field.
+  Finally, in this work we only investigated the cross-identification problem on
+  a per-object basis. We did not investigate the problem of determining which
+  radio objects are associated with each other, e.g. detecting when two radio
+  objects are simply two jets of the same object. This is potentially a much
+  harder problem than cross-identification, yet it is important for astronomy.
+  One possible approach is to use a classifier like we have developed, use this
+  to identify galaxies that may contain AGNs, and then search around those
+  galaxies for radio objects. This is similar to the approach taken by
+  \citet{fan15}, though their algorithm was applied across the entirety of the
+  CDFS field.

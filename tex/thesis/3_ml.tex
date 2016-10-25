@@ -560,7 +560,7 @@ look at different ways to handle the problems in Section \ref{sec:crowd-labels}.
     we describe our method for simulating a crowd labelling task, which we will
     later employ to test methods in Section \ref{sec:crowd-labels}. As part of
     this thesis, we have also implemented this simulation in Python. The
-    implemention is described in Section \ref{sec:crowdastro-util}.
+    implemention is described in Appendix \ref{sec:crowdastro-util}.
 
     \subsection{The Breast Cancer Wisconsin Dataset}
     \label{sec:breast-dataset}
@@ -771,7 +771,7 @@ look at different ways to handle the problems in Section \ref{sec:crowd-labels}.
         the old $\vec w$ to initialise each subsequent maximisation step.
 
         As part of this thesis, we have produced an open source implementation
-        of this algorithm, described in Section \ref{sec:crowdastro-raykar}. We
+        of this algorithm, described in Appendix \ref{sec:crowdastro-raykar}. We
         then performed a series of experiments using this implementation, which
         are detailed here.
 
@@ -952,11 +952,12 @@ look at different ways to handle the problems in Section \ref{sec:crowd-labels}.
         \vec x_i, \vec w)$ is fixed to use the previous value of $\vec w$.
 
         As part of this thesis, we have produced an open source implementation
-        of this algorithm, described in Section \ref{sec:crowdastro-yan}. After
+        of this algorithm, described in Appendix \ref{sec:crowdastro-yan}. After
         the algorithm was implemented, we found it to be considerably slower
         than the \citeauthor{raykar10} algorithm, so we do not use it later in
-        this thesis. Its main purpose here is to show that the expectation-
-        maximisation approach can be extended by choice of labeller model.
+        this thesis. Its inclusion in this thesis is to show that the
+        expectation-maximisation approach can be extended by choice of labeller
+        model.
 
         \begin{figure}
             \centering
@@ -990,12 +991,12 @@ look at different ways to handle the problems in Section \ref{sec:crowd-labels}.
         model differed to show the ability of the \citeauthor{yan10} model to
         handle feature-dependent noise. Instead of using two values $\alpha$ and
         $\beta$ to describe each labeller, we clustered the data and assigned
-        each labeller one cluster The labeller had $100\%$ accuracy for that
-        cluster, and a fixed lower accuracy $\upsilon$ for all other clusters,
-        giving each labeller a ``cluster of expertise''.. We tested with low
-        noise ($\upsilon = 0.75$) and high noise ($\upsilon = 0.25$). The
-        results are compared with logistic regression trained on the majority
-        vote and logistic regression trained on the groundtruth in Figure
+        each labeller one cluster. The labeller had $100\%$ accuracy for that
+        cluster, and a fixed accuracy $\upsilon$ for all other clusters, giving
+        each labeller a ``cluster of expertise''. We tested with low noise
+        ($\upsilon = 0.75$) and high noise ($\upsilon = 0.25$). The results are
+        compared with logistic regression trained on the majority vote and
+        logistic regression trained on the groundtruth in Figure
         \ref{fig:yan-experiment-low-noise} and Figure
         \ref{fig:yan-experiment-high-noise} for low and high noise,
         respectively.
