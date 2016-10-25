@@ -81,6 +81,7 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
         if plot:
             matplotlib.rcParams['font.family'] = 'serif'
             matplotlib.rcParams['font.serif'] = ['Palatino Linotype']
+            plt.figure(figsize=(6, 3))  # Shrink it a little for thesis.
             vertical_scatter_ba(
                 results,
                 crowdastro_h5['/{}/cdfs/norris_labels'.format(ir_survey)].value,

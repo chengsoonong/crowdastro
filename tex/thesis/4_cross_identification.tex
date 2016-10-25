@@ -317,7 +317,13 @@
     found that the CNN features tended to dominate results. These results are
     plotted in Figure \ref{fig:feature-ablation} and the means and standard
     deviations of the balanced accuracies can be found in Table
-    \ref{tab:feature-ablation}.
+    \ref{tab:feature-ablation}. It is clear that the features extracted from the
+    radio image are by far the most useful features; removing them causes the
+    balanced accuracy to drop by $17.07 \pm 1.88$ percentage points. It also
+    seems that some features, such as distance and $w1 - w2$, can act as
+    distractors, though they may be useful features on their own. The inability
+    of our classifier to ignore these features may be due to our use of $L2$
+    regularisation.
 
     \begin{figure}
       \centering
@@ -353,6 +359,23 @@
         rows are sorted from highest accuracy to lowest.}
       \label{tab:feature-ablation}
     \end{table}
+
+    Of particular interest is the effect of the magnitude difference features,
+    as these have significance in astronomy. For this reason, we plot the $w1 -
+    w2$ and $w2 - w3$ features against predicted probability for both positive
+    and negative instances in Figure \ref{fig:wise-colours}. From the plot, we
+    can see that some instances are able to be excluded based on the magnitude
+    differences, though there is significant overlap between positive and
+    negative instances. The magnitude differences are thus weak predictors.
+
+    \begin{figure}
+      \centering
+      \includegraphics[width=\textwidth]{images/experiments/wise_colours}
+      \caption{WISE magnitude difference features against predicted probability
+        of a galaxy containing an AGN. Colours represent the logarithm of
+        occurrences of instances in each cell.}
+      \label{fig:wise-colours}
+    \end{figure}
 
 \section{Choosing a Binary Classifier}
 \label{sec:binary-classifiers}
@@ -489,11 +512,9 @@
       \caption{Confusion matrix for logistic regression trained on
         \citeauthor{norris06}.}
       \label{tab:cm-lr-norris}
-    \end{table}
 
-    \begin{table}
-      \ContinuedFloat
-      \centering
+      \vspace{10pt}
+
       \begin{tabular}{l|ll}
           & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
           $z = 0$ & $95.93 \pm 0.26$ & $4.07 \pm 0.26$\\
@@ -502,11 +523,9 @@
       \caption{Confusion matrix for logistic regression trained on
         \citeauthor{fan15}.}
       \label{tab:cm-lr-fan}
-    \end{table}
 
-    \begin{table}
-      \ContinuedFloat
-      \centering
+      \vspace{10pt}
+
       \begin{tabular}{l|ll}
           & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
           $z = 0$ & $90.60 \pm 0.55$ & $9.40 \pm 0.55$\\
@@ -515,11 +534,9 @@
       \caption{Confusion matrix for logistic regression trained on the Radio
         Galaxy Zoo majority vote.}
       \label{tab:cm-lr-rgz-mv}
-    \end{table}
 
-    \begin{table}
-      \ContinuedFloat
-      \centering
+      \vspace{10pt}
+
       \begin{tabular}{l|ll}
           & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
           $z = 0$ & $87.88 \pm 1.34$ & $12.12 \pm 1.34$\\
@@ -528,11 +545,9 @@
       \caption{Confusion matrix for the \citeauthor{raykar10} algorithm trained
         on the Radio Galaxy Zoo labels.}
       \label{tab:cm-raykar-rgz-raw}
-    \end{table}
 
-    \begin{table}
-      \ContinuedFloat
-      \centering
+      \vspace{10pt}
+
       \begin{tabular}{l|ll}
           & $y = 0$  $(\%)$ & $y = 1$ $(\%)$ \\\hline
           $z = 0$ & $92.47$ & $7.53$ \\

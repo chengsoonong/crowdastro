@@ -112,19 +112,19 @@ def main(results_h5_path, overwrite=False, plot=False, n_trials=5,
         plt.subplot(2, 2, 1)
         fillbetween(
             sorted(alpha_to_bas),
-            [alpha_to_bas[a] for a in sorted(alpha_to_bas)],
+            [[ba * 100 for ba in alpha_to_bas[a]] for a in sorted(alpha_to_bas)],
             facecolour='lightblue', edgecolour='blue')
-        plt.ylim((0.5, 1.0))
-        plt.ylabel('Balanced accuracy')
+        plt.ylim((50, 100))
+        plt.ylabel('Balanced accuracy (%)')
 
         # beta vs ba
         plt.subplot(2, 2, 2)
         fillbetween(
             sorted(beta_to_bas),
-            [beta_to_bas[b] for b in sorted(beta_to_bas)],
+            [[ba * 100 for ba in beta_to_bas[b]] for b in sorted(beta_to_bas)],
             facecolour='lightblue', edgecolour='blue')
-        plt.ylim((0.5, 1.0))
-        plt.ylabel('Balanced accuracy')
+        plt.ylim((50, 100))
+        plt.ylabel('Balanced accuracy (%)')
 
         # alpha vs est alpha
         plt.subplot(2, 2, 3)

@@ -90,7 +90,7 @@ def main(crowdastro_h5_path, training_h5_path, results_h5_path,
                 plt.figure(figsize=[11, 6])
                 vertical_scatter_ba(
                     results, crowdastro_h5['/wise/cdfs/norris_labels'].value,
-                    ylim=(0.5, 1.0), violin=True, rotation='vertical',
+                    ylim=(50, 100), violin=True, rotation='vertical',
                     minorticks=False)
                 plt.subplots_adjust(bottom=0.3)
                 plt.show()
