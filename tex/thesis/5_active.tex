@@ -216,6 +216,82 @@ applications in citizen science.
     redundancy required. For full details, we refer the reader to the paper
     \citep{mozafari12}.
 
+\section{Active learning for Radio Galaxy Zoo}
+\label{sec:ideal-experiment}
+    
+    Radio Galaxy Zoo \citep{banfield15} is a domain where active learning could
+    be very useful. There are many more radio galaxies to classify than there
+    are volunteers, so making the best use we can of their labels is
+    particularly important.
+
+    Applying active learning to the task that Radio Galaxy Zoo presents to their
+    volunteers is non-trivial. Volunteers first choose which radio components
+    are associated with the same AGN, and then decide where this AGN is located
+    on an infrared image. Even ignoring the radio components problem, the
+    position is a real-valued vector label, rather than a binary label. In this
+    thesis, we have cast the cross-identification as a binary classification
+    problem, converting these real-valued positions into binary labels by
+    assigning a $1$ to the closest galaxy and $0$ to all other galaxies. This
+    should still work for active learning, but there is no obvious way to
+    develop a query strategy.
+
+    Volunteers are presented with an image of radio object to label, so a query
+    strategy must choose radio objects to present. Methods like uncertainty
+    sampling have no clear application here: How do we convert from
+    uncertainties in our classifications of neighbouring galaxies into an
+    uncertainty for a radio object? We may be able to perform this aggregation
+    by a number of methods, such as summing, averaging, or maximising the
+    uncertainties. We could even aggregate using something like entropy, looking
+    at the distribution of uncertainties of galaxies in the image. The choice is
+    not obvious and an experiment is required. While we do not perform such an
+    experiment in this thesis, we will suggest one at the end of this section.
+
+    Query-by-committee may generalise to Radio Galaxy Zoo. We could label radio
+    objects by considering nearby galaxies and classifying them using our
+    methods from Chapter \ref{cha:cross-identification}, then selecting the
+    galaxy with the most certain classification as the host galaxy of the radio
+    object. Multiple classifiers could be used to perform this selection, and
+    the percentage disagreement on the location of the host galaxy would then
+    indicate the uncertainty associated with the radio object. However, this
+    method would likely find radio objects that are intrinsically hard to
+    cross-identify rather than radio objects where labelling would give high
+    information gain. An example of this would be a compact radio object with
+    multiple potential host galaxies very close to its centre. Cross-identifying
+    such an object is usually very easy --- the galaxy closest to the centre is
+    most likely to be the host galaxy --- but if there are multiple galaxies
+    equidistant from the centre then a committee of classifiers will likely
+    choose equally between them, resulting in high disagreement. In preliminary
+    experiments with using QBC for this task, we found exactly this behaviour.
+
+    An ideal experiment for active learning for Radio Galaxy Zoo would compare
+    different generalisations of uncertainty sampling to QBC and passive
+    sampling. In contrast to our approach to the cross-identification problem,
+    instances would be radio objects rather than galaxies. Radio objects would
+    be drawn using the different query strategies. The results of queries would
+    come from an expert catalogue such as the \citeauthor{norris06} catalogue.
+    The resulting labels would then be used to train a classifier. Training is
+    possible using our methods by assigning all nearby galaxies a positive or
+    negative label based on the result of the query, in a very similar way to
+    how we converted the \citeauthor{norris06} and \citeauthor{fan15}
+    cross-identifications into label sets. There is a clear problem of scale ---
+    how large a radius around the radio object do we consider ``nearby''? ---
+    and there is no clear solution to this problem.
+
+    After such an experiment was used to determine good query strategies, the
+    approach would need to be extended to work with the crowd. Queries would now
+    be sent to a simulated crowd with realistic (i.e. Radio Galaxy Zoo
+    volunteer-like) noise. This is a much harder problem to solve: One must now
+    consider the problem of relabelling, label noise, and so on. Inspiration for
+    such methods could likely be drawn from \citet{mozafari12}, as their
+    partitioning approach is similar to that chosen by \citet{banfield15} for
+    the Radio Galaxy Zoo (where the partitions are compact and complex radio
+    objects).
+
+    Reviewing these suggested experiments, it is clear that active learning for
+    Radio Galaxy Zoo is a very hard problem to solve! As such, these experiments
+    were beyond the scope of this work, but we hope that our classification
+    methods may be applied in an aggregate way to radio objects in future work.
+
 \section{Active Learning for Citizen Science}
 \label{sec:al-citizen-science}
     
@@ -245,11 +321,14 @@ applications in citizen science.
     platform, we have some degree of freedom over who we query; this is (for
     example) the assumption made in \citet{yan11} and the crux of their methods.
     We can choose the best labeller and the best instance to query. In citizen
-    science, volunteers request labels from us. These volunteers may be
-    anonymous, making it difficult to estimate the quality of their labels.
-    Indeed, Radio Galaxy Zoo reports that 27\% of their labels come from
-    anonymous volunteers. Another factor to consider is that a large number of
-    labels in citizen science come from volunteers who only label a few
+    science, volunteers request labels from us.
+
+    It may also be difficult to estimate the accuracies of individual
+    volunteers, for a number of reasons. These volunteers may be anonymous, and
+    identifying which labels were assigned by the same individual may be
+    impossible. Indeed, Radio Galaxy Zoo reports that 27\% of their labels come
+    from anonymous volunteers. Another factor to consider is that a large number
+    of labels in citizen science come from volunteers who only label a few
     instances. This means that trialling volunteers on a ``gold standard'' of
     instances with known groundtruth is impractical: If we tested every
     volunteer on a few known instances, then for many volunteers, the known
@@ -258,14 +337,20 @@ applications in citizen science.
     for both recurring and new volunteers, citing the significant contributions
     of both groups. A visualisation of Galaxy Zoo 2 volunteer contributions is
     reproduced here in Figure \ref{fig:galaxy-zoo-2-volunteer-distribution}.
+
     Finally, citizen science tends to involve a very large number of labellers:
     Galaxy Zoo has involved several hundred thousand volunteers
     \citep{marshall15}; Radio Galaxy Zoo has over 2000 volunteers involved with
     just the ATLAS--CDFS observations that we have looked at in this thesis. For
     contrast, \citet{raykar10}, on whose methods we based our own crowd
-    experiments, used just 5 labellers in their experiments, and
-    \citet{mozafari12} and \citet{yan11} both used 3--5 labellers in their
-    experiments.
+    experiments, used 5 labellers for most of their experiments (with one
+    experiment with 164 labellers); \citet{mozafari12} and \citet{yan11} both
+    tested their methods with 3--5 labellers. The large number of labellers
+    involved in practical citizen science raises many challenges. Estimating
+    labeller accuracies is very difficult for large numbers of labellers as the
+    number of model parameters is often tied to the number of labellers.
+    Additionally, the label matrix $y_{t, i}$ is sparse: Most labellers have not
+    labelled most instances.
 
     \begin{figure}
         \centering
@@ -276,5 +361,3 @@ applications in citizen science.
             \emph{Image: K. Willett. Reproduced from \citet{marshall15}.}}
         \label{fig:galaxy-zoo-2-volunteer-distribution}
     \end{figure}
-
-\todo{Talk about citizen science and an ideal experiment}
