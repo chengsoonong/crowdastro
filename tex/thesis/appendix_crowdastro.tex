@@ -27,6 +27,8 @@ submodules available.
 \section{Submodules}
     \label{sec:crowdastro-submodules}
 
+    In this section, we document the main submodules in crowdastro.
+
     \subsection{crowdastro.active\_learning}
     \label{sec:crowdastro-active-learning}
 
@@ -84,38 +86,52 @@ submodules available.
             uncertainty sampling as described in Section
             \ref{sec:uncertainty-sampling}.
 
-    \subsection{crowdastro.crowd.raykar}
-        \label{sec:crowdastro-raykar}
+    \subsection{crowdastro.crowd}
+    \label{sec:crowdastro-crowd}
 
-        \texttt{crowdastro.crowd.raykar} is an implementation of the crowd
-        learning algorithm developed by \citet{raykar10}, described here in
-        Section \ref{sec:raykar}. The module provides a
-        \texttt{RaykarClassifier} object which implements a modified
-        scikit-learn interface.
+        \texttt{crowdastro.crowd} contains classes for crowd learning. Both
+        classes implement the same methods, and so can be used as drop-in
+        replacements for each other. The module also contains some helper
+        functions for crowd labels and related experiments.
 
-    \subsection{crowdastro.crowd.util}
-        \label{sec:crowdastro-util}
+        \subsection{raykar}
+            \label{sec:crowdastro-raykar}
 
-        \texttt{crowdastro.crowd.util} contains useful functions for dealing
-        with crowd labels and performing related experiments shown in this
-        thesis. These functions are:
-        \begin{itemize}
-            \item \texttt{balanced\_accuracy}, which computes the balanced
-                accuracy of a classifier against a test set,
-            \item \texttt{crowd\_label}, which simulates the crowd labelling
-                task as described in Section \ref{sec:crowd-simulation},
-            \item \texttt{majority\_vote}, which computes the majority vote of
-                a set of crowd labels,
-            \item \texttt{logistic\_regression}, a simple implementation of the
-                logistic regression function (Equation
-                \ref{eq:logistic-regression}).
-        \end{itemize}
+            \texttt{crowdastro.crowd.raykar} is an implementation of the crowd
+            learning algorithm developed by \citet{raykar10}, described here in
+            Section \ref{sec:raykar}. The module provides a
+            \texttt{RaykarClassifier} object which implements a modified
+            scikit-learn interface.
 
-    \subsection{crowdastro.crowd.yan}
-        \label{sec:crowdastro-yan}
+        \subsection{util}
+            \label{sec:crowdastro-util}
 
-        \texttt{crowdastro.crowd.yan} is an implementation of the crowd
-        learning algorithm developed by \citet{yan10}, described here in
-        Section \ref{sec:yan}. The module provides a
-        \texttt{YanClassifier} object which implements a modified scikit-learn
-        interface.
+            \texttt{crowdastro.crowd.util} contains useful functions for dealing
+            with crowd labels and performing related experiments shown in this
+            thesis. These functions are:
+            \begin{itemize}
+                \item \texttt{balanced\_accuracy}, which computes the balanced
+                    accuracy of a classifier against a test set,
+                \item \texttt{crowd\_label}, which simulates the crowd labelling
+                    task as described in Section \ref{sec:crowd-simulation},
+                \item \texttt{majority\_vote}, which computes the majority vote
+                    of a set of crowd labels,
+                \item \texttt{logistic\_regression}, a simple implementation of
+                    the logistic regression function (Equation
+                    \ref{eq:logistic-regression}).
+            \end{itemize}
+
+        \subsection{yan}
+            \label{sec:crowdastro-yan}
+
+            \texttt{crowdastro.crowd.yan} is an implementation of the crowd
+            learning algorithm developed by \citet{yan10}, described here in
+            Section \ref{sec:yan}. The module provides a \texttt{YanClassifier}
+            object which implements a modified scikit-learn interface.
+
+    \subsection{crowdastro.experiment}
+    \label{sec:crowdastro-experiment}
+
+        \texttt{crowdastro.experiment} contains all the experiments run for this
+        thesis. The scripts in this module can be executed from the command
+        line, e.g. \texttt{python3 -m crowdastro.experiment.experiment\_name}.
