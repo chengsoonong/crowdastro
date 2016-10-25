@@ -63,7 +63,7 @@ def main(training_path):
         plt.xlim((-0.5, 5.5))
         plt.xlabel('$w2 - w3$')
         plt.ylabel('Predicted probability')
-        plt.subplots_adjust(wspace=0.32)
+        plt.subplots_adjust(wspace=0.32, hspace=0.32)
         plt.show()
 
         # gridsize = 100
