@@ -149,12 +149,11 @@ applications in citizen science.
 
     For the passive test, we sampled 100 galaxies at random (stratified by the
     labels) and trained a logistic regression classifier on these. We then drew
-    a batch of new labels, added these to the existing label set, and then
-    retrained the classifier. This was repeated until the classifier had seen
-    the entire training set ($10^4$ labels). The process for testing QBC was
-    identical, except that instead of drawing new labels at random, the new
-    labels were drawn in order of highest to lowest disagreement of the
-    committee.
+    a batch of new labels, added these to the existing label set, and retrained
+    the classifier. This was repeated until the classifier had seen the entire
+    training set ($10^4$ labels). The process for testing QBC was identical,
+    except that instead of drawing new labels at random, the new labels were
+    drawn in order of highest to lowest disagreement of the committee.
 
     After running the experiment, we observed that QBC outperformed passive
     selection. We hypothesised that this was because querying at random ignores
@@ -173,7 +172,7 @@ applications in citizen science.
     
     Traditional active learning assumes that we have access to one expert, who
     always issues correct labels. When labels are sourced from a crowd, these
-    assumptions no longer hold: the crowd are non-experts and can give incorrect
+    assumptions no longer hold: The crowd are non-experts and can give incorrect
     labels \citep{mozafari12,yan11}, and there are multiple labellers with
     different accuracies \citep{yan11}. We can now ask questions deeper than
     simply ``which label should I request?'' --- we can, for example, ask
@@ -204,7 +203,7 @@ applications in citizen science.
     simply choose the instance closest to it (i.e. using Euclidean distance).
 
     This method has similar drawbacks to the \citeauthor{yan10} passive learning
-    method described in Chapter \ref{cha:ml}: the number of parameters grows
+    method described in Chapter \ref{cha:ml}: The number of parameters grows
     large with large numbers of annotators, and the expectation-maximisation
     algorithm only converges to a local minimum. In our implementation, training
     was also quite slow, meaning online active learning may be impractical. It
@@ -304,7 +303,7 @@ applications in citizen science.
     
     Thus far, we have taken the word ``crowdsourcing'' to mean any scenario
     where there are multiple labellers. This conflates a number of arguably
-    different scenarios: we may have multiple experts, multiple non-experts with
+    different scenarios: We may have multiple experts, multiple non-experts with
     domain knowledge, multiple non-experts without domain knowledge, and so on.
     The literature often does not disambiguate. \citet{raykar10} consider the
     problem of multiple experts who disagree; \citet{yan10} and
@@ -365,6 +364,7 @@ applications in citizen science.
         \caption{Label contributions from volunteers in Galaxy Zoo 2. Each
             square represents a single user, with the area of the square
             proportional to the number of instances labelled by that user.
+            Colours are arbitrary.
             \emph{Image: K. Willett. Reproduced from \citet{marshall15}.}}
         \label{fig:galaxy-zoo-2-volunteer-distribution}
     \end{figure}

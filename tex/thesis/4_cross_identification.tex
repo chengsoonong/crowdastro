@@ -114,10 +114,10 @@
   classifier. We address the former in Section \ref{sec:rgz-crowd-labels}, and
   the latter here.
 
-  The obvious way to evaluate classifier performance without groundtruth is to
-  aggregate the Radio Galaxy Zoo crowd labels in some way to approximate the
-  groundtruth, and then use that for evaluation. While there are many ways that
-  we could aggregate the labels (Section \ref{sec:rgz-crowd-labels}), these
+  A straightforward way to evaluate classifier performance without groundtruth
+  is to aggregate the Radio Galaxy Zoo crowd labels in some way to approximate
+  the groundtruth, and then use that for evaluation. While there are many ways
+  that we could aggregate the labels (Section \ref{sec:rgz-crowd-labels}), these
   aggregates are \emph{not} the groundtruth and may still contain high noise. We
   want our classifier to be capable of finding the best approximation to the
   groundtruth, not to the noisy inputs, and evaluation should reflect that. We
@@ -203,11 +203,11 @@
     it does not cover the whole sky. Here, we describe our choice of features
     for both.
 
-    For WISE, we chose to use all four WISE band magnitudes ($w1, w2, w3,$ and
-    $w4$) as features. Since the features are magnitudes, they are on a
-    logarithmic scale, and we found that in practice classification performance
-    improved when the magnitudes were converted to their corresponding flux
-    value. We performed this conversion with the formula
+    For WISE, we use all four WISE band magnitudes ($w1, w2, w3,$ and $w4$) as
+    features. Since the features are magnitudes, they are on a logarithmic
+    scale, and we found that in practice classification performance improved
+    when the magnitudes were converted to their corresponding flux value. We
+    performed this conversion with the formula
     \begin{equation}
       \label{eq:mag-to-flux}
       f = 10^{-0.4m}.
@@ -226,11 +226,11 @@
 
     Also available were the unprocessed infrared images captured in the survey.
     Under the assumption that the large scale infrared structure of a galaxy is
-    unchanged by an AGN, we chose to ignore the images themselves and focus on
+    unchanged by an AGN, we ignored the images themselves and focused on
     features obtained from the catalogue. This greatly simplified feature
     selection with minimal expected impact on the classification performance.
     Future work may investigate the effectiveness of features extracted from
-    infrared images on classification performance, but this is out of the scope
+    infrared images on classification performance, but this is beyond the scope
     of this thesis.
 
     SWIRE also contains colour information, but unlike WISE, the information is
@@ -250,11 +250,12 @@
   \label{sec:radio-features}
 
     While the infrared catalogues include measurements on individual galaxies,
-    the ATLAS radio catalogue does not. This is because galaxies are not
-    visible in radio, so while galaxies are directly represented in an infrared
+    the ATLAS radio catalogue does not. This is because galaxies are not visible
+    in radio, so while galaxies are directly represented in an infrared
     catalogue they are not in a radio catalogue. Galactic features must thus be
-    extracted from the radio images directly. We chose to use a convolutional
-    neural network, as described in Section \ref{sec:image-feature-extraction}.
+    extracted from the radio images directly. We use a convolutional neural
+    network for this purpose, as described in Section
+    \ref{sec:image-feature-extraction}.
 
     We note that there is existing research on feature representations of radio
     galaxies. \citet{fan15} used an astronomical model of radio galaxies in
