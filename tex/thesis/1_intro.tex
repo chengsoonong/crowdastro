@@ -138,24 +138,51 @@ cross-identify over 100~000 radio galaxies. While this does not compare in scale
 to EMU, the hope is that these cross-identifications can be used to train
 next-generation machine learning algorithms.
 
-This thesis presents a na\"ive, supervised learning approach to the problem of
-active galactic nuclei cross-identification, using label data sourced from the
-Radio Galaxy Zoo.
-
 \section{Contributions}
 \label{sec:contributions}
 
-  \begin{itemize}
-    \item ML on RGZ
-    \item Non-physical model for cross identification
-    \item Deep learning features for radio
-    \item Effect of features. \url{https://see.stanford.edu/materials/aimlcs229/ml-advice.pdf}
-    \item Framing cross identification as object localisation then binary classification
-    \item Implementation of Raykar and Yan
-    \item Compare Raykar, Yan, MV (wins)
-    \item Compare Logistic Regression with Random Forest
-    \item Benefit active learning
-  \end{itemize}
+  We present in this thesis a supervised learning approach to the problem of
+  radio cross-identification, using label data sourced from the Radio Galaxy
+  Zoo. Our approach is to frame the radio cross-identification problem as object
+  localisation, and then as binary classification, allowing standard machine
+  learning techniques to be applied to the problem. This is the first
+  application of machine learning to automated radio cross-identification.
+
+  Our methods do not make use of any astronomical models. We believe that this
+  will help in the development of future algorithms for cross-identification of
+  objects detected in EMU, where astronomical models may fail with the discovery
+  of new classes of radio object. Instead of astronomical models, we use
+  features extracted automatically from radio images using a convolutional
+  neural network (Section \ref{sec:radio-features}). To our knowledge, this is
+  the first instance where features have been automatically extracted from radio
+  images.
+
+  We have made use of the Radio Galaxy Zoo cross-identification database
+  \citep{banfield15}. This is a very recent data set, and our work is one of the
+  first uses of this data. In particular, this work is the first application of
+  machine learning to labels from Radio Galaxy Zoo.
+
+  In the process of developing our cross-identification methods, we have
+  investigated the predictive power of infrared flux ratios, which are believed
+  to correlate with whether a galaxy contains an AGN (Section
+  \ref{sec:feature-analysis}) \citep{banfield15}. Further, we have shown that
+  the features we have extracted from radio images are better predictors.
+
+  We have implemented two prominent crowd learning algorithms by
+  \citet{raykar10} and \citet{yan10}, and compared their performance against a
+  simple crowd learning algorithm (logistic regression with majority vote,
+  Sections \ref{sec:raykar} and \ref{sec:yan}). Our implementation is
+  MIT-licensed, and is the only open-source implementation that we are aware of.
+
+  In Chapter \ref{cha:active-learning} we have highlighted some problems with
+  applying existing active learning and crowd learning literature to citizen
+  science.
+
+  Finally, we have implemented an open-source Python library for crowd-based
+  learning in astronomy. This library contains all code used in this thesis, and
+  can be used to easily reproduce our experiments. In particular, the library
+  contains a pipeline for easily training and running our cross-identification
+  methods.
 
 \section{Outline}
 \label{sec:outline}

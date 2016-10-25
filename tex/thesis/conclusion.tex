@@ -1,13 +1,27 @@
-%%
-%% Template conclusion.tex
-%%
+%!tex root=thesis.tex
 
 \chapter{Conclusion}
 \label{cha:conclusion}
 
-\todo{Write a conclusion chapter.}
+    In this thesis we have presented a supervised learning approach to the
+    problem of radio cross-identification.
 
-%%% Local Variables: 
-%%% mode: latex
-%%% TeX-master: "thesis"
-%%% End: 
+    In Chapter \ref{cha:cross-identification}, we framed the
+    cross-identification problem first as object localisation and then as binary
+    classification of galaxies. We represented galaxies with the use of a
+    convolutional neural network to extract features from ATLAS radio images,
+    and combined these with features from the WISE telescope. We then tested a
+    variety of methods of learning for a classifier on these features, including
+    logistic regression, random forests, and the \citet{raykar10} crowd learning
+    algorithm. We showed that logistic regression with majority vote
+    outperformed the \citeauthor{raykar10} algorithm, and that a classifier
+    trained on non-expert crowd labels attains comparable accuracy to a
+    classifier trained on expert labels.
+
+    We then looked at active learning in Chapter \ref{cha:active-learning},
+    applying query-by-committee to the cross-identification task. We suggested
+    an experiment for using active learning on Radio Galaxy Zoo, and highlighted
+    some problems with existing active learning literature when applied to
+    citizen science.
+
+    \todo{Finish this!}
