@@ -33,30 +33,34 @@ def main(training_path):
         matplotlib.rcParams['font.family'] = 'serif'
         matplotlib.rcParams['font.serif'] = ['Palatino Linotype']
         plt.figure(figsize=(8, 6))
-        plt.subplot(2, 2, 1)
+        plt.subplot(2, 2, 1, axis_bgcolor=VIRIDIS_PURPLE)
+        plt.xlim((-1, 3))
         plt.hexbin(w1_w2[pos], probs[pos], cmap='viridis', gridsize=30,
                    bins='log', linewidths=0.5)
         plt.colorbar()
         plt.xlabel('$w1 - w2$')
         plt.ylabel('Predicted probability')
         plt.title('z = 1')
-        plt.subplot(2, 2, 2)
+        plt.subplot(2, 2, 2, axis_bgcolor=VIRIDIS_PURPLE)
+        plt.xlim((-1, 3))
         plt.hexbin(w1_w2[neg], probs[neg], cmap='viridis', gridsize=30,
                    bins='log', linewidths=0.5)
         plt.title('z = 0')
         plt.colorbar()
         plt.xlabel('$w1 - w2$')
         plt.ylabel('Predicted probability')
-        plt.subplot(2, 2, 3)
+        plt.subplot(2, 2, 3, axis_bgcolor=VIRIDIS_PURPLE)
         plt.hexbin(w2_w3[pos], probs[pos], cmap='viridis', gridsize=30,
                    bins='log', linewidths=0.5)
+        plt.xlim((-0.5, 5.5))
         plt.colorbar()
         plt.xlabel('$w2 - w3$')
         plt.ylabel('Predicted probability')
-        plt.subplot(2, 2, 4)
+        plt.subplot(2, 2, 4, axis_bgcolor=VIRIDIS_PURPLE)
         plt.hexbin(w2_w3[neg], probs[neg], cmap='viridis', gridsize=30,
                    bins='log', linewidths=0.5)
         plt.colorbar()
+        plt.xlim((-0.5, 5.5))
         plt.xlabel('$w2 - w3$')
         plt.ylabel('Predicted probability')
         plt.subplots_adjust(wspace=0.32)
