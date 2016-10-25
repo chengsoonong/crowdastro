@@ -65,11 +65,11 @@
     \section{Astronomical Observations}
     \label{sec:astronomical-observations}
 
-        When observing the sky, we can think about the sky as being projected
-        onto a spherical surface surrounding the earth. All objects we see with
-        telescopes are flat on the sky, and we only have limited tools to
-        determine their distances and scales. In this section, we describe the
-        coordinate systems and units used to describe these objects.
+        % When observing the sky, we can think about the sky as being projected
+        % onto a spherical surface surrounding the earth. All objects we see with
+        % telescopes are flat on the sky, and we only have limited tools to
+        % determine their distances and scales. In this section, we describe the
+        % coordinate systems and units used to describe these objects.
 
         \subsection{Astronomical Coordinates}
         \label{sec:coordinates}
@@ -117,9 +117,9 @@
             its \emph{wavelength} and \emph{frequency} \citep{griffiths99}. The
             wavelength of light is the distance between two neighbouring peaks;
             it is measured in metres (m) and usually denoted $\lambda$. The
-            frequency of light is the number of waves per second; it is measured
-            in hertz (Hz) and usually denoted $\nu$. Wavelength and frequency
-            are related by the formula
+            frequency of light is the number of waves that have passed a point
+            per second; it is measured in hertz (Hz) and usually denoted $\nu$.
+            Wavelength and frequency are related by the formula
             \[
                 c = \lambda \nu,
             \]
@@ -142,8 +142,9 @@
             Since telescopes generally only detect brightnesses of objects in
             the sky, and different wavelengths of radiation require different
             mechanisms to detect, telescopes are designed to measure radiation
-            only at specific ranges of wavelengths. Objects detected in
-            different wavelengths must be cross-identified with each other.
+            only at specific ranges of wavelengths. To gain full scientific
+            insight into objects detected in different wavelengths, the objects
+            must be cross-identified with each other.
 
         \subsection{Flux and Magnitude}
 
@@ -153,19 +154,20 @@
             \[
                 f = \frac{1}{A}\frac{\text{d}E}{\text{d}t}
             \]
-            where $E$ is the energy received from the object and $t$ is the
-            time. We cannot usually measure the flux over all frequencies, so
-            flux is observed over a specific frequency range $\Delta
-            \nu$. The \emph{spectral flux density} is then the limit as the
-            frequency range approaches zero, i.e.
+            where $E$ is the energy received from the object, $t$ is the time,
+            and $A$ is the apparent area of the object. We cannot usually
+            measure the flux over all frequencies, so flux is observed over a
+            specific frequency range $\Delta \nu$. The \emph{spectral flux
+            density} is then the limit as the frequency range approaches zero,
+            i.e.
             \[
                 f_\nu = \frac{1}{A}\frac{\text{d}^2E}{\text{d}\nu\text{d}t}
             \]
-            where $A$ is the area of the object on the sky. The spectral flux
-            density is measured in janskys (Jy), an astronomical unit equal to
-            $10^{-26} \text{ W m}^{-2} \text{ Hz}^{-1}$ \citep{francis08}.
+            The spectral flux density is measured in janskys (Jy), an
+            astronomical unit equal to $10^{-26} \text{ W m}^{-2} \text{
+            Hz}^{-1}$ \citep{francis08}.
 
-            The \emph{apparent magitude}, $m$, of an object is a logarithmic
+            The \emph{apparent magnitude}, $m$, of an object is a logarithmic
             measure of its flux seen from Earth, relative to the star Vega
             \citep{francis08}:
             \begin{equation}
@@ -229,7 +231,7 @@
         \citep{sokolov67}. Synchrotron radiation is emitted in radio
         wavelengths, and so AGNs emitting synchrotron radiation are called
         \emph{radio AGNs}. As radio AGNs are the focus of this work, ``AGN''
-        will refer only to radio AGNs unless otherwise specified.
+        will henceforth refer only to radio AGNs unless otherwise specified.
 
         \begin{figure}
             \centering
@@ -343,21 +345,21 @@
                     of the sky as the WISE image in Figure \ref{fig:wise}.}
             \end{figure}
 
-            The Spitzer Wide-Area Infrared Extragalactic Survey (SWIRE) is an
-            infrared survey of seven fields of the sky
-            \citep{lonsdale03}. These fields --- ELAIS-S1, ELAIS-N1, ELAIS-N2,
-            Lockman, CDFS, and Lonsdale --- are called the \emph{SWIRE fields},
-            totalling 63.2 square degrees in area. The fields contain few nearby
-            objects, meaning that observations in these fields are of very old,
-            distant objects. ELAIS-S1 and CDFS are in the southern sky; all
-            other fields are in the northern sky. SWIRE is a multi-wavelength
-            survey, observing at four wavelengths: 3.6 $\mu$m, 4.5 $\mu$m, 5.8
-            $\mu$m, and 8.0 $\mu$m.
+            The Spitzer Wide-Area Infrared Extragalactic Survey (SWIRE) is a
+            multi-wavelength infrared survey \citep{lonsdale03}. It observed at four wavelengths:
+            3.6 $\mu$m, 4.5 $\mu$m, 5.8 $\mu$m, and 8.0 $\mu$m.
+
+            SWIRE surveyed seven fields. These fields --- ELAIS-S1, ELAIS-N1,
+            ELAIS-N2, Lockman, CDFS, XMM-LSS, and Lonsdale --- are called the
+            \emph{SWIRE fields}, totalling 63.2 square degrees in area. The
+            fields contain few nearby objects, meaning that observations in
+            these fields are of very old, distant objects. ELAIS-S1 and CDFS are
+            in the southern sky; all other fields are in the northern sky.
 
             While SWIRE covers far less area of the sky than WISE, it does so at
             considerably higher resolution and sensitivity: $1.2''$ and
-            $7.3$--$32.5$ $\mu$Jy, respectively
-            \citep{irac-pocket-guide, surace05}.
+            $7.3$--$32.5$ $\mu$Jy, respectively \citep{irac-pocket-guide,
+            surace05}.
 
             SWIRE aimed to investigate the evolution of galaxies and AGNs and
             the relationship between galaxies and AGNs \citep{surace05}.
@@ -407,12 +409,14 @@
             by hand, and will therefore require algorithms to process the data.
             With so many new objects it is likely that many objects will not fit
             existing models, meaning that model-based approaches to data
-            processing may be ineffective. It is this problem that motivates the
-            development of new, machine-learned algorithms for processing
-            astronomical data at these large scales. While the EMU survey data
-            is not yet released, development of such algorithms can begin by
-            looking at other datasets with similar sensitivity and resolution,
-            such as ATLAS (Section \ref{sec:atlas}).
+            processing may be ineffective. \citet{norris11} estimated that 10\%
+            of the newly-found objects will be too complicated for current
+            automated algorithms \citep{banfield15}. It is this problem that
+            motivates the development of new, machine-learned algorithms for
+            processing astronomical data at these large scales. While the EMU
+            survey data is not yet released, development of such algorithms can
+            begin by looking at other datasets with similar sensitivity and
+            resolution, such as ATLAS (Section \ref{sec:atlas}).
 
             The radio objects found by EMU will eventually be cross-identified
             with the infrared objects found by WISE (Section \ref{sec:wise}). As
@@ -490,21 +494,22 @@
         \emph{cross-identification}.
 
         The specific cross-identification task we focus on in this thesis is
-        that of cross-identifying a radio object with its infrared counterpart.
-        Most often in current radio surveys, a radio object will be a jet from
-        an AGN \citep{norris11}. In this case, we refer to the infrared
+        that of cross-identifying a radio object with the associated infrared
+        object. Most often in current radio surveys, a radio object will be a
+        jet from an AGN \citep{norris11}. In this case, we refer to the infrared
         counterpart as the \emph{host galaxy} of the AGN. We will assume that
         all radio objects are AGNs. The main goal of cross-identifying AGNs is
         to better understand the relationship between AGNs and star-forming
         activity in their host galaxies \citep{norris06}.
 
         Sometimes, cross-identification is easy: We may have point-like sources
-        of light, and we can simply overlay two surveys and identify overlapping
-        objects. In the case of cross-identifying radio AGNs, though, we do not
-        have point-like sources of light, and cross-identification can be very
-        difficult. AGN jets may be arbitrarily large and complex, and often show
-        up as multiple disconnected radio objects. As such, past attempts to
-        cross-identify radio objects have required human insight
+        of light, allowing us to simply overlay two surveys and identify
+        overlapping objects. In the case of cross-identifying radio AGNs,
+        though, we do not have point-like sources of light, and
+        cross-identification can be very difficult. AGN jets may be arbitrarily
+        large and complex, and often show up as multiple disconnected radio
+        objects. As such, past attempts to cross-identify radio objects have
+        required human insight
         \citep{norris06,fan15}.
 
         In this section, we look at two different ways astronomers have
@@ -540,15 +545,15 @@
             objects with no identifiable host galaxy in the infrared. These are
             called ``infrared-faint'' radio objects.
 
-            \citeauthor{norris06} estimated the probability of false cross-
-            identifications by displacing all radio objects by $1'$ and
+            \citeauthor{norris06} estimated the probability of false
+            cross-identifications by displacing all radio objects by $1'$ and
             repeating the cross-identification process. From the results of this
             test, they estimated that $9.02\%$ of the cross-identifications are
             false.
 
-            We consider these cross-identifications \emph{expert} cross-
-            identifications, i.e., they are the best possible cross-
-            identifications available for radio objects in the CDFS field.
+            We consider these cross-identifications \emph{expert}
+            cross-identifications, i.e., they are the best possible
+            cross-identifications available for radio objects in the CDFS field.
             Throughout this thesis, we will use these as an approximation to the
             unobservable groundtruth cross-identifications.
 
@@ -629,14 +634,15 @@
     volunteers to manually cross-identify radio sources with their infrared host
     galaxies.
 
-    Radio Galaxy Zoo is a website where volunteers are presented with a radio
-    image from ATLAS or FIRST and a corresponding infrared image from SWIRE or
-    WISE, and are tasked with matching the radio source with its host galaxy, as
-    well as identifying which radio objects are associated with the same host
-    galaxy (e.g., two radio objects may represent two jets of one AGN). To help
-    reduce noise in these matches, each compact radio object is shown to 5
-    volunteers, and each complex radio object is shown to 20 volunteers. While
-    both the cross-identification task and the radio object association task are
+    Radio Galaxy Zoo\footnote{\url{http://radio.galaxyzoo.org/}} is a website
+    where volunteers are presented with a radio image from ATLAS or FIRST and a
+    corresponding infrared image from SWIRE or WISE, and are tasked with
+    matching the radio source with its host galaxy, as well as identifying which
+    radio objects are associated with the same host galaxy (e.g., two radio
+    objects may represent two jets of one AGN). To help reduce noise in these
+    matches, each compact radio object is shown to 5 volunteers, and each
+    complex radio object is shown to 20 volunteers. While both the
+    cross-identification task and the radio object association task are
     astronomically interesting, we focus only on the cross-identification task
     for this thesis. An example of the workflow presented to volunteers is shown
     in Figure \ref{fig:rgz-interface}.

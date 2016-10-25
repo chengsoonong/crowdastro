@@ -7,31 +7,32 @@ In this thesis we present a na\"ive, supervised learning approach to the problem
 in astronomy of \emph{radio cross-identification}, training using crowdsourced
 labels from the Radio Galaxy Zoo.
 
-Cross-identification is the matching of objects detected at one wavelength with
-objects detected at another. This is a particularly difficult problem for radio,
-as a large number of radio objects are \emph{active galactic nuclei},
-supermassive black holes at the centre of galaxies emitting huge radio jets.
-These jets can sprawl across the sky in complex ways as they interact with their
-environment, and in general have no clear relationship with their host galaxy.
+Cross-identification is the problem of matching of objects detected at one
+wavelength with objects detected at another. This is a particularly difficult
+problem for radio, as a large number of radio objects are \emph{active galactic
+nuclei}, supermassive black holes at the centre of galaxies emitting huge radio
+jets. These jets can sprawl across the sky in complex ways as they interact with
+their environment, and in general have no clear relationship with their host
+galaxy.
 
 We cast the radio cross-identification problem as an object localisation problem
-which can be solved using binary classification. We use a combination of image
+that can be solved using binary classification. We use a combination of image
 features and astronomical features to represent potential host galaxies of an
 active galactic nucleus. Image features are extracted from images of the radio
 sky using a convolutional neural network. We then classify galaxies in the
 Chandra Deep Field South according to whether they contain an active galactic
 nucleus.
 
-The classifier is trained using label data from Radio Galaxy Zoo, a citizen
+We trained the classifier using label data from Radio Galaxy Zoo, a citizen
 science website that allows volunteers to cross-identify radio objects. We find
 that a classifier trained on these non-expert labels performs similarly to a
 classifier trained on expert labels.
 
 We investigate multiple ways of handling noise and redundancy in the
 crowdsourced labels, and apply the classification model from \citet{raykar10} to
-the Radio Galaxy Zoo labels. This is then compared to a simple classification
-model trained on the majority vote. We find that the majority vote approach
-obtains the highest classification accuracy.
+the Radio Galaxy Zoo labels. Comparing this to a simple classification model
+trained on the majority vote, we find that the majority vote approach obtains
+the highest classification accuracy.
 
 Finally, we investigate applications of active learning to the radio
 cross-identification problem, with a focus on the Radio Galaxy Zoo project. We
