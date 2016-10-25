@@ -104,11 +104,21 @@ def main(crowdastro_h5_path, training_h5_path, results_npy_path,
             matplotlib.rcParams['font.serif'] = ['Palatino Linotype']
             plt.figure(figsize=(6, 6))
             results *= 100
-            fillbetween(instance_counts, list(zip(*results[0, :])))
+            fillbetween(instance_counts, list(zip(*results[0, :])),
+                        facecolour='green', edgecolour='green', facealpha=0.1,
+                        linestyle='-', marker='.', facekwargs={
+                            'linestyle': '-',
+                        })
             fillbetween(instance_counts, list(zip(*results[1, :])),
-                        facecolour='blue', edgecolour='blue', facealpha=0.2)
+                        facecolour='blue', edgecolour='blue', facealpha=0.1,
+                        linestyle='-.', marker='+', facekwargs={
+                            'linestyle': '-.',
+                        })
             fillbetween(instance_counts, list(zip(*results[2, :])),
-                        facecolour='red', edgecolour='red', facealpha=0.2)
+                        facecolour='red', edgecolour='red', facealpha=0.1,
+                        linestyle='--', marker='x', facekwargs={
+                            'linestyle': '--',
+                        })
             plt.grid(b=True, which='both', axis='y', color='grey',
                      linestyle='-', alpha=0.5)
             plt.ylim((70, 100))
