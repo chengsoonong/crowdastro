@@ -3,8 +3,13 @@
 \chapter{Conclusion}
 \label{cha:conclusion}
 
-    In this thesis we have presented a supervised learning approach to the
-    problem of radio cross-identification.
+    Ever larger and ever more detailed radio surveys will bring new challenges
+    to astronomy. In this thesis, we have focused on radio cross-identification,
+    a task for which existing algorithms are expected to fail and for which a
+    manual approach is intractable. We have presented a new, astronomical
+    model-free, supervised learning approach to this problem. We hope that this
+    approach will help guide the search for innovative ways to handle the data
+    produced by the Evolutionary Map of the Universe.\\
 
     In Chapter \ref{cha:cross-identification}, we framed the
     cross-identification problem first as object localisation and then as binary
@@ -24,4 +29,20 @@
     some problems with existing active learning literature when applied to
     citizen science.
 
-    \todo{Finish this!}
+    Our work here is just the start of applying machine learning to the radio
+    cross-identification problem. In Section
+    \ref{sec:cross-identification-conclusion-future-work} we have suggested a
+    number of avenues for future work. Performance could be improved by
+    incorporating hand-selected features, using information from more
+    wavelengths, and developing a better feature extraction method. Our method
+    could be extended to account for infrared-faint radio objects. Machine
+    learning could be applied to learn to associate related radio objects with
+    each other, and then with their host galaxy. Radio Galaxy Zoo volunteers
+    could be analysed to determine the best possible labeller model for use in
+    crowd learning algorithms. In Section \ref{sec:al-rgz-ideal-experiment} we
+    suggested an experiment for applying active learning to Radio Galaxy Zoo and
+    determining an appropriate uncertainty aggregation method for the radio
+    cross-identification task. Finally, in Section \ref{sec:al-citizen-science},
+    we highlighted some problems with active learning and crowd learning when
+    applied to citizen science, suggesting that citizen science is a unique form
+    of crowdsourcing that requires additional considerations.
