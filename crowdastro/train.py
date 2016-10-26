@@ -41,7 +41,8 @@ def train(training_h5, classifier_out_path, astro_transformer_out_path,
     if not any([use_astro, use_cnn]):
         raise ValueError('Must have features.')
 
-    n_static = 4+1+2 if training_h5.attrs['ir_survey'] == 'wise' else 5+1
+    ir_survey = training_h5.attrs['ir_survey']
+    n_static = config['surveys'][ir_survey]['n_features']
 
     train_indices = training_h5['is_ir_train'].value
     outputs = training_h5['labels'].value[train_indices]
