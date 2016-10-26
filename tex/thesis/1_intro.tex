@@ -81,7 +81,7 @@ surveys \citep{banfield15}.
 The Evolutionary Map of the Universe (EMU) \citep{norris11} is one such survey.
 EMU will use the new Australian SKA Pathfinder (ASKAP) telescope to image 75\%
 of the sky in radio wavelengths, and is expected to find over 70 million radio
-galaxies --- over 30 times the number of radio galaxies we know about today
+galaxies --- around 30 times the number of radio galaxies we know about today
 \citep{banfield15}! These objects will need to be cross-identified with their
 infrared counterparts, but it is estimated that 10\% of these radio galaxies
 will be too complicated for current automated cross-identification algorithms
@@ -210,11 +210,12 @@ next-generation machine learning algorithms.
   cross-identification. We also perform some experiments to test how selected
   crowd learning algorithms behave in different contexts.
 
-  Chapter \ref{cha:cross-identification} brings together Chapters 2 and 3 to
-  develop a machine learning approach to the radio cross-identification task. We
-  formalise the problem and highlight the problems that must be solved for
-  development, trial different methods of approaching the task, and present
-  results on task performance using our classifier.
+  Chapter \ref{cha:cross-identification} brings together Chapters
+  \ref{cha:astro} and \ref{cha:ml} to develop a machine learning approach to the
+  radio cross-identification task. We formalise the problem, highlight the
+  problems that must be solved for development, trial different methods of
+  approaching the task, and present results on task performance using our
+  classifier.
 
   Chapter \ref{cha:active-learning} discusses active learning and its
   application to crowdsourced projects like the Radio Galaxy Zoo. We perform
@@ -222,8 +223,7 @@ next-generation machine learning algorithms.
 
   Appendix \ref{cha:crowdastro} describes crowdastro, a Python package developed
   as part of this project. This package was used to perform all experiments
-  described in this thesis. It also provides a command-line interface for
-  training and executing the automated cross-identification task.
+  described in this thesis.
 
 \section{Data Products and Packages Used in this Thesis}
 \label{sec:data-products}
@@ -252,12 +252,12 @@ next-generation machine learning algorithms.
   Our experiments in Chapter \ref{cha:ml} use the Breast Cancer Wisconsin
   dataset. The dataset was obtained from the University of Wisconsin Hospitals,
   Madison from Dr. William H. Wolberg, and was accessed from the UCI Machine
-  Learning Repository \footnote{https://archive.ics.uci.edu/ml/}.
+  Learning Repository \footnote{\url{https://archive.ics.uci.edu/ml/}}.
 
   For running our experiments and developing our machine learning methods, we
   made use of astropy \citep{astropy}, a community-developed core Python package
-  for astronomy, and scikit-learn \citep{scikit-learn}, an open source package
-  machine learning package.
+  for astronomy, and scikit-learn \citep{scikit-learn}, an open source machine
+  learning package.
 
   Finally, this thesis had been made possible by the participation of more then
   10~000 volunteers in the Radio Galaxy Zoo project. Their contributions are
@@ -269,7 +269,7 @@ next-generation machine learning algorithms.
     \item AGN: Active galactic nucleus (Section \ref{sec:agns})
     \item AL: Active learning (Chapter \ref{cha:active-learning})
     \item ATLAS: Australia Telescope Large Area Survey (Section \ref{sec:atlas})
-    \item CDFS: Chandra Deep Field - South (Section \ref{sec:swire})
+    \item CDFS: Chandra Deep Field South (Section \ref{sec:swire})
     \item Dec: Declination (Section \ref{sec:astronomical-observations})
     \item ELAIS-S1: European Large Area ISO Survey - South 1 (Section \ref{sec:swire})
     \item EMU: Evolutionary Map of the Universe (Section \ref{sec:emu})
@@ -280,7 +280,7 @@ next-generation machine learning algorithms.
     \item RA: Right ascension (Section \ref{sec:astronomical-observations})
     \item RF: Random forests (Section \ref{sec:random-forests})
     \item RGZ: Radio Galaxy Zoo (Section \ref{sec:radio-galaxy-zoo})
-    \item SKA: Square Kilometre Array (Chapter \ref{cha:intro})
+    % \item SKA: Square Kilometre Array (Chapter \ref{cha:intro})
     \item SWIRE: Spitzer Wide-area Infrared Extragalactic Survey (Section \ref{sec:swire})
     \item WISE: Wide-field Infrared Survey Explorer (Section \ref{sec:wise})
   \end{itemize}

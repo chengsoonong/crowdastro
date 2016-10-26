@@ -38,7 +38,7 @@ at different ways to handle the problems in Section \ref{sec:crowd-labels}.
     \text{benign}\}$ \citep{wolberg90}.
 
     Modelling $p(z \mid x)$ requires some set of \emph{training data} $\mathcal
-    D \subset \mathcal X \times \mathcal Y$. The training data are either used
+    D \subseteq \mathcal X \times \mathcal Y$. The training data are either used
     to find parameters for a model or to estimate the model directly. Both
     processes are called \emph{training} the model. The cardinality of the
     training data is denoted $N = |\mathcal D|$.
@@ -455,10 +455,10 @@ at different ways to handle the problems in Section \ref{sec:crowd-labels}.
         from images that would not have been present using the na\"ive approach
         of Section \ref{sec:naive-approach-image-features}.
 
-        \begin{itemize}
-            \item CNNs are widely used now that we have a lot of data
-            \item Robust and require minimal pre-processing (cite 21)
-        \end{itemize}
+        % \begin{itemize}
+        %     \item CNNs are widely used now that we have a lot of data
+        %     \item Robust and require minimal pre-processing (cite 21)
+        % \end{itemize}
 
     \subsection{Convolutional Neural Networks}
     \label{sec:convolutional-neural-networks}
@@ -579,13 +579,13 @@ at different ways to handle the problems in Section \ref{sec:crowd-labels}.
         % This page formats really awfully due to the algorithm underneath.
         \raggedbottom
 
-        The breast cancer Wisconsin dataset, first used by
-        \citeauthor{wolberg90}, presents a classification task commonly used for
-        testing classification methods. The dataset can be obtained from the UCI
-        Machine Learning Repository \citep{lichman13}
+        The breast cancer Wisconsin dataset, first used by \citet{wolberg90},
+        presents a classification task commonly used for testing classification
+        methods. The dataset can be obtained from the UCI Machine Learning
+        Repository \citep{lichman13}
         \footnote{\url{https://archive.ics.uci.edu/ml/%
                        datasets/Breast+Cancer+Wisconsin+\%28Original\%29}}.
-        The classification task is, given medical observations of a patient,
+        The classification task is to, given medical observations of a patient,
         determine if their cancer is benign or malignant. Each instance is a
         10-dimensional feature vector, and there are 699 instances. There is
         some missing data, which we chose to set to 0.
@@ -654,7 +654,8 @@ at different ways to handle the problems in Section \ref{sec:crowd-labels}.
 
     Nevertheless, this approach is used in existing citizen science projects
     such as Galaxy Zoo \citep{lintott08} and Radio Galaxy Zoo
-    \citep{banfield15}, both of which request 20 crowd labels for each instance.
+    \citep{banfield15}, both of which request between 5 and 20 crowd labels for
+    each instance.
 
     This raises the question of how best to make use of multiple labels to train
     classification models. In this section, we look at some methods that
@@ -777,8 +778,8 @@ at different ways to handle the problems in Section \ref{sec:crowd-labels}.
                             {\sum_{i = 1}^N (1 - \mu_i)}
         \end{align}
         and find the $\vec w$ that maximises the likelihood using gradient
-        methods. In my implementation of this algorithm, I initialised $\vec w$
-        using logistic regression trained on the majority vote, and then used
+        methods. In our implementation of this algorithm, we initialised $\vec
+        w$ using logistic regression trained on the majority vote, and then used
         the old $\vec w$ to initialise each subsequent maximisation step.
 
         As part of this thesis, we have produced an open source implementation
@@ -794,7 +795,9 @@ at different ways to handle the problems in Section \ref{sec:crowd-labels}.
                     {images/experiments/raykar.pdf}
                 \caption{Performance of the \citeauthor{raykar10} classifier
                     against logistic regression (LR) on a simulated crowd
-                    labelling of the breast cancer dataset \citep{wolberg90}.}
+                    labelling of the breast cancer dataset \citep{wolberg90}.
+                    Spread along the vertical axis represents results over
+                    multiple trials; the bar represents the mean.}
                 \label{fig:raykar}
             \end{figure}
 
@@ -835,7 +838,8 @@ at different ways to handle the problems in Section \ref{sec:crowd-labels}.
                     {images/experiments/raykar_class_balance_ba}
                 \caption{Performance of the \citeauthor{raykar10} classifier on
                     a simulated labelling problem with different class
-                    imbalance.}
+                    imbalance. Spread along the vertical axis represents results
+                    over multiple trials; the bar represents the mean.}
                 \label{fig:raykar-class-balance-ba}
             \end{figure}
 
@@ -845,7 +849,9 @@ at different ways to handle the problems in Section \ref{sec:crowd-labels}.
                     {images/experiments/raykar_class_balance}
                 \caption{Output $\alpha$ and $\beta$ values of the
                     \citeauthor{raykar10} classifier on a simulated labelling
-                    problem with different class imbalance.}
+                    problem with different class imbalance. Spread along the
+                    vertical axis represents results for multiple labellers over
+                    multiple trials; the bar represents the mean.}
                 \label{fig:raykar-class-balance-ab}
             \end{figure}
 
@@ -1018,7 +1024,7 @@ at different ways to handle the problems in Section \ref{sec:crowd-labels}.
         the \citeauthor{yan10} model to reduce to logistic regression, this is
         evidently not guaranteed in practice. This may be due to the difficulty
         of the expectation-maximisation problem, which is never guaranteed to
-        converge on a global maximum in general. When noise is high, however,
+        converge to a global maximum in general. When noise is high, however,
         the \citeauthor{yan10} algorithm considerably outperforms logistic
         regression, indicating that in situations with high, feature-dependent
         noise, the \citeauthor{yan10} algorithm may be a good choice of
