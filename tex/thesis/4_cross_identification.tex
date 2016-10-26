@@ -144,10 +144,14 @@
   describes the design and test sets used for the experiments that appear in the
   following sections.
 
+  Note that in the experiments that follow later in this chapter, we have not
+  used SWIRE. AllWISE is the infrared survey that EMU will be cross-identified
+  with, and so we have chosen to focus on it.
+
   To generate the \citeauthor{norris06} and \citeauthor{fan15} label sets, we
   matched each location identified by \citeauthor{norris06} and
-  \citeauthor{fan15} to the nearest candidate host in WISE. These galaxies were
-  labelled $1$. All other candidate hosts were labelled $0$.
+  \citeauthor{fan15} to the nearest candidate host in the AllWISE survey. These
+  galaxies were labelled $1$. All other candidate hosts were labelled $0$.
 
   We generated test sets by first finding all candidate hosts for which the
   \citeauthor{norris06} label and the \citeauthor{fan15} label agree. To
@@ -333,7 +337,8 @@
       \caption{Balanced accuracy of logistic regression trained on the
         \citeauthor{norris06} label set with different subsets of features. The
         horizontal axis indicates which features were used for the results in
-        that column.}
+        that column. Spread along the vertical axis represents results over
+        multiple test sets; the bar represents the mean.}
       \label{fig:feature-ablation}
     \end{figure}
 
@@ -493,8 +498,8 @@
         \citeauthor{fan15} labels agree. LR($Y$) indicates logistic regression
         trained on $Y$. RGZ-MV is the set of majority vote labels from the Radio
         Galaxy Zoo. RGZ-Raw-MV is the majority vote of all crowd labels and is
-        included for comparison. Spread along the vertical axis represents results
-        across multiple test sets; the bar represents the mean.}
+        included for comparison. Spread along the vertical axis represents
+        results across multiple test sets; the bar represents the mean.}
       \label{fig:predictors}
     \end{figure}
 
