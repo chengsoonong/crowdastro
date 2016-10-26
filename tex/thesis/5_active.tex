@@ -135,7 +135,8 @@ applications in citizen science.
             {images/experiments/rgz_qbc.pdf}
         \caption{Logistic regression trained on the \citeauthor{norris06}
             labels with different amounts of training data and two different
-            query strategies.}
+            query strategies. The filled areas represent standard deviation
+            across multiple test sets.}
         \label{fig:rgz-qbc}
     \end{figure}
 
@@ -329,23 +330,8 @@ applications in citizen science.
     We can choose the best labeller and the best instance to query. In citizen
     science, volunteers request labels from us.
 
-    It may also be difficult to estimate the accuracies of individual
-    volunteers, for a number of reasons. These volunteers may be anonymous, and
-    identifying which labels were assigned by the same individual may be
-    impossible. Indeed, Radio Galaxy Zoo reports that 27\% of their labels come
-    from anonymous volunteers. Another factor to consider is that a large number
-    of labels in citizen science come from volunteers who only label a few
-    instances. This means that trialling volunteers on a ``gold standard'' of
-    instances with known groundtruth is impractical: If we tested every
-    volunteer on a few known instances, then for many volunteers, the known
-    instances would be all that they label! \citet{marshall15} highlight this
-    with respect to Galaxy Zoo 2. They note the importance of designing projects
-    for both recurring and new volunteers, citing the significant contributions
-    of both groups. A visualisation of Galaxy Zoo 2 volunteer contributions is
-    reproduced here in Figure \ref{fig:galaxy-zoo-2-volunteer-distribution}.
-
-    Finally, citizen science tends to involve a very large number of labellers:
-    Galaxy Zoo has involved several hundred thousand volunteers
+    Another factor is that citizen science tends to involve a very large number
+    of labellers: Galaxy Zoo has involved several hundred thousand volunteers
     \citep{marshall15}; Radio Galaxy Zoo has over 2000 volunteers involved with
     just the ATLAS--CDFS observations that we have looked at in this thesis. For
     contrast, \citet{raykar10}, on whose methods we based our own crowd
@@ -355,8 +341,32 @@ applications in citizen science.
     involved in practical citizen science raises many challenges. Estimating
     labeller accuracies is very difficult for large numbers of labellers as the
     number of model parameters is often tied to the number of labellers.
-    Additionally, the label matrix $y_{t, i}$ is sparse: Most labellers have not
-    labelled most instances.
+    % Additionally, the label matrix $y_{t, i}$ is sparse: Most labellers have
+    % not labelled most instances. This can make computing bulk properties of
+    % the labels or labellers difficult.
+
+    It may also be difficult to estimate the accuracies of individual
+    volunteers, for a number of reasons. These volunteers may be anonymous, and
+    identifying which labels were assigned by the same individual may be
+    impossible. Indeed, Radio Galaxy Zoo reports that 27\% of their labels come
+    from anonymous volunteers.
+
+    Finally, we note that volunteers in citizen science vary greatly in how many
+    instances they label. A large number of labels come from volunteers who only
+    label a few instances. This means that trialling volunteers on a ``gold
+    standard'' of instances with known groundtruth is impractical: If we tested
+    every volunteer on a few known instances, then for many volunteers, the
+    known instances would be all that they label! Yet we cannot treat all
+    volunteers as if they only label a few instances --- large contributions are
+    also made by small numbers of volunteers labelling many instances.
+    \citet{marshall15} highlight this variety with respect to Galaxy Zoo 2. They
+    emphasise the importance of designing projects for both recurring and new
+    volunteers, citing the significant contributions of both groups. This can be
+    visualised by Figure \ref{fig:galaxy-zoo-2-volunteer-distribution}, which
+    depicts Galaxy Zoo 2 volunteer contributions. We would like to extend their
+    statement: Just as we must design citizen science projects for both
+    recurring and new volunteers, we must design citizen science
+    \emph{algorithms} for both recurring and new volunteers.
 
     \begin{figure}
         \centering

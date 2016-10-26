@@ -410,14 +410,6 @@
 \section{Handling Crowd Labels}
 \label{sec:rgz-crowd-labels}
 
-  \begin{figure}
-    \centering
-    \includegraphics[width=\textwidth]{images/experiments/rgz_raykar}
-    \caption{Comparison of logistic regression and \citeauthor{raykar10} on the
-      galaxy classification task with different numbers of labellers.}
-    \label{fig:rgz-raykar}
-  \end{figure}
-
   \begin{table}
     \centering
     \begin{tabular}{r|c}
@@ -430,9 +422,27 @@
       LR(Top-15-est-accurate-MV) & $87.25 \pm 0.90$\\
     \end{tabular}
     \caption{Comparison of logistic regression and \citeauthor{raykar10} on the
-      galaxy classification task with different numbers of labellers.}
+      galaxy classification task. These tests use only the $15$ best labellers,
+      with ``best'' defined in three different ways: Total number of galaxies
+      labelled (Top-15-prolific), balanced accuracy assessed against the
+      \citeauthor{norris06} labels (Top-15-accurate), and balanced accuracy
+      assessed against the Radio Galaxy Zoo majority vote (Top-15-est-accurate).
+      Logistic regression (LR) is trained on the majority vote of the training
+      labels; the \citeauthor{raykar10} method (Raykar) is trained on the labels
+      themselves. Uncertainties are standard deviations across multiple test
+      sets.}
     \label{tab:rgz-raykar}
   \end{table}
+
+  \begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{images/experiments/rgz_raykar}
+    \caption{Comparison of logistic regression and \citeauthor{raykar10} on the
+      galaxy classification task. Methods are denoted as in Table
+      \ref{tab:rgz-raykar}. Spread along the vertical axis represents results
+      across multiple test sets; the bar represents the mean.}
+    \label{fig:rgz-raykar}
+  \end{figure}
 
   While we want to train a classifier on the crowdsourced labels from the Radio
   Galaxy Zoo, it is unclear how we should aggregate the labels. Some methods for
@@ -483,7 +493,8 @@
         \citeauthor{fan15} labels agree. LR($Y$) indicates logistic regression
         trained on $Y$. RGZ-MV is the set of majority vote labels from the Radio
         Galaxy Zoo. RGZ-Raw-MV is the majority vote of all crowd labels and is
-        included for comparison.}
+        included for comparison. Spread along the vertical axis represents results
+        across multiple test sets; the bar represents the mean.}
       \label{fig:predictors}
     \end{figure}
 
