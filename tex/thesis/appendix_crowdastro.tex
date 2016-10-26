@@ -19,14 +19,14 @@ the submodules available.
 
     The crowdastro package can be imported into Python or used with the
     command-line interface. Documentation for the command-line interface is
-    available on Read the Docs at \url{https://crowdastro.readthedocs.io}.
+    available on Read~the~Docs at \url{https://crowdastro.readthedocs.io}.
 
 \section{Submodules}
     \label{sec:crowdastro-submodules}
 
     In this section, we document the main submodules in crowdastro.
 
-    \subsection{crowdastro.active\_learning}
+    \subsection{active\_learning}
     \label{sec:crowdastro-active-learning}
 
         \texttt{crowdastro.active\_learning} contains classes that simulate
@@ -83,7 +83,33 @@ the submodules available.
             uncertainty sampling as described in Section
             \ref{sec:uncertainty-sampling}.
 
-    \subsection{crowdastro.crowd}
+    \subsection{classifier}
+
+        \texttt{crowdastro.classifier} contains a \texttt{RGZClassifier} object
+        which attempts to locate the host galaxy of a given ATLAS object using
+        the methods developed in this thesis. The nearby galaxy with the highest
+        probability of containing an AGN is selected as the associated host
+        galaxy. The module also contains a \texttt{RGZCommittee} object which
+        could be used to estimate information content of ATLAS objects as
+        suggested in Section \ref{sec:al-rgz-ideal-experiment}.
+
+    \subsection{compile\_cnn}
+
+        \texttt{crowdastro.compile\_cnn} uses Keras to compile a convolutional
+        neural network model and save the output as JSON.
+
+    \subsection{consensuses}
+
+        \texttt{crowdastro.consensuses} finds the consensus label of each galaxy
+        using crowd labels from Radio Galaxy Zoo. This is referred to as the
+        Radio Galaxy Zoo majority vote throughout this thesis. A major part of
+        this module is the conversion of real-valued labels (i.e. the location
+        that the volunteer chose as the location of the host galaxy) into binary
+        labels, which is achieved by fitting the Gaussian mixture model with the
+        lowest value of the Bayesian information criterion. More details on the
+        methods implemented in this module will appear in \citet{atlas-ml}.
+
+    \subsection{crowd}
     \label{sec:crowdastro-crowd}
 
         \texttt{crowdastro.crowd} contains classes for crowd learning. Both
@@ -91,7 +117,7 @@ the submodules available.
         replacements for each other. The module also contains some helper
         functions for crowd labels and related experiments.
 
-        \subsection{raykar}
+        \subsubsection{raykar}
             \label{sec:crowdastro-raykar}
 
             \texttt{crowdastro.crowd.raykar} is an implementation of the crowd
@@ -100,7 +126,7 @@ the submodules available.
             \texttt{RaykarClassifier} object which implements a modified
             scikit-learn interface.
 
-        \subsection{util}
+        \subsubsection{util}
             \label{sec:crowdastro-util}
 
             \texttt{crowdastro.crowd.util} contains useful functions for dealing
@@ -118,7 +144,7 @@ the submodules available.
                     \ref{eq:logistic-regression}).
             \end{itemize}
 
-        \subsection{yan}
+        \subsubsection{yan}
             \label{sec:crowdastro-yan}
 
             \texttt{crowdastro.crowd.yan} is an implementation of the crowd
@@ -126,9 +152,70 @@ the submodules available.
             Section \ref{sec:yan}. The module provides a \texttt{YanClassifier}
             object which implements a modified scikit-learn interface.
 
-    \subsection{crowdastro.experiment}
+    \subsection{experiment}
     \label{sec:crowdastro-experiment}
 
         \texttt{crowdastro.experiment} contains all the experiments run for this
         thesis. The scripts in this module can be executed from the command
-        line, e.g. \texttt{python3 -m crowdastro.experiment.experiment\_name}.
+        line, e.g.
+
+        \begin{center}
+            \texttt{python3 -m crowdastro.experiment.experiment\_name}
+        \end{center}
+
+    \subsection{generate\_annotator\_labels}
+
+        \texttt{crowdastro.generate\_annotator\_labels} generates binary labels
+        for each labeller in Radio Galaxy Zoo by assigning the nearest galaxy to
+        labellers' clicks a label of $1$, and assigning all other seen galaxies
+        a label of $0$. If a galaxy is never seen by a given labeller, then the
+        associated label is masked and not used in future calculations. This is
+        referred to as the raw Radio Galaxy Zoo labels in this thesis.
+
+    \subsection{generate\_cnn\_outputs}
+
+        \texttt{crowdastro.generate\_cnn\_outputs} runs a trained convolutional
+        neural network on radio patches to obtain features as described in
+        Section \ref{sec:radio-features}.
+
+    \subsection{generate\_test\_sets}
+
+        \texttt{crowdastro.generate\_test\_sets} generates training and testing
+        sets for use in experiments. This ensures that training and testing
+        labels are consistent across experiments, and also that no testing data
+        is used to train the convolutional neural network.
+
+    \subsection{generate\_training\_data}
+
+        \texttt{crowdastro.generate\_training\_data} generates vector
+        representations of training instances, as well as generating associated
+        labels and metadata.
+
+    \subsection{import\_data}
+
+        \texttt{crowdastro.import\_data} imports and standardises data used for
+        other modules, including the ATLAS catalogue and images, the WISE
+        catalogue, the SWIRE catalogue, the \citeauthor{norris06} catalogue, and
+        the \citeauthor{fan15} catalogue.
+
+    \subsection{plot}
+
+        \texttt{crowdastro.plot} contains functions for generating the plots in
+        this thesis.
+
+    \subsection{rgz\_data}
+
+        \texttt{crowdastro.rgz\_data} contains low-level functions for handling
+        the Radio Galaxy Zoo database.
+
+    \subsection{train\_classifier}
+
+        \texttt{crowdastro.train\_classifier} trains and stores a logistic
+        regression classifier on the galaxy classification task.
+
+    \subsection{train\_cnn}
+
+        \texttt{crowdastro.train\_cnn} trains a convolutional neural network on
+        the galaxy classification task using a subset of training data. The
+        training set is generated in\\\texttt{crowdastro.generate\_test\_sets}
+        to ensure that it is held out of testing sets.

@@ -7,25 +7,28 @@
     to astronomy. In this thesis we have focused on radio cross-identification,
     a task for which existing algorithms are expected to fail and for which a
     manual approach is intractable. We have presented a new, astronomical
-    model-free, supervised learning approach to this problem. We hope that this
-    approach will help guide the search for innovative ways to handle the data
+    model-free, supervised learning approach to this problem. This approach will
+    hopefully help guide the search for innovative ways to handle the data
     produced by the Evolutionary Map of the Universe.
 
-    In Chapter \ref{cha:cross-identification}, we framed the
+    Chapters \ref{cha:astro} and \ref{cha:ml} introduced concepts from astronomy
+    and machine learning respectively. These were then brought together in
+    Chapter \ref{cha:cross-identification}, where we framed the
     cross-identification problem first as object localisation and then as binary
     classification of galaxies. We represented galaxies with the use of a
     convolutional neural network to extract features from ATLAS radio images,
     and combined these with features from the WISE telescope. We then tested a
     variety of methods of learning for a classifier on these features, including
     logistic regression, random forests, and the \citet{raykar10} crowd learning
-    algorithm. We showed that logistic regression with majority vote
-    outperformed the \citeauthor{raykar10} algorithm, and that a classifier
-    trained on non-expert crowd labels attains comparable accuracy to a
-    classifier trained on expert labels.
+    algorithm. The results showed that logistic regression with majority vote
+    outperformed the
+    \citeauthor{raykar10} algorithm, and that a classifier trained on non-expert
+    crowd labels attains comparable accuracy to a classifier trained on expert
+    labels.
 
-    We then looked at active learning in Chapter \ref{cha:active-learning},
-    applying query-by-committee to the cross-identification task. We suggested
-    an experiment for using active learning on Radio Galaxy Zoo, and highlighted
+    Chapter \ref{cha:active-learning} discussed active learning, applying
+    query-by-committee to the cross-identification task. We suggested an
+    experiment for using active learning on Radio Galaxy Zoo, and highlighted
     some problems with existing active learning literature when applied to
     citizen science.
 
