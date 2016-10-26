@@ -377,8 +377,19 @@ at different ways to handle the problems in Section \ref{sec:crowd-labels}.
             ~
             \begin{subfigure}[t]{0.3\textwidth}
                 \centering
-                \includegraphics[width=\textwidth]
-                    {images/convolutional_filter.png}
+                \begin{minipage}{\textwidth}
+                \vspace{-75pt}
+                \centering
+                $
+                    \begin{bmatrix}
+                        -1 & 1 & 0 \\
+                        -2 & 2 & 0 \\
+                        -1 & 1 & 0
+                    \end{bmatrix}
+                $
+                \end{minipage}
+                % \includegraphics[width=\textwidth]
+                %     {images/convolutional_filter.png}
                 \caption{Convolutional filter.}
                 \label{fig:convolution-face-filter}
             \end{subfigure}%
