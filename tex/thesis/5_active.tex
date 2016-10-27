@@ -15,11 +15,10 @@ In Section \ref{sec:active-learning-on-crowds} we extend the active learning
 discussion to a crowdsourcing context, and discuss how crowdsourcing complicates
 active learning. We propose an experiment for applying active learning to the
 Radio Galaxy Zoo in Section \ref{sec:al-rgz-ideal-experiment}, highlighting some
-difficulties in doing so. Finally, in Section \ref{sec:al-citizen-science}, we
+difficulties in doing so. Finally, in Section \ref{sec:al-citizen-science} we
 look at the differences between the standard crowdsourcing context and citizen
 science, pointing out how they differ and how this breaks assumptions of
-existing methods. We end with describing an ideal experiment for active learning
-applications in citizen science.
+existing methods.
 
 \section{Introduction}
 \label{sec:intro-active-learning}
@@ -90,16 +89,15 @@ applications in citizen science.
         algorithm must choose what ``least certain'' means. There are three
         common measures of uncertainty --- confidence-, entropy-, and
         margin-based --- but in the case of binary classification, they all
-        reduce to one strategy
-        \citep{settles09}:
+        reduce to one strategy~\citep{settles09}:
         \[
-            \tilde x = \underset{\vec x}{\mbox{argmax}}\ \left(1 - \abs{y(\vec x) - 0.5}\right).
+            \tilde x = \underset{\vec x}{\mbox{argmax}}\ \left(0.5 - \abs{y(\vec x) - 0.5}\right).
         \]
         The intuition is that the further a data point is from the decision
         boundary, the more certain the classifier is of the assigned label, so
         choosing the closest data point to the decision boundary is equivalent
         to choosing the most uncertain data point. Another interpretation is
-        that $1 - \abs{y(\vec x) - 0.5}$ is the expected probability of
+        that $0.5 - \abs{y(\vec x) - 0.5}$ is the expected probability of
         mislabelling $\vec x$ \citep{settles09}.
 
         % In the confidence-based approach, $\tilde x$ is the data point that is
@@ -120,8 +118,8 @@ applications in citizen science.
         committee on the label, and the data point with the most disagreement is
         queried.
 
-        Disagreement can be measured in multiple ways. The most obvious is by
-        simply counting the number of classifiers that disagree with the
+        Disagreement can be measured in multiple ways. The most obvious way is
+        to simply count the number of classifiers that disagree with the
         majority label \citep{seung92}. Other methods include computing the
         entropy of the committee vote \citep{mccallum98, dagan95}, and using
         Kullback-Leibler divergence \citep{mccallum98}.
@@ -155,6 +153,8 @@ applications in citizen science.
     training set ($10^4$ labels). The process for testing QBC was identical,
     except that instead of drawing new labels at random, the new labels were
     drawn in order of highest to lowest disagreement of the committee.
+    Disagreement was measured by counting the number of committee labels that
+    disagreed with the majority vote of the labels.
 
     After running the experiment, we observed that QBC outperformed passive
     selection. We hypothesised that this was because querying at random ignores
@@ -182,19 +182,20 @@ applications in citizen science.
 
     \citet{yan11} apply the \citet{yan10} model (Section \ref{sec:yan}) to the
     problem of active learning from crowds. We remind the reader that this model
-    consists of a label model $p(z | \vec x)$ and a data-dependent labeller
-    model $p(y_t | \vec x, z)$, where $\vec x$ is an instance, $y_t$ is the
+    consists of a label model $p(z \mid \vec x)$ and a data-dependent labeller
+    model $p(y_t \mid \vec x, z)$, where $\vec x$ is an instance, $y_t$ is the
     label assigned by labeller $t$, and $z$ is the groundtruth label. To extend
     this model into active learning, \citeauthor{yan11} introduce a query
     strategy where not only an instance is requested, but also a specific
     labeller.
 
-    First, uncertainty sampling is used with the label model to choose an ideal
-    point to query. With logistic regression (Equation \ref{eq:raykar-logreg}),
-    the decision boundary between positive and negative labels is a hyperplane
-    $\vec w^T \vec x = 0$; uncertainty sampling would choose to query the point
-    nearest (or on) this hyperplane. The labeller and instance to query are then
-    chosen as solutions to the following optimisation problem:
+    First, uncertainty sampling is used with the label model to choose a set of
+    ideal points to query. With logistic regression (Equation
+    \ref{eq:raykar-logreg}), the decision boundary between positive and negative
+    labels is a hyperplane $\vec w^T \vec x = 0$; uncertainty sampling would
+    choose to query the points nearest (or on) this hyperplane. The labeller and
+    instance to query are then chosen as solutions to the following optimisation
+    problem:
     \begin{align*}
         \underset{\vec x, t}{\text{minimise}}\ & \eta_t(\vec x)\\
         \text{s.t. } & \vec w^T \vec x = 0.
@@ -244,13 +245,13 @@ applications in citizen science.
 
     Volunteers are presented with an image of radio object to label, so a query
     strategy must choose radio objects to present. Methods like uncertainty
-    sampling have no clear application here: How do we convert from
-    uncertainties in our classifications of neighbouring galaxies into an
-    uncertainty for a radio object? We may be able to perform this aggregation
-    by a number of methods, such as summing, averaging, or maximising the
-    uncertainties. We could even aggregate using something like entropy, looking
-    at the distribution of uncertainties of galaxies in the image. The choice is
-    not obvious and an experiment is required. While we do not perform such an
+    sampling have no clear application here: How do we aggregate uncertainties
+    in our classifications of neighbouring galaxies into an uncertainty for a
+    radio object? We may be able to perform this aggregation by a number of
+    methods, such as summing, averaging, or maximising the uncertainties. We
+    could even aggregate using something like entropy, looking at the
+    distribution of uncertainties of galaxies in the image. The choice is not
+    obvious and an experiment is required. While we do not perform such an
     experiment in this thesis, we will suggest one at the end of this section.
 
     Query-by-committee may generalise to Radio Galaxy Zoo. We could label radio
@@ -296,7 +297,7 @@ applications in citizen science.
 
     Reviewing these suggested experiments, it is clear that active learning for
     Radio Galaxy Zoo is a very hard problem to solve! As such, these experiments
-    were beyond the scope of this work, but we hope that our classification
+    were beyond the scope of this thesis, but we hope that our classification
     methods may be applied in an aggregate way to radio objects in future work.
 
 \section{Active Learning for Citizen Science}
@@ -338,9 +339,10 @@ applications in citizen science.
     experiments, used 5 labellers for most of their experiments (with one
     experiment with 164 labellers); \citet{mozafari12} and \citet{yan11} both
     tested their methods with 3--5 labellers. The large number of labellers
-    involved in practical citizen science raises many challenges. Estimating
-    labeller accuracies is very difficult for large numbers of labellers as the
-    number of model parameters is often tied to the number of labellers.
+    involved in practical citizen science raises many challenges. In particular,
+    estimating labeller accuracies is very difficult for large numbers of
+    labellers as the number of model parameters is often tied to the number of
+    labellers.
     % Additionally, the label matrix $y_{t, i}$ is sparse: Most labellers have
     % not labelled most instances. This can make computing bulk properties of
     % the labels or labellers difficult.

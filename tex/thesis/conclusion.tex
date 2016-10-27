@@ -18,8 +18,8 @@
     classification of galaxies. We represented galaxies with the use of a
     convolutional neural network to extract features from ATLAS radio images,
     and combined these with features from the WISE telescope. We then tested a
-    variety of methods of learning for a classifier on these features, including
-    logistic regression, random forests, and the \citet{raykar10} crowd learning
+    variety of classification methods with these features, including logistic
+    regression, random forests, and the \citet{raykar10} crowd learning
     algorithm. The results showed that logistic regression with majority vote
     outperformed the
     \citeauthor{raykar10} algorithm, and that a classifier trained on non-expert
@@ -27,17 +27,14 @@
     labels.
 
     Chapter \ref{cha:active-learning} discussed active learning, applying
-    query-by-committee to the cross-identification task. We suggested an
-    experiment for using active learning on Radio Galaxy Zoo, and highlighted
-    some problems with existing active learning literature when applied to
-    citizen science.
+    query-by-committee to the cross-identification task in a simple experiment. We then discussed applications of active learning to citizen science.
 
     Our work here is just the start of applying machine learning to radio
     cross-\\identification. In Section
     \ref{sec:cross-identification-conclusion-future-work} we have suggested a
     number of avenues for future work. Performance could be improved by
     incorporating hand-selected features, using information from more
-    wavelengths, and developing a better feature extraction method. Our method
+    wavelengths, and developing better feature extraction methods. Our method
     could be extended to account for infrared-faint radio objects. Machine
     learning could be applied to learn to associate related radio objects with
     each other, and then with their host galaxy. Radio Galaxy Zoo volunteers
