@@ -154,7 +154,7 @@
   galaxies were labelled $1$. All other candidate hosts were labelled $0$.
 
   We generated test sets by first finding all candidate hosts for which the
-  \citeauthor{norris06} label and the \citeauthor{fan15} label agree. To
+  \citeauthor{norris06} labels and the \citeauthor{fan15} labels agree. To
   generate a test set, we followed the following method:
   \begin{enumerate}
     \item Find all ATLAS objects where \citeauthor{norris06} and
@@ -199,7 +199,7 @@
 
     As described in Section \ref{sec:cross-identification-formalism}, we need
     candidate host galaxies from an infrared catalogue. We have two choices here
-    --- the WISE catalogue (Section \ref{sec:wise}) and the SWIRE catalogue
+    --- the AllWISE catalogue (Section \ref{sec:wise}) and the SWIRE catalogue
     (Section \ref{sec:swire}). WISE is lower resolution and less sensitive, but
     is the survey that will be used to cross-identify EMU (Section
     \ref{sec:emu}) sources when they are available. SWIRE has higher
@@ -233,9 +233,9 @@
     unchanged by an AGN, we ignored the images themselves and focused on
     features obtained from the catalogue. This greatly simplified feature
     selection with minimal expected impact on the classification performance.
-    Future work may investigate the effectiveness of features extracted from
-    infrared images on classification performance, but this is beyond the scope
-    of this thesis.
+    Future work may investigate the effect of features extracted from infrared
+    images on classification performance, but this is beyond the scope of this
+    thesis.
 
     SWIRE also contains colour information, but unlike WISE, the information is
     in the form of fluxes instead of magnitudes. This means that the flux
@@ -248,7 +248,7 @@
 
     Both WISE and SWIRE catalogues contain the positions of each object. For the
     final infrared feature, we use the distance from an infrared object to the
-    centre of the closest radio object.
+    centre of the closest radio object in ATLAS.
 
   \subsection{Radio Features}
   \label{sec:radio-features}
@@ -290,12 +290,13 @@
       network, we added a 64-dimensional dense layer mapping to a 1-dimensional
       output. 10\% of ATLAS objects were selected at random and reserved for
       training the CNN, to ensure later testing data would not overlap the
-      training set. The entire network was then trained to match the consensus
-      Radio Galaxy Zoo labels of the galaxies nearest the reserved training set.
+      training set. The entire network was then trained for 10~000 epochs to
+      match the consensus Radio Galaxy Zoo labels of the galaxies nearest the
+      reserved training set.
 
       A better approach would be to use a convolutional autoencoder, which would
-      allow training on all the radio data, and data with no labels at all, but
-      this was computationally infeasible for this project.
+      allow training on all the radio data and on data with no labels at all,
+      but this was computationally infeasible for this project.
 
       An example of the neural network applied to a radio image is shown in
       Figure \ref{fig:rgz-cnn}.
@@ -391,7 +392,9 @@
     \includegraphics[width=\textwidth]{images/experiments/lr_rf}
     \caption{Comparison of logistic regression and random forests on the galaxy
       classification task, trained on the \citet{norris06} and \citet{fan15}
-      label sets, and tested against the \citet{norris06} label set.}
+      label sets, and tested against the \citet{norris06} label set. Spread
+      along the vertical axis represents results over multiple test sets; the
+      bar represents the mean.}
   \end{figure}
 
   To compare the performance of logistic regression with random forests on the
@@ -403,14 +406,17 @@
   accuracy for each classifier. This was repeated for random forests, with each
   tree using $\sqrt{D}$ features.
 
-  To generate the test sets, we first selected at random half of all ATLAS
-  objects. We then added all WISE objects within $1'$ of a selected ATLAS object
-  to the test set. This was repeated for each test set. The motivation for first
-  selecting ATLAS objects rather than drawing WISE objects directly is that WISE
-  objects have overlapping features, since radio features are taken from a patch
-  of sky centred on each object, and WISE objects tend to be close together.
-  Objects from the test sets were then removed at random until all test sets
-  were the same size.
+  % To generate the test sets, we first selected at random half of all ATLAS
+  % objects. We then added all WISE objects within $1'$ of a selected ATLAS
+  % object to the test set. This was repeated for each test set. The motivation
+  % for first selecting ATLAS objects rather than drawing WISE objects directly
+  % is that WISE objects have overlapping features, since radio features are
+  % taken from a patch of sky centred on each object, and WISE objects tend to
+  % be close together. Objects from the test sets were then removed at random
+  % until all test sets were the same size.
+
+  We found that logistic regression greatly outperformed random forests. We
+  therefore decided to use logistic regression for later experiments.
 
 \section{Handling Crowd Labels}
 \label{sec:rgz-crowd-labels}
@@ -459,9 +465,9 @@
   One key problem with the use of the \citeauthor{raykar10} algorithm is that it
   is very slow with large numbers of labellers. To mitigate this problem, we
   tested the algorithm on a subset of labellers, chosen by three different
-  measures: the 10 labellers with the most labels, the 10 labellers with the
+  measures: the 15 labellers with the most labels, the 15 labellers with the
   highest balanced accuracy assessed against the \citeauthor{norris06} labels,
-  and the 10 labellers with the highest balanced accuracy assessed against the
+  and the 15 labellers with the highest balanced accuracy assessed against the
   majority vote of all labellers. While in practice on datasets such as EMU or
   FIRST there would be no equivalent to the \citeauthor{norris06} labels, we can
   treat this test as a ``best-case'' method. For each subset of labellers, the
@@ -477,7 +483,7 @@
   We also tried using all of the crowd labels directly with logistic regression,
   without aggregation. In principle, training logistic regression on such a
   label set may average over the conflicting labels and give reasonable results.
-  This was not the case in practice; we found that this method resulted in a
+  This was not the case in practice: We found that this method resulted in a
   balanced accuracy of $50\%$ (i.e. random chance) as the classifier learned to
   always output 0.
 
@@ -496,10 +502,11 @@
         algorithm on the galaxy classification task, trained on different sets of
         labels and tested on the galaxies where \citeauthor{norris06} and
         \citeauthor{fan15} labels agree. LR($Y$) indicates logistic regression
-        trained on $Y$. RGZ-MV is the set of majority vote labels from the Radio
-        Galaxy Zoo. RGZ-Raw-MV is the majority vote of all crowd labels and is
-        included for comparison. Spread along the vertical axis represents
-        results across multiple test sets; the bar represents the mean.}
+        trained on $Y$. RGZ-MV is the training set of majority vote labels from
+        the Radio Galaxy Zoo. RGZ-Raw-MV is the majority vote of all crowd
+        labels and is included for comparison. Spread along the vertical axis
+        represents results across multiple test sets; the bar represents the
+        mean.}
       \label{fig:predictors}
     \end{figure}
 
@@ -570,7 +577,7 @@
           $z = 0$ & $92.47$ & $7.53$ \\
           $z = 1$ & $20.67$ & $79.33$ \\
       \end{tabular}
-      \caption{Confusion matrix for the Radio Galaxy Majority vote.}
+      \caption{Confusion matrix for the Radio Galaxy majority vote.}
       \label{tab:cm-rgz-raw-mv}
     \end{table}
 
@@ -648,18 +655,15 @@
     \citep{scipy}.
 
     According to the Pearson correlation coefficient, the true and predicted
-    values of $\alpha$ were weakly correlated, with $r = 0.11$ and $p = 0.01$;
-    the true and predicted values of $\beta$ were not, with $r = -0.01$ and $p =
-    0.75$. According to the Spearman correlation coefficient, the true and
-    predicted values of $\alpha$ were weakly correlated, with $r = 0.32$ and $p
-    = 0.00$; the true and predicted values of $\beta$ were also correlated, with
-    $r = 0.21$ and $p = 0.00$.
+    values of $\alpha$ were weakly correlated, with $r = 0.11$; the true and
+    predicted values of $\beta$ were not, with $r = -0.01$. According to the
+    Spearman correlation coefficient, the true and predicted values of $\alpha$
+    were weakly correlated, with $r = 0.32$; the true and predicted values of
+    $\beta$ were also correlated, with $r = 0.21$.
 
-    We make two notes on these results. First, the Pearson correlation
-    coefficient assumes that the values being tested are normally distributed,
-    which the $\alpha$ and $\beta$ values are not. Second, \texttt{scipy.stats}
-    comments that the output $p$ values are ``not entirely reliable'' though the
-    reliability increases with larger datasets.
+    We note that the Pearson correlation coefficient assumes that the values
+    being tested are normally distributed, which the $\alpha$ and $\beta$ values
+    are not.
 
     These results may imply that the labeller model does not accurately describe
     the Radio Galaxy Zoo volunteers. It is possible that a data-dependent model
@@ -730,7 +734,7 @@
   We note that the \citeauthor{raykar10} model performed relatively poorly on
   the galaxy classification task. In Section \ref{sec:raykar-estimates-rgz} we
   suggested some reasons that this might be the case. Further investigation of
-  these results is needed, in particular, whether using a different labeller
+  these results is needed, in particular whether using a different labeller
   model would improve results. One such model would be the \citeauthor{yan10}
   model, but as we noted in Section \ref{sec:yan} this is very slow and seems to
   yield mediocre results for large numbers of annotators. Careful analysis of
