@@ -1,0 +1,3 @@
+[submodule "tex/projects"]
+	path = tex/projects
+	url = git@github.com:chengsoonong/crowdastro-projects.git
