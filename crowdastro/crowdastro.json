@@ -4,7 +4,7 @@
         "atlas_cdfs_image": "data/CDFSmosaic_allch_8March2015.fits",
         "atlas_elais_image": "data/ELAISmosaic_allch_8March2015.fits",
         "cdfs_fits": "data/cdfs",
-        "norris_coords": "data/norris_2006_atlas_classifications_ra_dec_only.dat",
+        "norris_coords": "data/norris_2006_classifications.csv",
         "fan_swire": "data/fan_2015_swire_only.csv",
         "radio_galaxy_zoo_db": "radio",
         "rgz_to_atlas": "data/RGZ-ATLAS-Bookkeeping.csv",

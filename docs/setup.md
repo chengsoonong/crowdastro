@@ -31,7 +31,7 @@ You need the following data files:
 - radio_galaxy_zoo_2016-08-28.tar.gz
 - RGZ-ATLAS-Bookkeeping.csv
 - [SWIRE3_CDFS_cat_IRAC24_21Dec05.tbl.gz](http://swire.ipac.caltech.edu/swire/astronomers/data/SWIRE3_CDFS_cat_IRAC24_21Dec05.tbl.gz) or an AllWISE catalogue covering the CDFS field
-- norris_2006_atlas_classifications_ra_dec_only.dat (pipe-separated RA/DEC from Norris et al. (2006) Table 6)
+- [norris_2006_atlas_classifications.dat](http://vizier.u-strasbg.fr/viz-bin/VizieR-3?-source=J/AJ/132/2409/table6) (Table 6 from Norris et al. (2006))
 - wise_allwise.wise_allwise_p3as_psd4511.tbl
 - fan_2015_swire_only.csv
 - CDFSmosaic_allch_8March2015.fits

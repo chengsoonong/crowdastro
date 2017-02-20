@@ -459,22 +459,40 @@ def import_norris(f_h5):
     f_h5: crowdastro HDF5 file with WISE or SWIRE already imported.
     """
     ir_survey = f_h5.attrs['ir_survey']
-    ir_names = f_h5['/{}/cdfs/string'.format(ir_survey)]
     ir_positions = f_h5['/{}/cdfs/numeric'.format(ir_survey)][:, :2]
     ir_tree = sklearn.neighbors.KDTree(ir_positions)
-    with open(config['data_sources']['norris_coords'], 'r') as norris_dat:
-        norris_coords = [r.strip().split('|') for r in norris_dat]
+    norris_dat = astropy.io.ascii.read(config['data_sources']['norris_coords'])
+    norris_swire = norris_dat['SWIRE']
+    norris_coords = []
+    for s in norris_swire:
+        if len(s) < 19:
+            continue
+
+        # e.g. J032931.44-281722.0
+        ra_hr = s[1:3]
+        ra_min = s[3:5]
+        ra_sec = s[5:10]
+        dec_sgn = s[10]
+        dec_deg = s[11:13]
+        dec_min = s[13:15]
+        dec_sec = s[15:19]
+
+        coord = SkyCoord(ra='{} {} {}'.format(ra_hr, ra_min, ra_sec),
+                         dec='{}{} {} {}'.format(dec_sgn, dec_deg, dec_min,
+                                                 dec_sec),
+                         unit=('hourangle, deg'))
+        norris_coords.append(coord)
+
     norris_labels = numpy.zeros((ir_positions.shape[0],))
-    for ra, dec in norris_coords:
+    for skycoord in norris_coords:
         # Find a neighbour.
-        skycoord = SkyCoord(ra=ra, dec=dec, unit=('hourangle', 'deg'))
         ra = skycoord.ra.degree
         dec = skycoord.dec.degree
         ((dist,),), ((ir,),) = ir_tree.query([(ra, dec)])
         if dist < config['surveys'][ir_survey]['distance_cutoff']:
             norris_labels[ir] = 1
     f_h5.create_dataset('/{}/cdfs/norris_labels'.format(ir_survey),
-                         data=norris_labels)
+                        data=norris_labels)
 
 
 def import_fan(f_h5):
