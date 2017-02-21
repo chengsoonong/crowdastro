@@ -477,9 +477,10 @@ def import_norris(f_h5):
         dec_min = s[13:15]
         dec_sec = s[15:19]
 
-        coord = SkyCoord(ra='{} {} {}'.format(ra_hr, ra_min, ra_sec),
-                         dec='{}{} {} {}'.format(dec_sgn, dec_deg, dec_min,
-                                                 dec_sec),
+        ra = '{} {} {}'.format(ra_hr, ra_min, ra_sec)
+        dec = '{}{} {} {}'.format(dec_sgn, dec_deg, dec_min, dec_sec)
+        logging.debug('Reading Norris coordinate: {}; {}'.format(ra, dec))
+        coord = SkyCoord(ra=ra, dec=dec,
                          unit=('hourangle, deg'))
         norris_coords.append(coord)
 
