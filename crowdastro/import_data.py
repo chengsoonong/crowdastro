@@ -465,6 +465,7 @@ def import_norris(f_h5):
     norris_swire = norris_dat['SWIRE']
     norris_coords = []
     for s in norris_swire:
+        s = s.strip()
         if len(s) < 19:
             continue
 
