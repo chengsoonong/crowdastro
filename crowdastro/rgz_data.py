@@ -25,9 +25,9 @@ client = pymongo.MongoClient(config['mongo']['host'], config['mongo']['port'])
 db = client[config['data_sources']['radio_galaxy_zoo_db']]
 
 # Index zooniverse_id and metadata.source for speedy queries.
-db.radio_subjects.create_index({'zooniverse_id': 1})
-db.radio_subjects.create_index({'metadata.source': 1})
-db.radio_classifications.create_index({'subject_ids': 1})
+db.radio_subjects.create_index([('zooniverse_id', pymongo.ASCENDING)])
+db.radio_subjects.create_index([('metadata.source', pymongo.ASCENDING)])
+db.radio_classifications.create_index([('subject_ids', pymongo.ASCENDING)])
 
 
 def require_atlas(f):

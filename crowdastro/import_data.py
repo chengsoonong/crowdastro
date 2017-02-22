@@ -62,10 +62,12 @@ def checksum_file(filename, h):
 
 def prep_h5(f_h5, ir_survey):
     """Creates hierarchy in HDF5 file."""
+    f_h5.create_group('/first/first')
     f_h5.create_group('/atlas/cdfs')
     f_h5.create_group('/atlas/elais')
     f_h5.create_group('/{}/cdfs'.format(ir_survey))
     f_h5.create_group('/{}/elais'.format(ir_survey))
+    f_h5.create_group('/{}/first'.format(ir_survey))
     f_h5.attrs['version'] = VERSION
     f_h5.attrs['ir_survey'] = ir_survey
 
@@ -193,7 +195,7 @@ def import_first(f_h5, test=False):
     from . import rgz_data as data
 
     # Fetch groups from HDF5.
-    first = f_h5['/first/all']
+    first = f_h5['/first/first']
 
     # We first need:
     # - coords,
@@ -207,32 +209,37 @@ def import_first(f_h5, test=False):
     names = []
     zooniverse_ids = []
 
-    first_images = [row['col1'] for row in astropy.io.ascii.read(
+    # col2 = radio filenames.
+    first_images = [row['col2'] for row in astropy.io.ascii.read(
         config['data_sources']['first_images_digest'])]
 
     if test:
         first_images = first_images[:10]
 
-    ra_regex = re.compile(r'OBJCTRA =\s+\'(\d{2} \d{2} \d{2}\.\d{3})\'')
-    dec_regex = re.compile(r'OBJCTDEC =\s+\'([+\-]\d{2} \d{2} \d{2}\.\d{2})\'')
-    for im_path in first_images:
+    ra_regex = re.compile(
+        r'OBJCTRA\s*=\s*\'(\d{2} \d{2} \d{2}\.\d{3})\'')
+    dec_regex = re.compile(
+        r'OBJCTDEC\s*=\s*\'([+\-]\d{2} \d{2} \d{2}\.\d{2})\'')
+    for first_filename in first_images:
+        im_path = os.path.join(config['data_sources']['first_images'],
+                               first_filename)
         with astropy.io.fits.open(im_path, ignore_blank=True) as im:
             # Pull out the RA/dec.
-            history = im[0].header['HISTORY']
+            history = str(im[0].header['HISTORY'])
             try:
                 ra = ra_regex.search(history).group(1)
             except AttributeError:
                 raise ValueError('Invalid or missing OBJCTRA in {}'.format(
-                    im_path))
+                    first_filename))
             try:
                 dec = dec_regex.search(history).group(1)
             except AttributeError:
                 raise ValueError('Invalid or missing OBJCTRA in {}'.format(
-                    im_path))
+                    first_filename))
 
             # Fetch the object name.
             # FIRSTJ105651.9+632529.fits -> FIRSTJ105651.9+632529
-            name = im_path.split('.')[0]
+            name = first_filename[:-5]
             # Why use the filename? The FITS file also has a name stored, but it
             # is less precise and does not include the decimal place on the RA.
             # We also need to ensure that the name matches up with the RGZ
@@ -244,6 +251,7 @@ def import_first(f_h5, test=False):
             dec = coord.dec.degree
 
             # Get the Zooniverse ID.
+            logging.debug('Fetching FIRST subject {}'.format(name))
             zooniverse_id = data.get_subject_by_source(name)['zooniverse_id']
 
             # Store information in lists.
@@ -968,6 +976,7 @@ def _main(args):
     check_raw_data()
     with h5py.File(args.h5, 'w') as f_h5:
         prep_h5(f_h5, args.ir)
+        import_first(f_h5, test=args.test)
         import_atlas(f_h5, test=args.test, field='cdfs')
         import_atlas(f_h5, test=args.test, field='elais')
         if args.ir == 'swire':
