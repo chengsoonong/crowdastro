@@ -24,6 +24,11 @@ from .config import config
 client = pymongo.MongoClient(config['mongo']['host'], config['mongo']['port'])
 db = client[config['data_sources']['radio_galaxy_zoo_db']]
 
+# Index zooniverse_id and metadata.source for speedy queries.
+db.radio_subjects.create_index({'zooniverse_id': 1})
+db.radio_subjects.create_index({'metadata.source': 1})
+db.radio_classifications.create_index({'subject_ids': 1})
+
 
 def require_atlas(f):
     """Decorator that ensures a subject (the first argument) is from the ATLAS
@@ -51,6 +56,15 @@ def get_subject(zid):
     -> RGZ subject dict.
     """
     return db.radio_subjects.find_one({'zooniverse_id': zid})
+
+
+def get_subject_by_source(source):
+    """Gets a Radio Galaxy Zoo subject from the database by its source.
+
+    source: Name of object that generated the subject.
+    -> RGZ subject dict.
+    """
+    return db.radio_subjects.find_one({'metadata.source': source})
 
 
 def get_subject_raw_id(subject_id):

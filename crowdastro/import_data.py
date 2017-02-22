@@ -9,6 +9,7 @@ import csv
 import hashlib
 import logging
 import os
+import re
 
 from astropy.coordinates import SkyCoord
 import astropy.io.fits
@@ -181,6 +182,106 @@ def import_atlas(f_h5, test=False, field='cdfs'):
             numeric[index, 2:2 + image_size] = radio.reshape(-1)
 
     logging.debug('ATLAS imported.')
+
+
+def import_first(f_h5, test=False):
+    """Imports the FIRST dataset into crowdastro.
+
+    f_h5: An HDF5 file.
+    test: Flag to run on only 10 subjects. Default False.
+    """
+    from . import rgz_data as data
+
+    # Fetch groups from HDF5.
+    first = f_h5['/first/all']
+
+    # We first need:
+    # - coords,
+    # - names, and
+    # - Zooniverse IDs.
+    # The FIRST-RGZ dataset consists of a number of FITS files, each
+    # representing a radio subject. Coords and names can be extracted from these
+    # and matched to a Zooniverse ID from the MongoDB database.
+
+    coords = []
+    names = []
+    zooniverse_ids = []
+
+    first_images = [row['col1'] for row in astropy.io.ascii.read(
+        config['data_sources']['first_images_digest'])]
+
+    if test:
+        first_images = first_images[:10]
+
+    ra_regex = re.compile(r'OBJCTRA =\s+\'(\d{2} \d{2} \d{2}\.\d{3})\'')
+    dec_regex = re.compile(r'OBJCTDEC =\s+\'([+\-]\d{2} \d{2} \d{2}\.\d{2})\'')
+    for im_path in first_images:
+        with astropy.io.fits.open(im_path, ignore_blank=True) as im:
+            # Pull out the RA/dec.
+            history = im[0].header['HISTORY']
+            try:
+                ra = ra_regex.search(history).group(1)
+            except AttributeError:
+                raise ValueError('Invalid or missing OBJCTRA in {}'.format(
+                    im_path))
+            try:
+                dec = dec_regex.search(history).group(1)
+            except AttributeError:
+                raise ValueError('Invalid or missing OBJCTRA in {}'.format(
+                    im_path))
+
+            # Fetch the object name.
+            # FIRSTJ105651.9+632529.fits -> FIRSTJ105651.9+632529
+            name = im_path.split('.')[0]
+            # Why use the filename? The FITS file also has a name stored, but it
+            # is less precise and does not include the decimal place on the RA.
+            # We also need to ensure that the name matches up with the RGZ
+            # database, and we know that the filenames match.
+
+            # Convert the RA/dec into degrees.
+            coord = SkyCoord(ra=ra, dec=dec, unit=('hourangle', 'deg'))
+            ra = coord.ra.degree
+            dec = coord.dec.degree
+
+            # Get the Zooniverse ID.
+            zooniverse_id = data.get_subject_by_source(name)['zooniverse_id']
+
+            # Store information in lists.
+            coords.append((ra, dec))
+            names.append(name)
+            zooniverse_ids.append(zooniverse_id)
+
+    n_first = len(names)
+
+    # Sort the data by Zooniverse ID.
+    coords_to_zooniverse_ids = dict(zip(coords, zooniverse_ids))
+    names_to_zooniverse_ids = dict(zip(names, zooniverse_ids))
+
+    coords.sort(key=coords_to_zooniverse_ids.get)
+    names.sort(key=names_to_zooniverse_ids.get)
+    zooniverse_ids.sort()
+
+    # Begin to store the data. We will have two tables: one for numeric data,
+    # and one for strings. We will have to preallocate the numeric table so that
+    # we aren't storing huge amounts of image data in memory.
+
+    # Strings.
+    dtype = [('zooniverse_id', '<S{}'.format(MAX_ZOONIVERSE_ID_LENGTH)),
+             ('name', '<S{}'.format(MAX_NAME_LENGTH))]
+    string_data = numpy.array(list(zip(zooniverse_ids, names)), dtype=dtype)
+    first.create_dataset('string', data=string_data, dtype=dtype)
+
+    # Numeric.
+    # RA, DEC, (distance to WISE object added later)
+    dim = (n_first, 2)
+    numeric = first.create_dataset('_numeric', shape=dim, dtype='float32')
+
+    # With ATLAS, we would now load image patches etc. However, this leads to a
+    # *massive* file for FIRST, so we will not do that and instead just fetch
+    # the images from the filesystem when necessary. Note that RGZ stores the
+    # FIRST images on a one subject = one file basis.
+
+    logging.debug('FIRST imported.')
 
 
 def remove_nulls(n):
