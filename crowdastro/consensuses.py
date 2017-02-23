@@ -97,7 +97,8 @@ def lowest_bic_gmm(points, min_k=1, max_k=5):
     min_bic = float('inf')
     min_gmm = None
     for k in range(min_k, max_k):
-        gmm = sklearn.mixture.GMM(n_components=k, covariance_type='full')
+        gmm = sklearn.mixture.GaussianMixture(
+            n_components=k, covariance_type='full')
         try:
             gmm.fit(points)
         except ValueError:
