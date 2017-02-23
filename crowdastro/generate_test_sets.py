@@ -86,20 +86,22 @@ def main(c_h5, t_h5, n, p, p_cnn=0.1, add=False):
         candidates_ = list(set(candidates) - cnn_train_set_atlas)
         numpy.random.shuffle(candidates_)
         atlas_test_set = []
-        while len(atlas_test_set) < int(n_atlas * p):
-            for atlas_id in candidates_:
-                assert atlas_id not in cnn_train_set_atlas
-                nearby = get_nearby_galaxies(
-                    c_h5['/atlas/cdfs/numeric'][atlas_id])
-                for j in nearby:
-                    # Check for overlaps.
-                    if j in cnn_train_set_:
-                        break
-                else:
-                    # No overlaps!
-                    atlas_test_set.append(atlas_id)
+        for atlas_id in candidates_:
+            if len(atlas_test_set) >= int(n_atlas * p):
+                break
 
-        # Get all nearby galaxies and add all nearby galaxies to the test set.
+            assert atlas_id not in cnn_train_set_atlas
+            nearby = get_nearby_galaxies(
+                c_h5['/atlas/cdfs/numeric'][atlas_id])
+            for j in nearby:
+                # Check for overlaps.
+                if j in cnn_train_set_:
+                    break
+            else:
+                # No overlaps!
+                atlas_test_set.append(atlas_id)
+        
+	# Get all nearby galaxies and add all nearby galaxies to the test set.
         test_set = []
         for atlas_id in atlas_test_set:
             assert atlas_id not in cnn_train_set_atlas
@@ -109,7 +111,10 @@ def main(c_h5, t_h5, n, p, p_cnn=0.1, add=False):
                 assert j not in cnn_train_set_
             test_set.extend(nearby)
 
-        test_sets.append(list(set(test_set)))
+        test_set = sorted(set(test_set))
+        if test_sets:
+            assert test_sets[-1] != test_set[:len(test_sets[-1])]
+        test_sets.append(test_set)
 
     # Because the test sets are galaxy-based but the drawing was radio-based,
     # we may have unequal length lists, so we'll crop them.
