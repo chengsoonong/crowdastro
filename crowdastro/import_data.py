@@ -448,12 +448,20 @@ def import_swire(f_h5, field='cdfs'):
             numeric[index, -image_size:] = radio.reshape(-1)
 
 
-def import_wise(f_h5, field='cdfs'):
+def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
     """Imports the WISE dataset into crowdastro.
 
     f_h5: An HDF5 file.
-    field: 'cdfs' or 'elais'.
+    radio_survey: 'atlas' or 'first'.
+    field: 'cdfs' or 'elais' (only if radio_survey == 'atlas').
     """
+    if radio_survey == 'atlas':
+        radio_prefix = '/atlas/' + field + '/'
+        ir_prefix = '/wise/' + field + '/'
+    elif radio_survey == 'first':
+        radio_prefix = '/first/first/'
+        ir_prefix = '/wise/first/'
+
     names = []
     rows = []
     logging.debug('Reading WISE catalogue.')
@@ -497,14 +505,14 @@ def import_wise(f_h5, field='cdfs'):
     rows = numpy.array(rows)
 
     # Filter on distance - only include image data for WISE objects within a
-    # given radius of an ATLAS object. Otherwise, there's way too much data to
+    # given radius of a radio object. Otherwise, there's way too much data to
     # store.
     wise_positions = rows[:, :2]
-    atlas_positions = f_h5['/atlas/{}/_numeric'.format(field)][:, :2]
+    radio_positions = f_h5[radio_prefix + '_numeric'][:, :2]
     logging.debug('Computing WISE k-d tree.')
     wise_tree = sklearn.neighbors.KDTree(wise_positions, metric='euclidean')
     indices = numpy.concatenate(
-            wise_tree.query_radius(atlas_positions, CANDIDATE_RADIUS))
+            wise_tree.query_radius(radio_positions, CANDIDATE_RADIUS))
     indices = numpy.unique(indices)
 
     logging.debug('Found %d WISE objects near ATLAS objects.', len(indices))
@@ -514,52 +522,59 @@ def import_wise(f_h5, field='cdfs'):
     wise_positions = wise_positions[indices]
 
     # Get distances.
-    logging.debug('Finding ATLAS-WISE object distances.')
-    distances = scipy.spatial.distance.cdist(atlas_positions, wise_positions,
+    logging.debug('Finding radio object-WISE object distances.')
+    # TODO(MatthewJA): This distance finding will become extremely big for large
+    # numbers of points. This will thus almost certainly need optimising for
+    # FIRST.
+    distances = scipy.spatial.distance.cdist(radio_positions, wise_positions,
                                              'euclidean')
-    assert distances.shape[0] == atlas_positions.shape[0]
+    assert distances.shape[0] == radio_positions.shape[0]
     assert distances.shape[1] == wise_positions.shape[0]
     logging.debug('Done finding distances.')
 
     # Write numeric data to HDF5.
     rows[:, 6] = distances.min(axis=0)
-    atlas_numeric = f_h5['/atlas/{}/_numeric'.format(field)]
-    f_h5['/atlas/{}'.format(field)].create_dataset(
+    radio_numeric = f_h5[radio_prefix + '_numeric']
+    f_h5[radio_prefix].create_dataset(
         'numeric', dtype='float32',
-        shape=(atlas_numeric.shape[0],
-               atlas_numeric.shape[1] + len(indices)))
-    numeric_f = f_h5['/atlas/{}/numeric'.format(field)]
-    numeric_f[:, :atlas_numeric.shape[1]] = atlas_numeric
-    numeric_f[:, atlas_numeric.shape[1]:] = distances
+        shape=(radio_numeric.shape[0],
+               radio_numeric.shape[1] + len(indices)))
+    numeric_f = f_h5[radio_prefix + 'numeric']
+    numeric_f[:, :radio_numeric.shape[1]] = radio_numeric
+    numeric_f[:, radio_numeric.shape[1]:] = distances
 
-    del f_h5['/atlas/{}/_numeric'.format(field)]
+    del f_h5[radio_prefix + '_numeric']
 
     image_size = (PATCH_RADIUS * 2) ** 2
     dim = (rows.shape[0], rows.shape[1] + image_size)
-    numeric = f_h5['/wise/{}'.format(field)].create_dataset(
+    numeric = f_h5[ir_prefix].create_dataset(
         'numeric', shape=dim, dtype='float32')
     numeric[:, :rows.shape[1]] = rows
-    f_h5['/wise/{}'.format(field)].create_dataset('string', data=names)
+    f_h5[ir_prefix].create_dataset('string', data=names)
 
     # Load and store radio images.
-    logging.debug('Importing radio patches.')
-    with astropy.io.fits.open(
-            config['data_sources']['atlas_{}_image'.format(field)],
-            ignore_blank=True) as atlas_image:
-        wcs = astropy.wcs.WCS(atlas_image[0].header).dropaxis(3).dropaxis(2)
-        pix_coords = wcs.all_world2pix(wise_positions, FITS_CONVENTION)
-        assert pix_coords.shape[1] == 2
-        assert pix_coords.shape[0] == len(indices)
-        logging.debug('Fetching %d ATLAS patches.', len(indices))
+    if radio_survey == 'atlas':
+        logging.debug('Importing ATLAS radio patches.')
+        with astropy.io.fits.open(
+                config['data_sources']['atlas_{}_image'.format(field)],
+                ignore_blank=True) as atlas_image:
+            wcs = astropy.wcs.WCS(atlas_image[0].header).dropaxis(3).dropaxis(2)
+            pix_coords = wcs.all_world2pix(wise_positions, FITS_CONVENTION)
+            assert pix_coords.shape[1] == 2
+            assert pix_coords.shape[0] == len(indices)
+            logging.debug('Fetching %d ATLAS patches.', len(indices))
 
-        for index, (x, y) in enumerate(pix_coords):
-            radio = atlas_image[0].data[
-                0, 0,  # stokes, freq
-                int(y) - PATCH_RADIUS:
-                int(y) + PATCH_RADIUS,
-                int(x) - PATCH_RADIUS:
-                int(x) + PATCH_RADIUS]
-            numeric[index, -image_size:] = radio.reshape(-1)
+            for index, (x, y) in enumerate(pix_coords):
+                radio = atlas_image[0].data[
+                    0, 0,  # stokes, freq
+                    int(y) - PATCH_RADIUS:
+                    int(y) + PATCH_RADIUS,
+                    int(x) - PATCH_RADIUS:
+                    int(x) + PATCH_RADIUS]
+                numeric[index, -image_size:] = radio.reshape(-1)
+    elif radio_survey == 'first':
+        # Since there isn't just one big image for FIRST, unlike ATLAS, we need
+        # to load each individual file.
 
 
 def import_norris(f_h5):
