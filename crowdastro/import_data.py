@@ -283,6 +283,7 @@ def import_first(f_h5, test=False):
     # RA, DEC, (distance to WISE object added later)
     dim = (n_first, 2)
     numeric = first.create_dataset('_numeric', shape=dim, dtype='float32')
+    numeric[:, :] = numpy.array(coords)
 
     # With ATLAS, we would now load image patches etc. However, this leads to a
     # *massive* file for FIRST, so we will not do that and instead just fetch
@@ -458,15 +459,16 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
     if radio_survey == 'atlas':
         radio_prefix = '/atlas/' + field + '/'
         ir_prefix = '/wise/' + field + '/'
+        wise_path = config['data_sources']['wise_{}_catalogue'.format(field)]
     elif radio_survey == 'first':
         radio_prefix = '/first/first/'
         ir_prefix = '/wise/first/'
+        wise_path = config['data_sources']['wise_first_catalogue']
 
     names = []
     rows = []
     logging.debug('Reading WISE catalogue.')
-    with open(
-            config['data_sources']['wise_{}_catalogue'.format(field)]) as f_tbl:
+    with open(wise_path) as f_tbl:
         # This isn't a valid ASCII table, so Astropy can't handle it. This means
         # we have to parse it manually.
         for _ in range(105):  # Skip the first 105 lines.
@@ -575,7 +577,7 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
     elif radio_survey == 'first':
         # Since there isn't just one big image for FIRST, unlike ATLAS, we need
         # to load each individual file.
-
+        raise NotImplementedError()
 
 def import_norris(f_h5):
     """Imports the Norris et al. (2006) labels.
