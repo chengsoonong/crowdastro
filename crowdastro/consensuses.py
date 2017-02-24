@@ -161,17 +161,34 @@ def kde(points):
     return (x_peak, y_peak), True
 
 
-def find_consensuses(f_h5, ir_survey):
+def find_consensuses(f_h5, ir_survey, radio_survey):
     """Find Radio Galaxy Zoo crowd consensuses.
 
     f_h5: crowdastro HDF5 file.
     ir_survey: SWIRE or WISE.
+    radio_survey: ATLAS or FIRST.
     """
-    if 'consensus_objects' in f_h5['/atlas/cdfs/']:
-        del f_h5['/atlas/cdfs/consensus_objects']
+    if ir_survey not in {'wise', 'swire'}:
+        raise ValueError('Unknown IR survey: {}'.format(ir_survey))
 
-    class_positions = f_h5['/atlas/cdfs/classification_positions']
-    class_combinations = f_h5['/atlas/cdfs/classification_combinations']
+    if radio_survey not in {'atlas', 'first'}:
+        raise ValueError('Unknown radio survey: {}'.format(radio_survey))
+
+    if radio_survey == 'first' and ir_survey != 'wise':
+        raise ValueError('Must use WISE IR data with FIRST.')
+
+    if radio_survey == 'atlas':
+        radio_prefix = '/atlas/cdfs/'
+        ir_prefix = '/{}/cdfs/'.format(ir_survey)
+    elif radio_survey == 'first':
+        radio_prefix = '/first/first/'
+        ir_prefix = '/{}/first/'.format(ir_survey)
+
+    if 'consensus_objects' in f_h5[radio_prefix]:
+        del f_h5[radio_prefix + 'consensus_objects']
+
+    class_positions = f_h5[radio_prefix + 'classification_positions']
+    class_combinations = f_h5[radio_prefix + 'classification_combinations']
 
     # For computing the consensus, we ignore all but the first click. This is a
     # boolean mask contained in the positions array.
@@ -186,7 +203,7 @@ def find_consensuses(f_h5, ir_survey):
                   len(class_combinations))
 
     # Pre-build the IR tree.
-    ir_coords = f_h5['/{}/cdfs/numeric'.format(ir_survey)][:, :2]
+    ir_coords = f_h5[ir_prefix + 'numeric'][:, :2]
     ir_tree = sklearn.neighbors.KDTree(ir_coords)
 
     cons_positions = []
@@ -263,12 +280,12 @@ def find_consensuses(f_h5, ir_survey):
     # consensus that has success.
     cons_objects = {}  # Maps IR index to (ATLAS index, success,
                        #                   percentage_consensus)
-    for (atlas_i, ir_i, success), (atlas_j, radio, percentage) in zip(
+    for (radio_i, ir_i, success), (radio_j, radio, percentage) in zip(
             cons_positions, cons_combinations):
-        assert atlas_i == atlas_j
+        assert radio_i == radio_j
 
         if ir_i not in cons_objects:
-            cons_objects[ir_i] = (atlas_i, success, percentage)
+            cons_objects[ir_i] = (radio_i, success, percentage)
             continue
 
         if cons_objects[ir_i][1] and not success:
@@ -277,25 +294,25 @@ def find_consensuses(f_h5, ir_survey):
 
         if not cons_objects[ir_i][1] and success:
             # Preference successful KDE/PG-means.
-            cons_objects[ir_i] = (atlas_i, success, percentage)
+            cons_objects[ir_i] = (radio_i, success, percentage)
             continue
 
         # If we get this far, we have the same success state. Choose based on
         # radio consensus.
         if percentage > cons_objects[ir_i][2]:
-            cons_objects[ir_i] = (atlas_i, success, percentage)
+            cons_objects[ir_i] = (radio_i, success, percentage)
             continue
 
     logging.debug('Found %d consensuses.', int(len(cons_objects)))
 
-    cons_objects = numpy.array([(atlas_i, ir_i, success, percentage)
-            for ir_i, (atlas_i, success, percentage)
+    cons_objects = numpy.array([(radio_i, ir_i, success, percentage)
+            for ir_i, (radio_i, success, percentage)
             in sorted(cons_objects.items())])
 
     # Write rows to file.
     cons_objects = numpy.array(cons_objects, dtype=float)
-    f_h5['/atlas/cdfs/'].create_dataset('consensus_objects',
-                                        data=cons_objects, dtype=float)
+    f_h5[radio_prefix].create_dataset('consensus_objects',
+                                      data=cons_objects, dtype=float)
 
 
 def _populate_parser(parser):
@@ -303,13 +320,15 @@ def _populate_parser(parser):
                          'classifications.'
     parser.add_argument('--h5', default='data/crowdastro.h5',
                         help='HDF5 IO file')
+    parser.add_argument('--survey', default='atlas', choices=['atlas', 'first'],
+                        help='Radio survey to generate consensuses for.')
 
 
 def _main(args):
     with h5py.File(args.h5, 'r+') as f_h5:
         assert f_h5.attrs['version'] == '0.5.1'
         ir_survey = f_h5.attrs['ir_survey']
-        find_consensuses(f_h5, ir_survey)
+        find_consensuses(f_h5, ir_survey, radio_survey=args.survey)
 
 
 if __name__ == '__main__':
