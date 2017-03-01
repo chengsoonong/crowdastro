@@ -13,8 +13,7 @@
         "wise_cdfs_catalogue": "data/wise_allwise.wise_allwise_p3as_psd4511.tbl",
         "wise_elais_catalogue": "data/wise_allwise.wise_allwise_p3as_psd24832.tbl",
         "wise_first_catalogue": "data/wise_allwise.allwise_p3as_psd_first.tbl",
-        "first_images_digest": "data/first/RGZ-full.1/RGZ-firstimgs.txt",
-        "first_images": "data/first/RGZ-full.1/FIRST-IMGS"
+        "first_images_dir": "data/first"
     },
 
     "data_checksums": {

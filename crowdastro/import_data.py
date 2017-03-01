@@ -471,6 +471,7 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
     with open(wise_path) as f_tbl:
         # This isn't a valid ASCII table, so Astropy can't handle it. This means
         # we have to parse it manually.
+        raise NotImplementedError()  # Tables are different formats!
         for _ in range(105):  # Skip the first 105 lines.
             next(f_tbl)
 
@@ -496,7 +497,8 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
             rows.append((ra, dec, w1mpro, w2mpro, w3mpro, w4mpro, -1))
             names.append(name)
 
-    logging.debug('Found %d WISE objects.', len(names))
+    n_wise = len(names)
+    logging.debug('Found %d WISE objects.', n_wise)
 
     # Sort by name.
     rows_to_names = dict(zip(rows, names))
@@ -577,7 +579,45 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
     elif radio_survey == 'first':
         # Since there isn't just one big image for FIRST, unlike ATLAS, we need
         # to load each individual file.
-        raise NotImplementedError()
+        # For each FIRST image...
+        for dirpath, dirnames, filenames in os.walk(
+                config['data_sources']['first_images_dir']):
+            for filename in filenames:
+                if not filename.endswith('.fits'):
+                    continue
+
+                logging.debug('Reading FIRST image: {}'.format(filename))
+
+                image = astropy.io.fits.open(os.path.join(dirpath, filename))
+                wcs = astropy.wcs.WCS(image[0].header)
+                wcs = wcs.dropaxis(3).dropaxis(2)  # Drop STOKES and FREQ axes.
+                min_pix_x = min_pix_y = 0
+                _, _, max_pix_y, max_pix_x = image[0].data.shape
+                pixel_coords = wcs.all_world2pix(wise_positions, 1)
+                valid = numpy.logical_and(
+                    numpy.logical_and(min_pix_x <= pixel_coords[:, 0],
+                                      pixel_coords[:, 0] < max_pix_x),
+                    numpy.logical_and(min_pix_y <= pixel_coords[:, 1],
+                                      pixel_coords[:, 1] < max_pix_y)
+                    ).nonzero()[0]
+                for wise_index, (x, y) in zip(valid, pixel_coords[valid]):
+                    x = int(x)
+                    y = int(y)
+                    patch = image[0].data[
+                        0, 0, y - PATCH_RADIUS:y + PATCH_RADIUS,
+                        x - PATCH_RADIUS:x + PATCH_RADIUS]
+                    if patch.shape != (PATCH_RADIUS * 2, PATCH_RADIUS * 2):
+                        pad_width = numpy.array(
+                            [PATCH_RADIUS * 2, PATCH_RADIUS * 2]
+                            ) - numpy.array(patch.shape)
+                        pad_width = numpy.stack(
+                            [numpy.zeros(2), pad_width]).T.astype(int)
+                        patch = numpy.pad(patch, pad_width, mode='edge')
+                    if numpy.isnan(patch).all():
+                        continue
+
+                    numeric[wise_index, -image_size:] = numpy.nan_to_num(patch)
+
 
 def import_norris(f_h5):
     """Imports the Norris et al. (2006) labels.

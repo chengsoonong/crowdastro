@@ -19,20 +19,18 @@ config = json.loads(pkg_resources.resource_string(
 
 # Normalise paths.
 # TODO(MatthewJA): Also don't hardcode these.
-config['data_sources']['atlas_catalogue'] = os.path.normpath(
-        os.path.join(os.getcwd(), config['data_sources']['atlas_catalogue']))
-config['data_sources']['swire_cdfs_catalogue'] = os.path.normpath(
-        os.path.join(os.getcwd(),
-                     config['data_sources']['swire_cdfs_catalogue']))
-config['data_sources']['swire_elais_catalogue'] = os.path.normpath(
-        os.path.join(os.getcwd(),
-                     config['data_sources']['swire_elais_catalogue']))
-config['data_sources']['atlas_cdfs_image'] = os.path.normpath(
-        os.path.join(os.getcwd(), config['data_sources']['atlas_cdfs_image']))
-config['data_sources']['atlas_elais_image'] = os.path.normpath(
-        os.path.join(os.getcwd(), config['data_sources']['atlas_elais_image']))
-config['data_sources']['norris_coords'] = os.path.normpath(
-        os.path.join(os.getcwd(), config['data_sources']['norris_coords']))
+sources = [
+    'atlas_catalogue',
+    'swire_cdfs_catalogue',
+    'swire_elais_catalogue',
+    'atlas_cdfs_image',
+    'atlas_elais_image',
+    'norris_coords',
+    'first_images_dir',
+]
+for source in sources:
+    config['data_sources'][source] = os.path.normpath(
+            os.path.join(os.getcwd(), config['data_sources'][source]))
 
 # Generate some helper configuration info.
 config['surveys']['atlas']['click_to_fits_x'] = (
