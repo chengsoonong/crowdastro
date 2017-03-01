@@ -471,20 +471,28 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
     with open(wise_path) as f_tbl:
         # This isn't a valid ASCII table, so Astropy can't handle it. This means
         # we have to parse it manually.
-        raise NotImplementedError()  # Tables are different formats!
-        for _ in range(105):  # Skip the first 105 lines.
-            next(f_tbl)
+        if radio_survey == 'atlas':
+            n_header_rows = 105
+            # Get the column names.
+            columns = [c.strip() for c in next(f_tbl).strip().split('|')][1:-1]
+            for _ in range(n_header_rows):  # Skip the first header lines.
+                next(f_tbl)
+            assert len(columns) == 45
+            for _ in range(3):  # Skip the next three lines.
+                next(f_tbl)
 
-        # Get the column names.
-        columns = [c.strip() for c in next(f_tbl).strip().split('|')][1:-1]
-        assert len(columns) == 45
+        elif radio_survey == 'first':
+            n_header_rows = 34  # Up to but not including header row.
+            columns = [c.strip() for c in next(f_tbl).strip().split('|')][1:-1]
+            assert len(columns) == 12
+            for _ in range(3):  # Skip the next three lines.
+                next(f_tbl)
 
-        for _ in range(3):  # Skip the next three lines.
-            next(f_tbl)
+        col_count = len(columns)
 
         for row in f_tbl:
             row = row.strip().split()
-            assert len(row) == 45
+            assert len(row) == col_count
             row = dict(zip(columns, row))
             name = row['designation']
             ra = float(row['ra'])
