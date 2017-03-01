@@ -27,6 +27,8 @@ sources = [
     'atlas_elais_image',
     'norris_coords',
     'first_images_dir',
+    'first_images_digest',
+    'first_images',
 ]
 for source in sources:
     config['data_sources'][source] = os.path.normpath(
