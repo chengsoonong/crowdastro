@@ -251,7 +251,6 @@ def import_first(f_h5, test=False):
             dec = coord.dec.degree
 
             # Get the Zooniverse ID.
-            logging.debug('Fetching FIRST subject {}'.format(name))
             zooniverse_id = data.get_subject_by_source(name)['zooniverse_id']
 
             # Store information in lists.
@@ -474,15 +473,17 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
         if radio_survey == 'atlas':
             n_header_rows = 105
             # Get the column names.
-            columns = [c.strip() for c in next(f_tbl).strip().split('|')][1:-1]
             for _ in range(n_header_rows):  # Skip the first header lines.
                 next(f_tbl)
+            columns = [c.strip() for c in next(f_tbl).strip().split('|')][1:-1]
             assert len(columns) == 45
             for _ in range(3):  # Skip the next three lines.
                 next(f_tbl)
 
         elif radio_survey == 'first':
             n_header_rows = 34  # Up to but not including header row.
+            for _ in range(n_header_rows):  # Skip the first header lines.
+                next(f_tbl)
             columns = [c.strip() for c in next(f_tbl).strip().split('|')][1:-1]
             assert len(columns) == 12
             for _ in range(3):  # Skip the next three lines.
