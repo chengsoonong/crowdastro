@@ -4,16 +4,18 @@
         "atlas_cdfs_image": "data/CDFSmosaic_allch_8March2015.fits",
         "atlas_elais_image": "data/ELAISmosaic_allch_8March2015.fits",
         "cdfs_fits": "data/cdfs",
-        "norris_coords": "data/norris_2006_classifications.csv",
         "fan_swire": "data/fan_2015_swire_only.csv",
+        "first_images": "data/FIRST-IMGS",
+        "first_images_digest": "data/RGZ-firstimgs.txt",
+        "first_images_dir": "data/first",
+        "norris_coords": "data/norris_2006_classifications.csv",
         "radio_galaxy_zoo_db": "radio",
         "rgz_to_atlas": "data/RGZ-ATLAS-Bookkeeping.csv",
         "swire_cdfs_catalogue": "data/SWIRE3_CDFS_cat_IRAC24_21Dec05.tbl",
         "swire_elais_catalogue": "data/swire.elaiss1_cat_f0521785.tbl",
         "wise_cdfs_catalogue": "data/wise_allwise.wise_allwise_p3as_psd4511.tbl",
         "wise_elais_catalogue": "data/wise_allwise.wise_allwise_p3as_psd24832.tbl",
-        "wise_first_catalogue": "data/wise_allwise.allwise_p3as_psd_first.tbl",
-        "first_images_dir": "data/first"
+        "wise_first_catalogue": "data/wise_allwise.allwise_p3as_psd_first.tbl"
     },
 
     "data_checksums": {
