@@ -524,9 +524,9 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
     wise_positions = rows[:, :2]
     radio_positions = f_h5[radio_prefix + '_numeric'][:, :2]
     logging.debug('Computing WISE k-d tree.')
-    # balanced = False switches to the midpoint rule which works better for
+    # balanced_tree = False switches to the midpoint rule which works better for
     # large datasets like this one.
-    wise_tree = scipy.spatial.cKDTree(wise_positions, balanced=False)
+    wise_tree = scipy.spatial.cKDTree(wise_positions, balanced_tree=False)
     indices = numpy.concatenate(
             wise_tree.query_ball_point(radio_positions, CANDIDATE_RADIUS))
     indices = numpy.unique(indices)
