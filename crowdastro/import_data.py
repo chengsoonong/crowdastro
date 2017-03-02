@@ -203,62 +203,24 @@ def import_first(f_h5, test=False):
     # - coords,
     # - names, and
     # - Zooniverse IDs.
-    # The FIRST-RGZ dataset consists of a number of FITS files, each
-    # representing a radio subject. Coords and names can be extracted from these
-    # and matched to a Zooniverse ID from the MongoDB database.
+    # This can all be dumped from the Radio Galaxy Zoo database.
 
     coords = []
     names = []
     zooniverse_ids = []
 
-    # col2 = radio filenames.
-    first_images = [row['col2'] for row in astropy.io.ascii.read(
-        config['data_sources']['first_images_digest'])]
-
+    first_objects = data.db.radio_subjects.find({'metadata.survey': 'first'})
     if test:
-        first_images = first_images[:10]
+        first_objects = first_objects.limit(10)
 
-    ra_regex = re.compile(
-        r'OBJCTRA\s*=\s*\'(\d{2} \d{2} \d{2}\.\d{3})\'')
-    dec_regex = re.compile(
-        r'OBJCTDEC\s*=\s*\'([+\-]\d{2} \d{2} \d{2}\.\d{2})\'')
-    for first_filename in first_images:
-        im_path = os.path.join(config['data_sources']['first_images'],
-                               first_filename)
-        with astropy.io.fits.open(im_path, ignore_blank=True) as im:
-            # Pull out the RA/dec.
-            history = str(im[0].header['HISTORY'])
-            try:
-                ra = ra_regex.search(history).group(1)
-            except AttributeError:
-                raise ValueError('Invalid or missing OBJCTRA in {}'.format(
-                    first_filename))
-            try:
-                dec = dec_regex.search(history).group(1)
-            except AttributeError:
-                raise ValueError('Invalid or missing OBJCTRA in {}'.format(
-                    first_filename))
+    for first_object in first_objects:
+        ra, dec = first_object['coords']
+        name = first_object['metadata.source']
+        zooniverse_id = first_object['zooniverse_id']
 
-            # Fetch the object name.
-            # FIRSTJ105651.9+632529.fits -> FIRSTJ105651.9+632529
-            name = first_filename[:-5]
-            # Why use the filename? The FITS file also has a name stored, but it
-            # is less precise and does not include the decimal place on the RA.
-            # We also need to ensure that the name matches up with the RGZ
-            # database, and we know that the filenames match.
-
-            # Convert the RA/dec into degrees.
-            coord = SkyCoord(ra=ra, dec=dec, unit=('hourangle', 'deg'))
-            ra = coord.ra.degree
-            dec = coord.dec.degree
-
-            # Get the Zooniverse ID.
-            zooniverse_id = data.get_subject_by_source(name)['zooniverse_id']
-
-            # Store information in lists.
-            coords.append((ra, dec))
-            names.append(name)
-            zooniverse_ids.append(zooniverse_id)
+        coords.append((ra, dec))
+        names.append(name)
+        zooniverse_ids.append(zooniverse_id)
 
     n_first = len(names)
 
