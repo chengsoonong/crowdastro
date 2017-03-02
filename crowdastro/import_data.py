@@ -533,7 +533,7 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
         time.time() - t))
     indices = numpy.concatenate(
             wise_tree.query_ball_point(radio_positions, CANDIDATE_RADIUS))
-    indices = numpy.unique(indices)
+    indices = numpy.unique(indices).astype('int')
 
     logging.debug('Found %d WISE objects near radio objects.', len(indices))
 
@@ -622,6 +622,8 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
                     patch = image[0].data[
                         0, 0, y - PATCH_RADIUS:y + PATCH_RADIUS,
                         x - PATCH_RADIUS:x + PATCH_RADIUS]
+                    if patch.shape[0] == 0 or patch.shape[1] == 0:
+                        continue
                     if patch.shape != (PATCH_RADIUS * 2, PATCH_RADIUS * 2):
                         pad_width = numpy.array(
                             [PATCH_RADIUS * 2, PATCH_RADIUS * 2]
@@ -632,7 +634,7 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
                     if numpy.isnan(patch).all():
                         continue
 
-                    numeric[wise_index, -image_size:] = numpy.nan_to_num(patch)
+                    numeric[wise_index, -image_size:] = numpy.nan_to_num(patch).ravel()
 
 
 def import_norris(f_h5):
@@ -1056,8 +1058,9 @@ def _main(args):
             import_swire(f_h5, field='cdfs')
             import_swire(f_h5, field='elais')
         elif args.ir == 'wise':
-            import_wise(f_h5, field='cdfs')
-            import_wise(f_h5, field='elais')
+            import_wise(f_h5, radio_survey='first')
+            import_wise(f_h5, radio_survey='atlas', field='cdfs')
+            import_wise(f_h5, radio_survey='atlas', field='elais')
         import_norris(f_h5)
         import_fan(f_h5)
         import_classifications(f_h5)
