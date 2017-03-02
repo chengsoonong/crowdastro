@@ -215,7 +215,7 @@ def import_first(f_h5, test=False):
 
     for first_object in first_objects:
         ra, dec = first_object['coords']
-        name = first_object['metadata.source']
+        name = first_object['metadata']['source']
         zooniverse_id = first_object['zooniverse_id']
 
         coords.append((ra, dec))
