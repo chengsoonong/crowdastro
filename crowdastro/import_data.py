@@ -18,6 +18,7 @@ import astropy.utils.exceptions
 import astropy.wcs
 import h5py
 import numpy
+import scipy.spatial
 import scipy.spatial.distance
 import sklearn.neighbors
 
@@ -523,9 +524,11 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
     wise_positions = rows[:, :2]
     radio_positions = f_h5[radio_prefix + '_numeric'][:, :2]
     logging.debug('Computing WISE k-d tree.')
-    wise_tree = sklearn.neighbors.KDTree(wise_positions, metric='euclidean')
+    # balanced = False switches to the midpoint rule which works better for
+    # large datasets like this one.
+    wise_tree = scipy.spatial.cKDTree(wise_positions, balanced=False)
     indices = numpy.concatenate(
-            wise_tree.query_radius(radio_positions, CANDIDATE_RADIUS))
+            wise_tree.query_ball_point(radio_positions, CANDIDATE_RADIUS))
     indices = numpy.unique(indices)
 
     logging.debug('Found %d WISE objects near ATLAS objects.', len(indices))
