@@ -10,6 +10,7 @@ import hashlib
 import logging
 import os
 import re
+import time
 
 from astropy.coordinates import SkyCoord
 import astropy.io.fits
@@ -524,14 +525,17 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
     wise_positions = rows[:, :2]
     radio_positions = f_h5[radio_prefix + '_numeric'][:, :2]
     logging.debug('Computing WISE k-d tree.')
+    t = time.time()  # To time KDTree generation.
     # balanced_tree = False switches to the midpoint rule which works better for
     # large datasets like this one.
     wise_tree = scipy.spatial.cKDTree(wise_positions, balanced_tree=False)
+    logging.debug('Computing WISE k-d tree took {:.02f} seconds.'.format(
+        time.time() - t))
     indices = numpy.concatenate(
             wise_tree.query_ball_point(radio_positions, CANDIDATE_RADIUS))
     indices = numpy.unique(indices)
 
-    logging.debug('Found %d WISE objects near ATLAS objects.', len(indices))
+    logging.debug('Found %d WISE objects near radio objects.', len(indices))
 
     names = names[indices]
     rows = rows[indices]
