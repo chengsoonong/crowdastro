@@ -162,9 +162,9 @@ def import_atlas(f_h5, test=False, field='cdfs'):
     # Numeric.
     image_size = (config['surveys']['atlas']['fits_width'] *
                   config['surveys']['atlas']['fits_height'])
-    # RA, DEC, radio, (distance to SWIRE object added later)
+    # RA, DEC, radio
     dim = (n_cdfs, 1 + 1 + image_size)
-    numeric = cdfs.create_dataset('_numeric', shape=dim, dtype='float32')
+    numeric = cdfs.create_dataset('numeric', shape=dim, dtype='float32')
 
     # Load image patches and store numeric data.
     with astropy.io.fits.open(
@@ -243,9 +243,9 @@ def import_first(f_h5, test=False):
     first.create_dataset('string', data=string_data, dtype=dtype)
 
     # Numeric.
-    # RA, DEC, (distance to WISE object added later)
+    # RA, DEC
     dim = (n_first, 2)
-    numeric = first.create_dataset('_numeric', shape=dim, dtype='float32')
+    numeric = first.create_dataset('numeric', shape=dim, dtype='float32')
     numeric[:, :] = numpy.array(coords)
 
     # With ATLAS, we would now load image patches etc. However, this leads to a
@@ -368,21 +368,14 @@ def import_swire(f_h5, field='cdfs'):
                                              'euclidean')
     assert distances.shape[0] == atlas_positions.shape[0]
     assert distances.shape[1] == swire_positions.shape[0]
+    distances = distances <= ARCMIN
     logging.debug('Done finding distances.')
 
     # Write numeric data to HDF5.
-    rows[:, 8] = distances.min(axis=0)
-    atlas_numeric = f_h5['/atlas/{}/_numeric'.format(field)]
-    f_h5['/atlas/{}'.format(field)].create_dataset(
-        'numeric', dtype='float32',
-        shape=(atlas_numeric.shape[0],
-               atlas_numeric.shape[1] + len(indices)))
-    f_h5['/atlas/{}/numeric'.format(field)][
-        :, :atlas_numeric.shape[1]] = atlas_numeric
-    f_h5['/atlas/{}/numeric'.format(field)][
-        :, atlas_numeric.shape[1]:] = distances
-
-    del f_h5['/atlas/{}/_numeric'.format(field)]
+    f_h5['/swire/{}/'.format(field)].create_dataset(
+        'nearby',
+        data=distances,
+        dtype=bool)
 
     image_size = (PATCH_RADIUS * 2) ** 2
     dim = (rows.shape[0], rows.shape[1] + image_size)
@@ -512,20 +505,14 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
                                              'euclidean')
     assert distances.shape[0] == radio_positions.shape[0]
     assert distances.shape[1] == wise_positions.shape[0]
+    distances = distances <= ARCMIN
     logging.debug('Done finding distances.')
 
     # Write numeric data to HDF5.
-    rows[:, 6] = distances.min(axis=0)
-    radio_numeric = f_h5[radio_prefix + '_numeric']
-    f_h5[radio_prefix].create_dataset(
-        'numeric', dtype='float32',
-        shape=(radio_numeric.shape[0],
-               radio_numeric.shape[1] + len(indices)))
-    numeric_f = f_h5[radio_prefix + 'numeric']
-    numeric_f[:, :radio_numeric.shape[1]] = radio_numeric
-    numeric_f[:, radio_numeric.shape[1]:] = distances
-
-    del f_h5[radio_prefix + '_numeric']
+    f_h5[ir_prefix].create_dataset(
+        'nearby',
+        data=distances,
+        dtype=bool)
 
     image_size = (PATCH_RADIUS * 2) ** 2
     dim = (rows.shape[0], rows.shape[1] + image_size)
@@ -596,7 +583,8 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
                     if numpy.isnan(patch).all():
                         continue
 
-                    numeric[wise_index, -image_size:] = numpy.nan_to_num(patch).ravel()
+                    numeric[wise_index, -image_size:] = \
+                        numpy.nan_to_num(patch).ravel()
 
 
 def import_norris(f_h5):
