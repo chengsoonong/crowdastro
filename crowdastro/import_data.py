@@ -500,20 +500,17 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
     wise_positions = wise_positions[indices]
 
     # Get distances.
+    distances = f_h5[ir_prefix].create_dataset(
+        'nearby',
+        shape=(len(radio_positions), len(wise_positions)),
+        dtype=bool)
     logging.debug('Finding radio object-WISE object distances.')
-    distances = numpy.zeros((len(radio_positions), len(wise_positions)),
-                            dtype=bool)
     for radio_index, wise_indices in enumerate(wise_near_radio):
-        distances[radio_index, wise_indices] = True
+        for wise_index in wise_indices:
+            distances[radio_index, wise_index] = True
     assert distances.shape[0] == radio_positions.shape[0]
     assert distances.shape[1] == wise_positions.shape[0]
     logging.debug('Done finding distances.')
-
-    # Write numeric data to HDF5.
-    f_h5[ir_prefix].create_dataset(
-        'nearby',
-        data=distances,
-        dtype=bool)
 
     image_size = (PATCH_RADIUS * 2) ** 2
     dim = (rows.shape[0], rows.shape[1] + image_size)
