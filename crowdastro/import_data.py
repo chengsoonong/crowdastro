@@ -349,7 +349,7 @@ def import_swire(f_h5, field='cdfs'):
     # given radius of an ATLAS object. Otherwise, there's way too much data to
     # store.
     swire_positions = rows[:, :2]
-    atlas_positions = f_h5['/atlas/{}/_numeric'.format(field)][:, :2]
+    atlas_positions = f_h5['/atlas/{}/numeric'.format(field)][:, :2]
     logging.debug('Computing SWIRE k-d tree.')
     swire_tree = sklearn.neighbors.KDTree(swire_positions, metric='euclidean')
     swire_near_atlas = swire_tree.query_radius(
@@ -480,7 +480,7 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
     # given radius of a radio object. Otherwise, there's way too much data to
     # store.
     wise_positions = rows[:, :2]
-    radio_positions = f_h5[radio_prefix + '_numeric'][:, :2]
+    radio_positions = f_h5[radio_prefix + 'numeric'][:, :2]
     logging.debug('Computing WISE k-d tree.')
     t = time.time()  # To time KDTree generation.
     # balanced_tree = False switches to the midpoint rule which works better for
