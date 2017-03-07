@@ -496,11 +496,12 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
     logging.debug('Found %d WISE objects near radio objects.', len(indices))
     assert sorted(indices) == list(indices)
 
-    tree_index_to_new_index = {j: i for i, j in enumerate(indices)}
-
     names = names[indices]
     rows = rows[indices]
     wise_positions = wise_positions[indices]
+
+    wise_near_radio = wise_tree.query_ball_point(
+        radio_positions, CANDIDATE_RADIUS)
 
     # Get distances.
     distances = f_h5[ir_prefix].create_dataset(
@@ -509,8 +510,8 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
         dtype=bool)
     logging.debug('Finding radio object-WISE object distances.')
     for radio_index, wise_indices in enumerate(wise_near_radio):
-        for wise_index in wise_indices:
-            distances[radio_index, tree_index_to_new_index[wise_index]] = True
+        distances_ = distances[radio_index, :]
+        distances_[sorted(wise_indices)] = True
     assert distances.shape[0] == radio_positions.shape[0]
     assert distances.shape[1] == wise_positions.shape[0]
     logging.debug('Done finding distances.')
