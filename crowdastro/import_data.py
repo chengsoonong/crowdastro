@@ -500,6 +500,7 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
     rows = rows[indices]
     wise_positions = wise_positions[indices]
 
+    wise_tree = scipy.spatial.cKDTree(wise_positions, balanced_tree=False)
     wise_near_radio = wise_tree.query_ball_point(
         radio_positions, CANDIDATE_RADIUS)
 
