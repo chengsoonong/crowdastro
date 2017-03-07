@@ -352,8 +352,9 @@ def import_swire(f_h5, field='cdfs'):
     atlas_positions = f_h5['/atlas/{}/_numeric'.format(field)][:, :2]
     logging.debug('Computing SWIRE k-d tree.')
     swire_tree = sklearn.neighbors.KDTree(swire_positions, metric='euclidean')
-    indices = numpy.concatenate(
-            swire_tree.query_radius(atlas_positions, CANDIDATE_RADIUS))
+    swire_near_atlas = swire_tree.query_radius(
+        atlas_positions, CANDIDATE_RADIUS)
+    indices = numpy.concatenate(swire_near_atlas)
     indices = numpy.unique(indices)
 
     logging.debug('Found %d SWIRE objects near ATLAS objects.', len(indices))
@@ -364,11 +365,12 @@ def import_swire(f_h5, field='cdfs'):
 
     # Get distances.
     logging.debug('Finding ATLAS-SWIRE object distances.')
-    distances = scipy.spatial.distance.cdist(atlas_positions, swire_positions,
-                                             'euclidean')
+    distances = numpy.zeros((len(atlas_positions), len(swire_positions)),
+                            dtype=bool)
+    for atlas_index, swire_indices in enumerate(swire_near_atlas):
+        distances[atlas_index, swire_indices] = True
     assert distances.shape[0] == atlas_positions.shape[0]
     assert distances.shape[1] == swire_positions.shape[0]
-    distances = distances <= ARCMIN
     logging.debug('Done finding distances.')
 
     # Write numeric data to HDF5.
@@ -486,8 +488,9 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
     wise_tree = scipy.spatial.cKDTree(wise_positions, balanced_tree=False)
     logging.debug('Computing WISE k-d tree took {:.02f} seconds.'.format(
         time.time() - t))
-    indices = numpy.concatenate(
-            wise_tree.query_ball_point(radio_positions, CANDIDATE_RADIUS))
+    wise_near_radio = wise_tree.query_ball_point(
+        radio_positions, CANDIDATE_RADIUS)
+    indices = numpy.concatenate(wise_near_radio)
     indices = numpy.unique(indices).astype('int')
 
     logging.debug('Found %d WISE objects near radio objects.', len(indices))
@@ -498,14 +501,12 @@ def import_wise(f_h5, radio_survey='atlas', field='cdfs'):
 
     # Get distances.
     logging.debug('Finding radio object-WISE object distances.')
-    # TODO(MatthewJA): This distance finding will become extremely big for large
-    # numbers of points. This will thus almost certainly need optimising for
-    # FIRST.
-    distances = scipy.spatial.distance.cdist(radio_positions, wise_positions,
-                                             'euclidean')
+    distances = numpy.zeros((len(radio_positions), len(wise_positions)),
+                            dtype=bool)
+    for radio_index, wise_indices in enumerate(wise_near_radio):
+        distances[radio_index, wise_indices] = True
     assert distances.shape[0] == radio_positions.shape[0]
     assert distances.shape[1] == wise_positions.shape[0]
-    distances = distances <= ARCMIN
     logging.debug('Done finding distances.')
 
     # Write numeric data to HDF5.
