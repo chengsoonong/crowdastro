@@ -685,26 +685,29 @@ def contains(bbox, point):
 bbox_cache_ = {}  # Should help speed up ATLAS membership checking.
 
 
-def make_radio_combination_signature(radio_annotation, wcs, atlas_positions,
-                                     subject, pix_offset):
+def make_radio_combination_signature(radio_annotation, wcs, radio_positions,
+                                     subject, pix_offset, radio_survey='atlas'):
     """Generates a unique signature for a radio annotation.
 
     radio_annotation: 'radio' dictionary from a classification.
-    wcs: World coordinate system associated with the ATLAS image.
-    atlas_positions: [[RA, DEC]] NumPy array.
+    wcs: World coordinate system associated with the radio image.
+    radio_positions: [[RA, DEC]] NumPy array.
     subject: RGZ subject dict.
-    pix_offset: (x, y) pixel position of this radio subject on the ATLAS image.
+    pix_offset: (x, y) pixel position of this radio subject on the radio image.
+    radio_survey: 'atlas' or 'first'.
     -> Something immutable
     """
     from . import rgz_data as data
-    # TODO(MatthewJA): This only works on ATLAS. Generalise.
-    # My choice of immutable object will be stringified crowdastro ATLAS
+    # My choice of immutable object will be stringified crowdastro radio
     # indices.
     zooniverse_id = subject['zooniverse_id']
-    subject_fits = data.get_radio_fits(subject)
-    subject_wcs = astropy.wcs.WCS(subject_fits.header)
+    if radio_survey == 'atlas':
+        subject_fits = data.get_radio_fits(subject)
+        subject_wcs = astropy.wcs.WCS(subject_fits.header)
+    elif radio_survey == 'first':
+        subject_wcs = wcs  # FIRST wcs is taken straight from the RGZ FITS file.
 
-    atlas_ids = []
+    radio_ids = []
     x_offset, y_offset = pix_offset
     for c in radio_annotation.values():
         # Note that the x scale is not the same as the IR scale, but the scale
@@ -716,17 +719,17 @@ def make_radio_combination_signature(radio_annotation, wcs, atlas_positions,
             scale_width = float(scale_width)
         else:
             # Sometimes, there's no scale, so I've included a default scale.
-            scale_width = config['surveys']['atlas']['scale_width']
+            scale_width = config['surveys'][radio_survey]['scale_width']
 
         if scale_height:
             scale_height = float(scale_height)
         else:
-            scale_height = config['surveys']['atlas']['scale_height']
+            scale_height = config['surveys'][radio_survey]['scale_height']
 
         # These numbers are in terms of the PNG images, so I need to multiply by
         # the click-to-fits ratio.
-        scale_width *= config['surveys']['atlas']['click_to_fits_x']
-        scale_height *= config['surveys']['atlas']['click_to_fits_y']
+        scale_width *= config['surveys'][radio_survey]['click_to_fits_x']
+        scale_height *= config['surveys'][radio_survey]['click_to_fits_y']
 
         subject_bbox = [
             [
@@ -741,8 +744,8 @@ def make_radio_combination_signature(radio_annotation, wcs, atlas_positions,
 
         # ...and by the mosaic ratio. There's probably double-up here, but this
         # makes more sense.
-        scale_width *= config['surveys']['atlas']['mosaic_scale_x']
-        scale_height *= config['surveys']['atlas']['mosaic_scale_y']
+        scale_width *= config['surveys'][radio_survey]['mosaic_scale_x']
+        scale_height *= config['surveys'][radio_survey]['mosaic_scale_y']
         # Get the bounding box of the radio source in pixels.
         # Format: [xs, ys]
         bbox = [
@@ -779,10 +782,10 @@ def make_radio_combination_signature(radio_annotation, wcs, atlas_positions,
         if cache_key in bbox_cache_:
             index = bbox_cache_[cache_key]
         else:
-            x_gt_min = atlas_positions[:, 0] >= bbox[0, 0]
-            x_lt_max = atlas_positions[:, 0] <= bbox[0, 1]
-            y_gt_min = atlas_positions[:, 1] >= bbox[1, 0]
-            y_lt_max = atlas_positions[:, 1] <= bbox[1, 1]
+            x_gt_min = radio_positions[:, 0] >= bbox[0, 0]
+            x_lt_max = radio_positions[:, 0] <= bbox[0, 1]
+            y_gt_min = radio_positions[:, 1] >= bbox[1, 0]
+            y_lt_max = radio_positions[:, 1] <= bbox[1, 1]
             within = numpy.all([x_gt_min, x_lt_max, y_gt_min, y_lt_max], axis=0)
             indices = numpy.where(within)[0]
 
@@ -792,34 +795,37 @@ def make_radio_combination_signature(radio_annotation, wcs, atlas_positions,
                 continue
             else:
                 if len(indices) > 1:
-                    logging.debug('Found multiple (%d) ATLAS matches '
+                    logging.debug('Found multiple (%d) radio matches '
                                   'for %s', len(indices), zooniverse_id)
 
                 index = indices[0]
 
             bbox_cache_[cache_key] = index
 
-        atlas_ids.append(str(index))
+        radio_ids.append(str(index))
 
-    atlas_ids.sort()
+    logging.debug('Sorting radio IDs...')
+    radio_ids.sort()
+    logging.debug('Sorted radio IDs.')
 
-    if not atlas_ids:
+    if not radio_ids:
         raise CatalogueError('No catalogued radio sources.')
 
-    return ';'.join(atlas_ids)
+    return ';'.join(radio_ids)
 
 
-def parse_classification(classification, subject, atlas_positions, wcs,
-                         pix_offset):
+def parse_classification(classification, subject, radio_positions, wcs,
+                         pix_offset, radio_survey='atlas'):
     """Converts a raw RGZ classification into a classification dict.
 
     Scales all positions and flips y axis of clicks.
 
     classification: RGZ classification dict.
     subject: Associated RGZ subject dict.
-    atlas_positions: [[RA, DEC]] NumPy array.
-    wcs: World coordinate system of the ATLAS image.
-    pix_offset: (x, y) pixel position of this radio subject on the ATLAS image.
+    radio_positions: [[RA, DEC]] NumPy array.
+    wcs: World coordinate system of the radio image.
+    pix_offset: (x, y) pixel position of this radio subject on the radio image.
+    radio_survey: 'atlas' or 'first'.
     -> dict mapping radio signature to list of corresponding IR host pixel
         locations.
     """
@@ -838,8 +844,8 @@ def parse_classification(classification, subject, atlas_positions, wcs,
 
         try:
             radio_signature = make_radio_combination_signature(
-                    annotation['radio'], wcs, atlas_positions,
-                    subject, pix_offset)
+                    annotation['radio'], wcs, radio_positions,
+                    subject, pix_offset, radio_survey=radio_survey)
         except CatalogueError:
             # Ignore invalid annotations.
             n_invalid += 1
@@ -854,24 +860,26 @@ def parse_classification(classification, subject, atlas_positions, wcs,
                 ir_y = float(annotation['ir'][ir_click]['y'])
 
                 # Rescale to a consistent size.
-                ir_x *= config['surveys']['atlas']['click_to_fits_x']
-                ir_y *= config['surveys']['atlas']['click_to_fits_y']
+                ir_x *= config['surveys'][radio_survey]['click_to_fits_x']
+                ir_y *= config['surveys'][radio_survey]['click_to_fits_y']
 
                 # Ignore out-of-range data.
-                if not 0 <= ir_x <= config['surveys']['atlas']['fits_width']:
+                if not 0 <= ir_x <= config['surveys'][
+                        radio_survey]['fits_width']:
                     n_invalid += 1
                     continue
 
-                if not 0 <= ir_y <= config['surveys']['atlas']['fits_height']:
+                if not 0 <= ir_y <= config['surveys'][
+                        radio_survey]['fits_height']:
                     n_invalid += 1
                     continue
 
                 # Flip the y axis to match other data conventions.
-                ir_y = config['surveys']['atlas']['fits_height'] - ir_y
+                ir_y = config['surveys'][radio_survey]['fits_height'] - ir_y
 
                 # Rescale to match the mosaic WCS.
-                ir_x *= config['surveys']['atlas']['mosaic_scale_x']
-                ir_y *= config['surveys']['atlas']['mosaic_scale_y']
+                ir_x *= config['surveys'][radio_survey]['mosaic_scale_x']
+                ir_y *= config['surveys'][radio_survey]['mosaic_scale_y']
 
                 # Move to the reference location of the radio subject.
                 ir_x += pix_offset[0]
@@ -892,36 +900,53 @@ def parse_classification(classification, subject, atlas_positions, wcs,
     return result
 
 
-def import_classifications(f_h5, test=False):
+def import_classifications(f_h5, radio_survey='atlas', test=False):
     """Imports Radio Galaxy Zoo classifications into crowdastro.
 
     f_h5: An HDF5 file.
+    radio_survey: 'atlas' or 'first'.
     test: Flag to run on only 10 subjects. Default False.
     """
     # TODO(MatthewJA): This only works for ATLAS/CDFS. Generalise.
     from . import rgz_data as data
-    atlas_positions = f_h5['/atlas/cdfs/numeric'][:, :2]
-    atlas_ids = f_h5['/atlas/cdfs/string']['zooniverse_id']
+    radio_prefix = (
+        '/atlas/cdfs/' if radio_survey == 'atlas' else '/first/first/')
+    radio_positions = f_h5[radio_prefix + 'numeric'][:, :2]
+    radio_ids = f_h5[radio_prefix + 'string']['zooniverse_id']
     classification_positions = []
     classification_combinations = []
     classification_usernames = []
 
-    with astropy.io.fits.open(
-            # RGZ only has cdfs classifications
-            config['data_sources']['atlas_cdfs_image'],
-            ignore_blank=True) as atlas_image:
-        wcs = astropy.wcs.WCS(atlas_image[0].header).dropaxis(3).dropaxis(2)
+    if radio_survey == 'atlas':
+        with astropy.io.fits.open(
+                # RGZ only has cdfs classifications
+                config['data_sources']['atlas_cdfs_image'],
+                ignore_blank=True) as atlas_image:
+            wcs = astropy.wcs.WCS(atlas_image[0].header).dropaxis(3).dropaxis(2)
 
-    for obj_index, atlas_id in enumerate(atlas_ids):
-        subject = data.get_subject(atlas_id.decode('ascii'))
-        assert subject['zooniverse_id'] == atlas_ids[obj_index].decode('ascii')
+    for obj_index, radio_id in enumerate(radio_ids):
+        subject = data.get_subject(radio_id.decode('ascii'))
+        assert subject['zooniverse_id'] == radio_ids[obj_index].decode('ascii')
+
         classifications = data.get_subject_classifications(subject)
-        offset, = wcs.all_world2pix([subject['coords']], FITS_CONVENTION)
+
+        if radio_survey == 'atlas':
+            offset, = wcs.all_world2pix([subject['coords']], FITS_CONVENTION)
+        elif radio_survey == 'first':
+            with astropy.io.fits.open(os.path.join(
+                    config['data_sources']['first_images_dir'],
+                    '{}.fits'.format(subject['metadata']['source'])),
+                    ignore_blank=True) as first_image:
+                # RGZ images only have the (two) spatial axes.
+                wcs = astropy.wcs.WCS(first_image[0].header)
+                offset, = wcs.all_world2pix([subject['coords']],
+                                            FITS_CONVENTION)
+
         # The coords are of the middle of the subject.
-        offset[0] -= (config['surveys']['atlas']['fits_width'] *
-                      config['surveys']['atlas']['mosaic_scale_x'] // 2)
-        offset[1] -= (config['surveys']['atlas']['fits_height'] *
-                      config['surveys']['atlas']['mosaic_scale_y'] // 2)
+        offset[0] -= (config['surveys'][radio_survey]['fits_width'] *
+                      config['surveys'][radio_survey]['mosaic_scale_x'] // 2)
+        offset[1] -= (config['surveys'][radio_survey]['fits_height'] *
+                      config['surveys'][radio_survey]['mosaic_scale_y'] // 2)
 
         for c_index, classification in enumerate(classifications):
             user_name = classification.get('user_name', '').encode(
@@ -932,7 +957,8 @@ def import_classifications(f_h5, test=False):
                 user_name = user_name[:50]
 
             classification = parse_classification(classification, subject,
-                                                  atlas_positions, wcs, offset)
+                                                  radio_positions, wcs, offset,
+                                                  radio_survey=radio_survey)
             full_radio = '|'.join(classification.keys())
             for radio, locations in classification.items():
                 if not locations:
@@ -960,15 +986,15 @@ def import_classifications(f_h5, test=False):
     classification_combinations = numpy.array(classification_combinations,
                                               dtype=combinations_dtype)
 
-    f_h5['/atlas/cdfs/'].create_dataset('classification_positions',
-                                        data=classification_positions,
-                                        dtype=float)
-    f_h5['/atlas/cdfs/'].create_dataset('classification_usernames',
-                                        data=classification_usernames,
-                                        dtype='<S50')
-    f_h5['/atlas/cdfs/'].create_dataset('classification_combinations',
-                                        data=classification_combinations,
-                                        dtype=combinations_dtype)
+    f_h5[radio_prefix].create_dataset('classification_positions',
+                                      data=classification_positions,
+                                      dtype=float)
+    f_h5[radio_prefix].create_dataset('classification_usernames',
+                                      data=classification_usernames,
+                                      dtype='<S50')
+    f_h5[radio_prefix].create_dataset('classification_combinations',
+                                      data=classification_combinations,
+                                      dtype=combinations_dtype)
 
 
 def _populate_parser(parser):
