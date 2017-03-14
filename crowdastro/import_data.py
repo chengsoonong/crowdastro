@@ -1042,7 +1042,8 @@ def _main(args):
             import_wise(f_h5, radio_survey='atlas', field='elais')
         import_norris(f_h5)
         import_fan(f_h5)
-        import_classifications(f_h5)
+        import_classifications(f_h5, radio_survey='atlas')
+        import_classifications(f_h5, radio_survey='first')
 
 
 if __name__ == '__main__':
