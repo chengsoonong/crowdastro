@@ -35,25 +35,26 @@ for source in sources:
             os.path.join(os.getcwd(), config['data_sources'][source]))
 
 # Generate some helper configuration info.
-config['surveys']['atlas']['click_to_fits_x'] = (
-    config['surveys']['atlas']['fits_width'] /
-    config['surveys']['atlas']['click_width'])
-config['surveys']['atlas']['click_to_fits_y'] = (
-    config['surveys']['atlas']['fits_height'] /
-    config['surveys']['atlas']['click_height'])
-config['surveys']['atlas']['click_to_fits'] = numpy.array(
-    [config['surveys']['atlas']['click_to_fits_x'],
-     config['surveys']['atlas']['click_to_fits_y']],
-    dtype=float)
-config['surveys']['atlas']['web_to_click_x'] = (
-    config['surveys']['atlas']['click_width'] /
-    config['surveys']['atlas']['web_width'])
-config['surveys']['atlas']['web_to_click_y'] = (
-    config['surveys']['atlas']['click_height'] /
-    config['surveys']['atlas']['web_height'])
-config['surveys']['atlas']['web_to_click'] = numpy.array(
-    [config['surveys']['atlas']['web_to_click_x'],
-     config['surveys']['atlas']['web_to_click_y']],
+for rs in {'atlas', 'first'}:
+    config['surveys'][rs]['click_to_fits_x'] = (
+        config['surveys'][rs]['fits_width'] /
+        config['surveys'][rs]['click_width'])
+    config['surveys'][rs]['click_to_fits_y'] = (
+        config['surveys'][rs]['fits_height'] /
+        config['surveys'][rs]['click_height'])
+    config['surveys'][rs]['click_to_fits'] = numpy.array(
+        [config['surveys'][rs]['click_to_fits_x'],
+         config['surveys'][rs]['click_to_fits_y']],
+        dtype=float)
+    config['surveys'][rs]['web_to_click_x'] = (
+        config['surveys'][rs]['click_width'] /
+        config['surveys'][rs]['web_width'])
+    config['surveys'][rs]['web_to_click_y'] = (
+        config['surveys'][rs]['click_height'] /
+        config['surveys'][rs]['web_height'])
+    config['surveys'][rs]['web_to_click'] = numpy.array(
+         [config['surveys'][rs]['web_to_click_x'],
+          config['surveys'][rs]['web_to_click_y']],
     dtype=float)
 
 
