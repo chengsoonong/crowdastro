@@ -933,14 +933,19 @@ def import_classifications(f_h5, radio_survey='atlas', test=False):
         if radio_survey == 'atlas':
             offset, = wcs.all_world2pix([subject['coords']], FITS_CONVENTION)
         elif radio_survey == 'first':
-            with astropy.io.fits.open(os.path.join(
-                    config['data_sources']['first_images_dir'],
-                    '{}.fits'.format(subject['metadata']['source'])),
-                    ignore_blank=True) as first_image:
-                # RGZ images only have the (two) spatial axes.
-                wcs = astropy.wcs.WCS(first_image[0].header)
-                offset, = wcs.all_world2pix([subject['coords']],
-                                            FITS_CONVENTION)
+            try:
+                path = os.path.join(
+                        config['data_sources']['first_images'],
+                        '{}.fits'.format(subject['metadata']['source']))
+                with astropy.io.fits.open(path,
+                        ignore_blank=True) as first_image:
+                    # RGZ images only have the (two) spatial axes.
+                    wcs = astropy.wcs.WCS(first_image[0].header)
+                    offset, = wcs.all_world2pix([subject['coords']],
+                                                FITS_CONVENTION)
+            except FileNotFoundError:
+                logging.warning('Could not find FIRST image: {}'.format(path))
+                continue
 
         # The coords are of the middle of the subject.
         offset[0] -= (config['surveys'][radio_survey]['fits_width'] *
