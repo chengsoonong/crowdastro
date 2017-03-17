@@ -14,11 +14,8 @@ import numpy
 import sklearn.neighbors
 
 from .config import config
-
-FITS_HEIGHT = config['surveys']['atlas']['fits_height']
-FITS_WIDTH = config['surveys']['atlas']['fits_height']
-IMAGE_SIZE = FITS_HEIGHT * FITS_WIDTH  # px
 ARCMIN = 1 / 60  # deg
+PATCH_SIZE = (config['patch_radius'] * 2) ** 2  # px
 
 
 def remove_nans(n):
@@ -29,19 +26,59 @@ def remove_nans(n):
     return float(n)
 
 
-def generate(f_h5, out_f_h5, field='cdfs'):
+def generate_distances(f_h5, ir_prefix, radio_prefix):
+    """Generates distance features for infrared objects.
+
+    f_h5: crowdastro HDF5 file.
+    ir_prefix: '/survey/field/' for IR data.
+    radio_prefix: '/survey/field/' for radio data.
+    -> Array of floats.
+    """
+    # nearby is a boolean array of whether radio/IR objects are nearby.
+    # It's too big to load into memory.
+    nearby = f_h5[ir_prefix + 'nearby']
+    n_ir = nearby.shape[1]
+    distances = numpy.zeros((n_ir,))
+    for ir_index, ir_info in enumerate(f_h5[ir_prefix + 'numeric']):
+        position = ir_info[:2]
+        nearby_this = nearby[:, ir_index]
+        nearby_positions = f_h5[radio_prefix + 'numeric'][nearby_this, :2]
+        distances_this = numpy.linalg.norm(nearby_positions - position, axis=1)
+        assert distances_this.shape == nearby_positions.shape[:1]
+        distances[ir_index] = distances_this.min()
+    return distances
+
+
+def generate(f_h5, out_f_h5, radio_survey='atlas', field='cdfs'):
     """Generates potential hosts and their astronomical features.
 
     f_h5: crowdastro input HDF5 file.
     out_f_h5: Training data output HDF5 file.
+    radio_survey: 'first' or 'atlas'.
+    field: 'cdfs' or 'elais'; only used for ATLAS.
     """
+    FITS_HEIGHT = config['surveys'][radio_survey]['fits_height']
+    FITS_WIDTH = config['surveys'][radio_survey]['fits_height']
+    IMAGE_SIZE = FITS_HEIGHT * FITS_WIDTH  # px
     ir_survey = f_h5.attrs['ir_survey']
+
+    if radio_survey == 'first' and ir_survey != 'wise':
+        raise ValueError('FIRST must use WISE IR data.')
+
+    if radio_survey == 'atlas':
+        ir_prefix = '/{}/{}/'.format(ir_survey, field)
+        radio_prefix = '/atlas/{}/'.format(field)
+    elif radio_survey == 'first':
+        ir_prefix = '/wise/first/'
+        radio_prefix = '/first/first/'
+        field = 'first'
+
     if ir_survey == 'swire':
-        swire = f_h5['/swire/{}/numeric'.format(field)]
+        swire = f_h5[ir_prefix + 'numeric']
         fluxes = swire[:, 2:7]
-        # Skip stellarities.
-        distances = swire[:, 8].reshape((-1, 1))
-        images = swire[:, 9:]
+        # Skip stellarities (index 7).
+        # Index 8 was used for distances.
+        # Indices 9+ are used for images.
         coords = swire[:, :2]
         s1_s2 = fluxes[:, 0] / fluxes[:, 1]
         s2_s3 = fluxes[:, 1] / fluxes[:, 2]
@@ -52,10 +89,10 @@ def generate(f_h5, out_f_h5, field='cdfs'):
                  s2_s3.reshape((-1, 1)),
                  s3_s4.reshape((-1, 1))], axis=1)
     elif ir_survey == 'wise':
-        wise = f_h5['/wise/{}/numeric'.format(field)]
+        wise = f_h5[ir_prefix + 'numeric']
         magnitudes = wise[:, 2:6]
-        distances = wise[:, 6].reshape((-1, 1))
-        images = wise[:, 7:]
+        # Index 6 was used for distances.
+        # Indices 7+ are images.
         coords = wise[:, :2]
 
         # Magnitude differences are probably useful features.
@@ -72,28 +109,37 @@ def generate(f_h5, out_f_h5, field='cdfs'):
                  w1_w2.reshape((-1, 1)),
                  w2_w3.reshape((-1, 1))], axis=1)
 
+    distances = generate_distances(f_h5, ir_prefix, radio_prefix)
+
     n_features = config['surveys'][ir_survey]['n_features']
     assert astro_features.shape[1] + distances.shape[1] == n_features
 
     # We now need to find the labels for each.
-    if field == 'cdfs':
-      truths = set(f_h5['/atlas/cdfs/consensus_objects'][:, 1])
-      labels = numpy.array([o in truths for o in range(len(astro_features))])
+    if field != 'elais':  # No labels for ELAIS-S1.
+        truths = set(f_h5[radio_prefix + 'consensus_objects'][:, 1])
+        labels = numpy.array([o in truths for o in range(len(astro_features))])
 
-      assert len(labels) == len(astro_features)
-      out_f_h5.create_dataset('labels', data=labels)
+        assert len(labels) == len(astro_features)
+        out_f_h5.create_dataset('labels', data=labels)
 
-    assert len(astro_features) == len(distances)
-    assert len(distances) == len(images)
-
-    features = numpy.hstack([astro_features, distances, images])
-    n_astro = features.shape[1] - images.shape[1]
-
-    # Save to HDF5.
-    out_f_h5.create_dataset('raw_features', data=features)
+    # Preallocate space for the features. This is because the image features are
+    # very large, and so they may not fit in memory.
+    features = out_f_h5.create_dataset('raw_features', dtype='float32',
+                                       shape=(features.shape[0],
+                                              n_features + PATCH_SIZE))
     out_f_h5.create_dataset('positions', data=coords)
     out_f_h5.attrs['ir_survey'] = ir_survey
     out_f_h5.attrs['field'] = field
+    assert len(astro_features) == len(distances)
+
+    # Store the non-image features.
+    features[:, :n_features] = numpy.hstack([astro_features, distances])
+    # Store the image features.
+    if ir_survey == 'wise':
+        features[:, -PATCH_SIZE:] = wise[:, 7:]
+    elif ir_survey == 'swire':
+        features[:, -PATCH_SIZE:] = swire[:, 9:]
+
 
 def _populate_parser(parser):
     parser.description = 'Generates training data (potential hosts and their ' \
@@ -103,13 +149,16 @@ def _populate_parser(parser):
     parser.add_argument('-o', default='data/training.h5',
                         help='HDF5 output file')
     parser.add_argument('--field', default='cdfs',
-                        help='ATLAS field')
+                        help='ATLAS field (ATLAS only)')
+    parser.add_argument('--survey', default='atlas', choices=['atlas', 'first'],
+                        help='Radio survey')
+
 
 def _main(args):
     with h5py.File(args.i, 'r') as f_h5:
         assert f_h5.attrs['version'] == '0.5.1'
         with h5py.File(args.o, 'w') as out_f_h5:
-            generate(f_h5, out_f_h5,field=args.field)
+            generate(f_h5, out_f_h5, field=args.field, radio_survey=args.survey)
 
 
 if __name__ == '__main__':

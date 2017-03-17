@@ -278,7 +278,7 @@ def find_consensuses(f_h5, ir_survey, radio_survey):
     # combinations overlap (though I need to care if I generate a catalogue!) so
     # just take duplicated locations and pick the one with the highest radio
     # consensus that has success.
-    cons_objects = {}  # Maps IR index to (ATLAS index, success,
+    cons_objects = {}  # Maps IR index to (radio index, success,
                        #                   percentage_consensus)
     for (radio_i, ir_i, success), (radio_j, radio, percentage) in zip(
             cons_positions, cons_combinations):
