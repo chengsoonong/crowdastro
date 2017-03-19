@@ -39,13 +39,22 @@ def generate_distances(f_h5, ir_prefix, radio_prefix):
     nearby = f_h5[ir_prefix + 'nearby']
     n_ir = nearby.shape[1]
     distances = numpy.zeros((n_ir,))
+    has_no_distance = numpy.zeros((n_ir,))
     for ir_index, ir_info in enumerate(f_h5[ir_prefix + 'numeric']):
         position = ir_info[:2]
         nearby_this = nearby[:, ir_index]
+        if not nearby_this.any():
+            has_no_distance[ir_index] = 1
+            continue
+
         nearby_positions = f_h5[radio_prefix + 'numeric'][nearby_this, :2]
         distances_this = numpy.linalg.norm(nearby_positions - position, axis=1)
         assert distances_this.shape == nearby_positions.shape[:1]
         distances[ir_index] = distances_this.min()
+
+    # Fill in blanks with the mean value.
+    distances[has_no_distance] = distances[~has_no_distance].mean()
+
     return distances
 
 
