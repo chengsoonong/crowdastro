@@ -125,11 +125,11 @@ def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
 
     datagen.fit(training_inputs)
 
-    model.fit(datagen.flow(training_inputs, training_outputs,
-                           batch_size=batch_size),
-              steps_per_epoch=training_inputs.shape[0] // batch_size,
-              nb_epoche=epochs,
-              callbacks=callbacks)
+    model.fit_generator(datagen.flow(training_inputs, training_outputs,
+                                     batch_size=batch_size),
+                        steps_per_epoch=training_inputs.shape[0] // batch_size,
+                        epochs=epochs,
+                        callbacks=callbacks)
 
     model.save_weights(weights_path, overwrite=True)
 
