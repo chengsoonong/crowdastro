@@ -13,10 +13,11 @@ def main(n_filters, conv_size, pool_size, dropout,
     # Imports must be in the function, or whenever we import this module, Keras
     # will dump to stdout.
     import keras.layers.core as core
+    from keras.layers import Input, Dense
     import keras.layers.convolutional as conv
     import keras.models as models
 
-    im_in = core.Input(shape=(1, patch_size, patch_size))
+    im_in = Input(shape=(1, patch_size, patch_size))
     conv1 = conv.Convolution2D(n_filters, conv_size, conv_size,
                                border_mode='valid',
                                activation='relu')(im_in)
@@ -29,7 +30,7 @@ def main(n_filters, conv_size, pool_size, dropout,
                                border_mode='valid', activation='relu')(pool2)
     dropout = core.Dropout(dropout)(conv3)
     flatten = core.Flatten()(dropout)
-    lr = core.Dense(1, activation='sigmoid')(flatten)
+    lr = Dense(1, activation='sigmoid')(flatten)
 
     model = models.Model(inputs=im_in, outputs=lr)
     model.compile(loss='binary_crossentropy', optimizer='adadelta')
