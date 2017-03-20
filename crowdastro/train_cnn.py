@@ -58,11 +58,7 @@ def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
     train_set = [i for i in range(n_examples) if i not in test_set]
     del test_set  # Just to make sure we don't use it.
 
-    training_inputs = training_h5[features_name].value[
-        train_set, n_nonimage_features:]
-
-    training_inputs = training_inputs.reshape(
-            (-1, 1, PATCH_DIAMETER, PATCH_DIAMETER))
+    training_inputs = training_h5[features_name].value[train_set, :]
     training_outputs = training_h5['labels'].value[train_set]
     assert training_inputs.shape[0] == training_outputs.shape[0]
 
@@ -118,14 +114,39 @@ def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
     if s3:
         callbacks.append(DumpToS3(weights_path, s3_bucket))
 
-    datagen = ImageDataGenerator(
-        horizontal_flip=True,
-        vertical_flip=True)
+    def create_generator(X, Y):
+        """Yields generated images and auxiliary inputs.
 
-    datagen.fit(training_inputs)
+        https://github.com/fchollet/keras/issues/3386
+        """
 
-    model.fit_generator(datagen.flow(training_inputs, training_outputs,
-                                     batch_size=batch_size),
+        X_im = X[:, n_nonimage_features:].reshape(
+            (-1, 1, PATCH_DIAMETER, PATCH_DIAMETER))
+        X_au = X[:, :n_nonimage_features]
+
+        while True:
+            # Shuffle indices.
+            idx = numpy.random.permutation(X.shape[0])
+            # Standard image generator.
+            datagen = ImageDataGenerator(
+                    horizontal_flip=True,
+                    vertical_flip=True)
+            datagen.fit(X_im)
+            # Shuffle the data before batching using known indices.
+            batches = datagen.flow(X_im[idx], Y[idx], batch_size=batch_size,
+                                   shuffle=False)
+            idx0 = 0
+            for batch in batches:
+                idx1 = idx0 + batch[0].shape[0]
+
+                # Yield ((image, aux), label) tuples.
+                yield [batch[0], X_au[idx[idx0:idx1]]], batch[1]
+
+                idx0 = idx1
+                if idx1 >= X.shape[0]:
+                    break
+
+    model.fit_generator(create_generator(training_inputs, training_outputs),
                         steps_per_epoch=training_inputs.shape[0] // batch_size,
                         epochs=epochs,
                         callbacks=callbacks,
