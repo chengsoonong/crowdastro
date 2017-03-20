@@ -22,20 +22,25 @@ def main(n_filters, conv_size, pool_size, dropout,
     conv1 = conv.Convolution2D(filters=n_filters,
                                kernel_size=(conv_size, conv_size),
                                border_mode='valid',
-                               activation='relu')(im_in)
+                               activation='relu',
+                               data_format='channels_first')(im_in)
     # 32 x 28 x 28
-    pool1 = conv.MaxPooling2D(pool_size=(pool_size, pool_size))(conv1)
+    pool1 = conv.MaxPooling2D(pool_size=(pool_size, pool_size),
+                              data_format='channels_first')(conv1)
     # 32 x 14 x 14
     conv2 = conv.Convolution2D(filters=n_filters,
                                kernel_size=(conv_size, conv_size),
                                border_mode='valid',
-                               activation='relu')(pool1)
+                               activation='relu',
+                               data_format='channels_first')(pool1)
     # 32 x 10 x 10
-    pool2 = conv.MaxPooling2D(pool_size=(pool_size, pool_size))(conv2)
+    pool2 = conv.MaxPooling2D(pool_size=(pool_size, pool_size),
+                              data_format='channels_first')(conv2)
     # 32 x 5 x 5
     conv3 = conv.Convolution2D(filters=n_filters,
                                kernel_size=(conv_size, conv_size),
-                               border_mode='valid', activation='relu')(pool2)
+                               border_mode='valid', activation='relu',
+                               data_format='channels_first')(pool2)
     # 32 x 1 x 1
     dropout = core.Dropout(dropout)(conv3)
     flatten = core.Flatten()(dropout)
