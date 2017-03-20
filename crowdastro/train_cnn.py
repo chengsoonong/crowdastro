@@ -41,6 +41,7 @@ def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
 
     import keras.callbacks
     import keras.models
+    from keras.preprocessing.image import ImageDataGenerator
     model = keras.models.model_from_json(model_json.read())
     model.compile(loss='binary_crossentropy', optimizer='adadelta')
 
@@ -118,8 +119,18 @@ def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
     if s3:
         callbacks.append(DumpToS3(weights_path, s3_bucket))
 
-    model.fit(training_inputs, training_outputs, batch_size=batch_size,
-              nb_epoch=epochs, callbacks=callbacks)
+    datagen = ImageDataGenerator(
+        horizontal_flip=True,
+        vertical_flip=True)
+
+    datagen.fit(training_inputs)
+
+    model.fit(datagen.flow(training_inputs, training_outputs,
+                           batch_size=batch_size),
+              steps_per_epoch=training_inputs.shape[0] // batch_size,
+              nb_epoche=epochs,
+              callbacks=callbacks)
+
     model.save_weights(weights_path, overwrite=True)
 
 
