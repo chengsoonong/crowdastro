@@ -16,24 +16,22 @@ def main(n_filters, conv_size, pool_size, dropout, hidden_layer_size,
     import keras.layers.convolutional as conv
     import keras.models as models
 
-    model = models.Sequential()
+    im_in = core.Input(shape=(1, patch_size, patch_size))
+    conv1 = conv.Convolution2D(n_filters, conv_size, conv_size,
+                               border_mode='valid',
+                               activation='relu')(im_in)
+    pool1 = conv.MaxPooling2D(pool_size=(pool_size, pool_size))(conv1)
+    conv2 = conv.Convolution2D(n_filters, conv_size, conv_size,
+                               border_mode='valid',
+                               activation='relu')(pool1)
+    pool2 = conv.MaxPooling2D(pool_size=(pool_size, pool_size))(conv2)
+    conv3 = conv.Convolution2D(n_filters, conv_size, conv_size,
+                               border_mode='valid', activation='relu')(pool2)
+    dropout = core.Dropout(dropout)(conv3)
+    flatten = core.Flatten()(dropout)
+    lr = core.Dense(1, activation='sigmoid')(flatten)
 
-    model.add(conv.Convolution2D(n_filters, conv_size, conv_size,
-                                 border_mode='valid',
-                                 input_shape=(1, patch_size, patch_size)))
-    model.add(core.Activation('relu'))
-    model.add(conv.MaxPooling2D(pool_size=(pool_size, pool_size)))
-    model.add(conv.Convolution2D(n_filters, conv_size, conv_size,
-                                 border_mode='valid',))
-    model.add(core.Activation('relu'))
-    model.add(conv.MaxPooling2D(pool_size=(pool_size, pool_size)))
-    model.add(conv.Convolution2D(n_filters, conv_size, conv_size,
-                                 border_mode='valid',))
-    model.add(core.Activation('relu'))
-    model.add(core.Dropout(dropout))
-    model.add(core.Flatten())
-    model.add(core.Dense(1))
-    model.add(core.Activation('sigmoid'))
+    model = models.Model(inputs=im_in, outputs=lr)
     model.compile(loss='binary_crossentropy', optimizer='adadelta')
 
     model_json = model.to_json()
@@ -63,7 +61,7 @@ def _populate_parser(parser):
 
 def _main(args):
     main(args.n_filters, args.conv_size, args.pool_size, args.dropout,
-         args.hidden_layer_size, args.patch_size, out_path=args.out_path)
+         args.patch_size, out_path=args.out_path)
 
 
 if __name__ == '__main__':
