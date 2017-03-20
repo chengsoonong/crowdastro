@@ -129,7 +129,8 @@ def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
                                      batch_size=batch_size),
                         steps_per_epoch=training_inputs.shape[0] // batch_size,
                         epochs=epochs,
-                        callbacks=callbacks)
+                        callbacks=callbacks,
+                        workers=8)
 
     model.save_weights(weights_path, overwrite=True)
 
