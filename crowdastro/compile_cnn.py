@@ -8,7 +8,7 @@ The Australian National University
 import argparse
 
 
-def main(n_filters, conv_size, pool_size, dropout, hidden_layer_size,
+def main(n_filters, conv_size, pool_size, dropout,
          patch_size, out_path=None):
     # Imports must be in the function, or whenever we import this module, Keras
     # will dump to stdout.
