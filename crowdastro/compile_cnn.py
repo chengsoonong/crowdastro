@@ -15,7 +15,7 @@ def main(n_filters, conv_size, pool_size, dropout,
     import keras.layers.core as core
     from keras.layers import Input, Dense
     import keras.layers.convolutional as conv
-    import keras.models as models
+    from keras.models import Model
 
     im_in = Input(shape=(1, patch_size, patch_size))
     conv1 = conv.Convolution2D(n_filters, conv_size, conv_size,
@@ -32,9 +32,10 @@ def main(n_filters, conv_size, pool_size, dropout,
     flatten = core.Flatten()(dropout)
     lr = Dense(1, activation='sigmoid')(flatten)
 
-    lr.compile(loss='binary_crossentropy', optimizer='adadelta')
+    model = Model(inputs=[im_in], outputs=[lr])
+    model.compile(loss='binary_crossentropy', optimizer='adadelta')
 
-    model_json = lr.to_json()
+    model_json = model.to_json()
 
     if out_path is not None:
         with open(out_path, 'w') as f:
