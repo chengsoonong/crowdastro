@@ -32,10 +32,9 @@ def main(n_filters, conv_size, pool_size, dropout,
     flatten = core.Flatten()(dropout)
     lr = Dense(1, activation='sigmoid')(flatten)
 
-    model = models.Model(inputs=im_in, outputs=lr)
-    model.compile(loss='binary_crossentropy', optimizer='adadelta')
+    lr.compile(loss='binary_crossentropy', optimizer='adadelta')
 
-    model_json = model.to_json()
+    model_json = lr.to_json()
 
     if out_path is not None:
         with open(out_path, 'w') as f:
