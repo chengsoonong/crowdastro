@@ -32,8 +32,6 @@ def main(n_filters, conv_size, pool_size, dropout, hidden_layer_size,
     model.add(core.Activation('relu'))
     model.add(core.Dropout(dropout))
     model.add(core.Flatten())
-    model.add(core.Dense(hidden_layer_size))
-    model.add(core.Activation('sigmoid'))
     model.add(core.Dense(1))
     model.add(core.Activation('sigmoid'))
     model.compile(loss='binary_crossentropy', optimizer='adadelta')
@@ -59,8 +57,6 @@ def _populate_parser(parser):
                         default=2, type=int)
     parser.add_argument('--dropout', help='dropout percentage',
                         default=0.25, type=float)
-    parser.add_argument('--hidden_layer_size', help='hidden layer size',
-                        default=64, type=int)
     parser.add_argument('--patch_size', help='size of image patches',
                         default=32, type=int)
 
