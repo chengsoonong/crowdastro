@@ -9,15 +9,17 @@ import argparse
 
 
 def main(n_filters, conv_size, pool_size, dropout,
-         patch_size, out_path=None):
+         patch_size, n_astro=7, out_path=None):
     # Imports must be in the function, or whenever we import this module, Keras
     # will dump to stdout.
     import keras.layers.core as core
     from keras.layers import Input, Dense
     import keras.layers.convolutional as conv
+    import keras.layers.merge
     from keras.models import Model
 
     im_in = Input(shape=(1, patch_size, patch_size))
+    astro_in = Input(shape=(n_astro,))
     # 1 x 32 x 32
     conv1 = conv.Convolution2D(filters=n_filters,
                                kernel_size=(conv_size, conv_size),
@@ -44,9 +46,10 @@ def main(n_filters, conv_size, pool_size, dropout,
     # 32 x 1 x 1
     dropout = core.Dropout(dropout)(conv3)
     flatten = core.Flatten()(dropout)
-    lr = Dense(1, activation='sigmoid')(flatten)
+    conc = keras.layers.merge.Concatenate()([astro_in, flatten])
+    lr = Dense(1, activation='sigmoid')(conc)
 
-    model = Model(inputs=[im_in], outputs=[lr])
+    model = Model(inputs=[astro_in, im_in], outputs=[lr])
     model.compile(loss='binary_crossentropy', optimizer='adadelta')
 
     model_json = model.to_json()
