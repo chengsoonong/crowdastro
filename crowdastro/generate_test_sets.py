@@ -110,7 +110,7 @@ def _populate_parser(parser):
 def _main(args):
     with h5py.File(args.crowdastro, 'r+') as c_h5:
         with h5py.File(args.training, 'r+') as t_h5:
-            main(c_h5, t_h5, args.n, args.p, add=args.add)
+            main(c_h5, t_h5, args.n, args.p, add=args.add, field=args.field)
 
 
 if __name__ == '__main__':
