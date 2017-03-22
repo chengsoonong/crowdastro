@@ -28,27 +28,27 @@ def get_nearby_galaxies(atlas_vector, radius=1/60):
     return (atlas_vector[2 + ATLAS_SIZE:] <= radius).nonzero()[0]
 
 
-def main(c_h5, t_h5, n, p, add=False):
+def main(c_h5, t_h5, n, p, add=False, field='cdfs'):
     ir_survey = c_h5.attrs['ir_survey']
     ir_survey_ = t_h5.attrs['ir_survey']
     assert ir_survey == ir_survey_
 
-    if '/{}/cdfs/test_sets'.format(ir_survey) in c_h5 and not add:
+    if '/{}/{}/test_sets'.format(ir_survey, field) in c_h5 and not add:
         raise ValueError('Test sets already exist.')
 
     candidates = []
-    for atlas_id, atlas in enumerate(c_h5['/atlas/cdfs/numeric']):
+    for atlas_id, atlas in enumerate(c_h5['/atlas/{}/numeric'.format(field)]):
         candidates.append(atlas_id)
 
-    n_atlas = c_h5['/atlas/cdfs/numeric'].shape[0]
+    n_atlas = c_h5['/atlas/{}/numeric'.format(field)].shape[0]
 
     # Generate the test sets.
     test_sets = []
     if add:
-        for test_set in c_h5['/{}/cdfs/test_sets'.format(ir_survey)].value:
+        for test_set in c_h5['/{}/{}/test_sets'.format(ir_survey, field)].value:
             test_sets.append(list(test_set))
-        assert len(test_sets) == c_h5['/{}/cdfs/test_sets'.format(ir_survey)
-                                      ].shape[0]
+        assert len(test_sets) == c_h5['/{}/{}/test_sets'.format(
+                ir_survey, field)].shape[0]
     for i in range(n):
         # Select at random, without replacement, candidate ATLAS objects.
         candidates_ = list(set(candidates))
@@ -63,7 +63,8 @@ def main(c_h5, t_h5, n, p, add=False):
         # Get all nearby galaxies and add all nearby galaxies to the test set.
         test_set = []
         for atlas_id in atlas_test_set:
-            nearby = get_nearby_galaxies(c_h5['/atlas/cdfs/numeric'][atlas_id])
+            nearby = get_nearby_galaxies(
+                c_h5['/atlas/{}/numeric'.format(field)][atlas_id])
             test_set.extend(nearby)
 
         test_set = sorted(set(test_set))
@@ -82,9 +83,9 @@ def main(c_h5, t_h5, n, p, add=False):
 
     test_sets = numpy.array(test_sets_)
     if add:
-        del c_h5['/{}/cdfs/test_sets'.format(ir_survey)]
+        del c_h5['/{}/{}/test_sets'.format(ir_survey, field)]
         del t_h5['test_sets']
-    c_h5.create_dataset('/{}/cdfs/test_sets'.format(ir_survey),
+    c_h5.create_dataset('/{}/{}/test_sets'.format(ir_survey, field),
                         data=test_sets)
     t_h5.create_dataset('test_sets', data=test_sets)
 
@@ -100,6 +101,8 @@ def _populate_parser(parser):
                         help='Number of test sets')
     parser.add_argument('--p', default=0.5, type=float,
                         help='Percentage size of test sets')
+    parser.add_argument('--field', default='cdfs',
+                        help='ATLAS field', choices=('cdfs', 'elais'))
     parser.add_argument('--add', action='store_true',
                         help='Add new test sets to existing test sets')
 
