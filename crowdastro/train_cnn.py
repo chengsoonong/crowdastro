@@ -19,7 +19,7 @@ PATCH_DIAMETER = PATCH_RADIUS * 2
 
 
 def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
-          s3_bucket=None, using_dataset=False, cnn_train_set_h5=None):
+          s3_bucket=None, using_dataset=False, test_set_index=0):
     """Trains a CNN.
 
     training_h5: Training HDF5 file.
@@ -31,8 +31,7 @@ def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
     s3_bucket: Name of the bucket to dump to. Must be specified iff s3 is True.
     using_dataset: Whether the given training file is the Zenodo crowdastro
         dataset. Default False (i.e. we are using the generated training file).
-    cnn_train_set_h5: HDF5 file specifying the CNN training set. Overrides the
-        training file if specified. Default None (i.e. not specified).
+    test_set_index: Index of the test set to not use for training. Default 0.
     """
     if s3 and not s3_bucket:
         raise ValueError('Must specify s3_bucket to dump to S3.')
@@ -41,13 +40,9 @@ def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
 
     import keras.callbacks
     import keras.models
+    from keras.preprocessing.image import ImageDataGenerator
     model = keras.models.model_from_json(model_json.read())
     model.compile(loss='binary_crossentropy', optimizer='adadelta')
-
-    if not cnn_train_set_h5:
-        train_set = training_h5['cnn_train_set'].value
-    else:
-        train_set = cnn_train_set_h5['cnn_train_set'].value
 
     if not using_dataset:
         ir_survey = training_h5.attrs['ir_survey']
@@ -58,11 +53,12 @@ def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
         n_nonimage_features = 5
         features_name = 'features'
 
-    training_inputs = training_h5[features_name].value[
-        train_set, n_nonimage_features:]
+    test_set = set(training_h5['test_sets'][test_set_index, :])
+    n_examples = training_h5[features_name].shape[0]
+    train_set = [i for i in range(n_examples) if i not in test_set]
+    del test_set  # Just to make sure we don't use it.
 
-    training_inputs = training_inputs.reshape(
-            (-1, 1, PATCH_DIAMETER, PATCH_DIAMETER))
+    training_inputs = training_h5[features_name].value[train_set, :]
     training_outputs = training_h5['labels'].value[train_set]
     assert training_inputs.shape[0] == training_outputs.shape[0]
 
@@ -118,8 +114,47 @@ def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
     if s3:
         callbacks.append(DumpToS3(weights_path, s3_bucket))
 
-    model.fit(training_inputs, training_outputs, batch_size=batch_size,
-              nb_epoch=epochs, callbacks=callbacks)
+    def create_generator(X, Y):
+        """Yields generated images and auxiliary inputs.
+
+        https://github.com/fchollet/keras/issues/3386
+        """
+
+        X_im = X[:, n_nonimage_features:].reshape(
+            (-1, 1, PATCH_DIAMETER, PATCH_DIAMETER))
+        X_au = X[:, :n_nonimage_features]
+
+        while True:
+            # Shuffle indices.
+            idx = numpy.random.permutation(X.shape[0])
+            # Standard image generator.
+            datagen = ImageDataGenerator(
+                    data_format='channels_first',
+                    horizontal_flip=True,
+                    vertical_flip=True,
+                    data_format='channels_first')
+            datagen.fit(X_im)
+            # Shuffle the data before batching using known indices.
+            batches = datagen.flow(X_im[idx], Y[idx], batch_size=batch_size,
+                                   shuffle=False)
+            idx0 = 0
+            for batch in batches:
+                idx1 = idx0 + batch[0].shape[0]
+
+                # Yield ((image, aux), label) tuples.
+                to_yield = ([X_au[idx[idx0:idx1]], batch[0]], batch[1])
+                yield to_yield
+
+                idx0 = idx1
+                if idx1 >= X.shape[0]:
+                    break
+
+    model.fit_generator(create_generator(training_inputs, training_outputs),
+                        steps_per_epoch=training_inputs.shape[0] // batch_size,
+                        epochs=epochs,
+                        callbacks=callbacks,
+                        workers=1)
+
     model.save_weights(weights_path, overwrite=True)
 
 
@@ -153,9 +188,10 @@ def _populate_parser(parser):
     parser.add_argument('--s3', help='dump to Amazon S3', action='store_true')
     parser.add_argument('--s3_bucket', help='name of S3 bucket', default='')
     parser.add_argument(
-        '--cnn_train_set',
-        help='HDF5 CNN training set override (default no override)',
-        default='')
+        '--test_set_index',
+        help='Index of test set (default 0)',
+        default=0,
+        type=int)
     parser.add_argument('--dataset', help='training file is the Zenodo dataset',
                         action='store_true')
 
@@ -164,17 +200,11 @@ def _main(args):
     with h5py.File(args.h5, 'r') as training_h5:
         check_raw_data(training_h5)
         with open(args.model, 'r') as model_json:
-            if args.cnn_train_set:
-                with h5py.File(args.cnn_train_set, 'r') as cnn_train_set_h5:
-                    train(training_h5, model_json, args.output,
-                          int(args.epochs), int(args.batch_size), s3=args.s3,
-                          s3_bucket=args.s3_bucket,
-                          cnn_train_set_h5=cnn_train_set_h5,
-                          using_dataset=args.dataset)
-            else:
-                train(training_h5, model_json, args.output,
-                      int(args.epochs), int(args.batch_size), s3=args.s3,
-                      s3_bucket=args.s3_bucket, using_dataset=args.dataset)
+            train(training_h5, model_json, args.output,
+                  int(args.epochs), int(args.batch_size), s3=args.s3,
+                  s3_bucket=args.s3_bucket,
+                  test_set_index=args.test_set_index,
+                  using_dataset=args.dataset)
 
 
 if __name__ == '__main__':

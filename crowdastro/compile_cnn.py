@@ -8,34 +8,48 @@ The Australian National University
 import argparse
 
 
-def main(n_filters, conv_size, pool_size, dropout, hidden_layer_size,
-         patch_size, out_path=None):
+def main(n_filters, conv_size, pool_size, dropout,
+         patch_size, n_astro=7, out_path=None):
     # Imports must be in the function, or whenever we import this module, Keras
     # will dump to stdout.
     import keras.layers.core as core
+    from keras.layers import Input, Dense, Concatenate
     import keras.layers.convolutional as conv
-    import keras.models as models
+    import keras.layers.merge
+    from keras.models import Model
 
-    model = models.Sequential()
+    im_in = Input(shape=(1, patch_size, patch_size))
+    astro_in = Input(shape=(n_astro,))
+    # 1 x 32 x 32
+    conv1 = conv.Convolution2D(filters=n_filters,
+                               kernel_size=(conv_size, conv_size),
+                               border_mode='valid',
+                               activation='relu',
+                               data_format='channels_first')(im_in)
+    # 32 x 28 x 28
+    pool1 = conv.MaxPooling2D(pool_size=(pool_size, pool_size),
+                              data_format='channels_first')(conv1)
+    # 32 x 14 x 14
+    conv2 = conv.Convolution2D(filters=n_filters,
+                               kernel_size=(conv_size, conv_size),
+                               border_mode='valid',
+                               activation='relu',
+                               data_format='channels_first')(pool1)
+    # 32 x 10 x 10
+    pool2 = conv.MaxPooling2D(pool_size=(pool_size, pool_size),
+                              data_format='channels_first')(conv2)
+    # 32 x 5 x 5
+    conv3 = conv.Convolution2D(filters=n_filters,
+                               kernel_size=(conv_size, conv_size),
+                               border_mode='valid', activation='relu',
+                               data_format='channels_first')(pool2)
+    # 32 x 1 x 1
+    dropout = core.Dropout(dropout)(conv3)
+    flatten = core.Flatten()(dropout)
+    conc = Concatenate()([astro_in, flatten])
+    lr = Dense(1, activation='sigmoid')(conc)
 
-    model.add(conv.Convolution2D(n_filters, conv_size, conv_size,
-                                 border_mode='valid',
-                                 input_shape=(1, patch_size, patch_size)))
-    model.add(core.Activation('relu'))
-    model.add(conv.MaxPooling2D(pool_size=(pool_size, pool_size)))
-    model.add(conv.Convolution2D(n_filters, conv_size, conv_size,
-                                 border_mode='valid',))
-    model.add(core.Activation('relu'))
-    model.add(conv.MaxPooling2D(pool_size=(pool_size, pool_size)))
-    model.add(conv.Convolution2D(n_filters, conv_size, conv_size,
-                                 border_mode='valid',))
-    model.add(core.Activation('relu'))
-    model.add(core.Dropout(dropout))
-    model.add(core.Flatten())
-    model.add(core.Dense(hidden_layer_size))
-    model.add(core.Activation('sigmoid'))
-    model.add(core.Dense(1))
-    model.add(core.Activation('sigmoid'))
+    model = Model(inputs=[astro_in, im_in], outputs=[lr])
     model.compile(loss='binary_crossentropy', optimizer='adadelta')
 
     model_json = model.to_json()
@@ -59,15 +73,13 @@ def _populate_parser(parser):
                         default=2, type=int)
     parser.add_argument('--dropout', help='dropout percentage',
                         default=0.25, type=float)
-    parser.add_argument('--hidden_layer_size', help='hidden layer size',
-                        default=64, type=int)
     parser.add_argument('--patch_size', help='size of image patches',
                         default=32, type=int)
 
 
 def _main(args):
     main(args.n_filters, args.conv_size, args.pool_size, args.dropout,
-         args.hidden_layer_size, args.patch_size, out_path=args.out_path)
+         args.patch_size, out_path=args.out_path)
 
 
 if __name__ == '__main__':

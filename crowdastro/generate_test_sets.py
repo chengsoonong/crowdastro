@@ -28,87 +28,43 @@ def get_nearby_galaxies(atlas_vector, radius=1/60):
     return (atlas_vector[2 + ATLAS_SIZE:] <= radius).nonzero()[0]
 
 
-def main(c_h5, t_h5, n, p, p_cnn=0.1, add=False):
+def main(c_h5, t_h5, n, p, add=False, field='cdfs'):
     ir_survey = c_h5.attrs['ir_survey']
     ir_survey_ = t_h5.attrs['ir_survey']
     assert ir_survey == ir_survey_
-    fan_labels = c_h5['/{}/cdfs/fan_labels'.format(ir_survey)].value
-    norris_labels = c_h5['/{}/cdfs/norris_labels'.format(ir_survey)].value
 
-    if '/{}/cdfs/test_sets'.format(ir_survey) in c_h5 and not add:
+    if '/{}/{}/test_sets'.format(ir_survey, field) in c_h5 and not add:
         raise ValueError('Test sets already exist.')
 
     candidates = []
-    for atlas_id, atlas in enumerate(c_h5['/atlas/cdfs/numeric']):
-        # Get all nearby galaxies.
-        nearby = get_nearby_galaxies(atlas)
-        # If Norris and Fan agree on all nearby galaxies, then add this ATLAS
-        # object to a set of candidates.
-        if all(fan_labels[n] == norris_labels[n] for n in nearby):
-            candidates.append(atlas_id)
+    for atlas_id, atlas in enumerate(c_h5['/atlas/{}/numeric'.format(field)]):
+        candidates.append(atlas_id)
 
-    n_atlas = c_h5['/atlas/cdfs/numeric'].shape[0]
+    n_atlas = c_h5['/atlas/{}/numeric'.format(field)].shape[0]
 
-    if not add:
-        # Pull out p_cnn% of the ATLAS objects for use training the CNN.
-        cnn_train_set_atlas = list(range(n_atlas))
-        numpy.random.shuffle(cnn_train_set_atlas)
-        cnn_train_set_atlas = set(cnn_train_set_atlas[:int(n_atlas * p_cnn)])
-        cnn_train_set = []
-        for atlas_id in cnn_train_set_atlas:
-            nearby = get_nearby_galaxies(c_h5['/atlas/cdfs/numeric'][atlas_id])
-            cnn_train_set.extend(nearby)
-        cnn_train_set.sort()
-        cnn_train_set_ = set(cnn_train_set)
-    else:
-        cnn_train_set = set(
-            c_h5['/{}/cdfs/cnn_train_set'.format(ir_survey)].value)
-        cnn_train_set_atlas = set()
-        for atlas_id, atlas in enumerate(c_h5['/atlas/cdfs/numeric']):
-            nearby = get_nearby_galaxies(atlas)
-            for i in nearby:
-                if i in cnn_train_set:
-                    cnn_train_set_atlas.add(atlas_id)
-                    break
-        cnn_train_set = sorted(cnn_train_set)
-        cnn_train_set_ = set(cnn_train_set)
-
-    # Generate the test sets. Make sure none of the ATLAS objects are in the
-    # CNN training set.
+    # Generate the test sets.
     test_sets = []
     if add:
-        for test_set in c_h5['/{}/cdfs/test_sets'.format(ir_survey)].value:
+        for test_set in c_h5['/{}/{}/test_sets'.format(ir_survey, field)].value:
             test_sets.append(list(test_set))
-        assert len(test_sets) == c_h5['/{}/cdfs/test_sets'.format(ir_survey)
-                                      ].shape[0]
+        assert len(test_sets) == c_h5['/{}/{}/test_sets'.format(
+                ir_survey, field)].shape[0]
     for i in range(n):
         # Select at random, without replacement, candidate ATLAS objects.
-        candidates_ = list(set(candidates) - cnn_train_set_atlas)
+        candidates_ = list(set(candidates))
         numpy.random.shuffle(candidates_)
         atlas_test_set = []
         for atlas_id in candidates_:
             if len(atlas_test_set) >= int(n_atlas * p):
                 break
 
-            assert atlas_id not in cnn_train_set_atlas
-            nearby = get_nearby_galaxies(
-                c_h5['/atlas/cdfs/numeric'][atlas_id])
-            for j in nearby:
-                # Check for overlaps.
-                if j in cnn_train_set_:
-                    break
-            else:
-                # No overlaps!
-                atlas_test_set.append(atlas_id)
-        
-	# Get all nearby galaxies and add all nearby galaxies to the test set.
+            atlas_test_set.append(atlas_id)
+
+        # Get all nearby galaxies and add all nearby galaxies to the test set.
         test_set = []
         for atlas_id in atlas_test_set:
-            assert atlas_id not in cnn_train_set_atlas
-            nearby = get_nearby_galaxies(c_h5['/atlas/cdfs/numeric'][atlas_id])
-            for j in nearby:
-                # Have to make sure there's no overlaps here.
-                assert j not in cnn_train_set_
+            nearby = get_nearby_galaxies(
+                c_h5['/atlas/{}/numeric'.format(field)][atlas_id])
             test_set.extend(nearby)
 
         test_set = sorted(set(test_set))
@@ -127,20 +83,11 @@ def main(c_h5, t_h5, n, p, p_cnn=0.1, add=False):
 
     test_sets = numpy.array(test_sets_)
     if add:
-        del c_h5['/{}/cdfs/test_sets'.format(ir_survey)]
+        del c_h5['/{}/{}/test_sets'.format(ir_survey, field)]
         del t_h5['test_sets']
-    c_h5.create_dataset('/{}/cdfs/test_sets'.format(ir_survey),
+    c_h5.create_dataset('/{}/{}/test_sets'.format(ir_survey, field),
                         data=test_sets)
     t_h5.create_dataset('test_sets', data=test_sets)
-
-    if not add:
-        cnn_train_set = numpy.array(cnn_train_set)
-        c_h5.create_dataset('/{}/cdfs/cnn_train_set'.format(ir_survey),
-                            data=cnn_train_set)
-        t_h5.create_dataset('cnn_train_set', data=cnn_train_set)
-    else:
-        assert 'cnn_train_set' in c_h5['/{}/cdfs/'.format(ir_survey)]
-        assert 'cnn_train_set' in t_h5
 
 
 def _populate_parser(parser):
@@ -154,6 +101,8 @@ def _populate_parser(parser):
                         help='Number of test sets')
     parser.add_argument('--p', default=0.5, type=float,
                         help='Percentage size of test sets')
+    parser.add_argument('--field', default='cdfs',
+                        help='ATLAS field', choices=('cdfs', 'elais'))
     parser.add_argument('--add', action='store_true',
                         help='Add new test sets to existing test sets')
 
@@ -161,7 +110,7 @@ def _populate_parser(parser):
 def _main(args):
     with h5py.File(args.crowdastro, 'r+') as c_h5:
         with h5py.File(args.training, 'r+') as t_h5:
-            main(c_h5, t_h5, args.n, args.p, add=args.add)
+            main(c_h5, t_h5, args.n, args.p, add=args.add, field=args.field)
 
 
 if __name__ == '__main__':
