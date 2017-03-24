@@ -129,6 +129,7 @@ def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
             idx = numpy.random.permutation(X.shape[0])
             # Standard image generator.
             datagen = ImageDataGenerator(
+                    data_format='channels_first',
                     horizontal_flip=True,
                     vertical_flip=True)
             datagen.fit(X_im)
@@ -149,8 +150,7 @@ def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
     model.fit_generator(create_generator(training_inputs, training_outputs),
                         steps_per_epoch=training_inputs.shape[0] // batch_size,
                         epochs=epochs,
-                        callbacks=callbacks,
-                        workers=8)
+                        callbacks=callbacks)
 
     model.save_weights(weights_path, overwrite=True)
 
