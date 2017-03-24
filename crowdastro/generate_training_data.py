@@ -39,7 +39,7 @@ def generate_distances(f_h5, ir_prefix, radio_prefix):
     nearby = f_h5[ir_prefix + 'nearby']
     n_ir = nearby.shape[1]
     distances = numpy.zeros((n_ir,))
-    has_no_distance = numpy.zeros((n_ir,))
+    has_no_distance = numpy.zeros((n_ir,), dtype=bool)
     for ir_index, ir_info in enumerate(f_h5[ir_prefix + 'numeric']):
         position = ir_info[:2]
         nearby_this = nearby[:, ir_index]
@@ -121,7 +121,7 @@ def generate(f_h5, out_f_h5, radio_survey='atlas', field='cdfs'):
     distances = generate_distances(f_h5, ir_prefix, radio_prefix)
 
     n_features = config['surveys'][ir_survey]['n_features']
-    assert astro_features.shape[1] + distances.shape[1] == n_features
+    assert astro_features.shape[1] + 1 == n_features
 
     # We now need to find the labels for each.
     if field != 'elais':  # No labels for ELAIS-S1.
@@ -134,7 +134,7 @@ def generate(f_h5, out_f_h5, radio_survey='atlas', field='cdfs'):
     # Preallocate space for the features. This is because the image features are
     # very large, and so they may not fit in memory.
     features = out_f_h5.create_dataset('raw_features', dtype='float32',
-                                       shape=(features.shape[0],
+                                       shape=(astro_features.shape[0],
                                               n_features + PATCH_SIZE))
     out_f_h5.create_dataset('positions', data=coords)
     out_f_h5.attrs['ir_survey'] = ir_survey
@@ -142,7 +142,7 @@ def generate(f_h5, out_f_h5, radio_survey='atlas', field='cdfs'):
     assert len(astro_features) == len(distances)
 
     # Store the non-image features.
-    features[:, :n_features] = numpy.hstack([astro_features, distances])
+    features[:, :n_features] = numpy.hstack([astro_features, distances.reshape((-1, 1))])
     # Store the image features.
     if ir_survey == 'wise':
         features[:, -PATCH_SIZE:] = wise[:, 7:]
