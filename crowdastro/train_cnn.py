@@ -131,7 +131,8 @@ def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
             datagen = ImageDataGenerator(
                     data_format='channels_first',
                     horizontal_flip=True,
-                    vertical_flip=True)
+                    vertical_flip=True,
+                    data_format='channels_first')
             datagen.fit(X_im)
             # Shuffle the data before batching using known indices.
             batches = datagen.flow(X_im[idx], Y[idx], batch_size=batch_size,
@@ -141,7 +142,8 @@ def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
                 idx1 = idx0 + batch[0].shape[0]
 
                 # Yield ((image, aux), label) tuples.
-                yield [batch[0], X_au[idx[idx0:idx1]]], batch[1]
+                to_yield = ([X_au[idx[idx0:idx1]], batch[0]], batch[1])
+                yield to_yield
 
                 idx0 = idx1
                 if idx1 >= X.shape[0]:
@@ -150,7 +152,8 @@ def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
     model.fit_generator(create_generator(training_inputs, training_outputs),
                         steps_per_epoch=training_inputs.shape[0] // batch_size,
                         epochs=epochs,
-                        callbacks=callbacks)
+                        callbacks=callbacks,
+                        workers=1)
 
     model.save_weights(weights_path, overwrite=True)
 

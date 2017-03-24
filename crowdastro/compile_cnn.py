@@ -13,7 +13,7 @@ def main(n_filters, conv_size, pool_size, dropout,
     # Imports must be in the function, or whenever we import this module, Keras
     # will dump to stdout.
     import keras.layers.core as core
-    from keras.layers import Input, Dense
+    from keras.layers import Input, Dense, Concatenate
     import keras.layers.convolutional as conv
     import keras.layers.merge
     from keras.models import Model
@@ -46,7 +46,7 @@ def main(n_filters, conv_size, pool_size, dropout,
     # 32 x 1 x 1
     dropout = core.Dropout(dropout)(conv3)
     flatten = core.Flatten()(dropout)
-    conc = keras.layers.merge.Concatenate()([astro_in, flatten])
+    conc = Concatenate()([astro_in, flatten])
     lr = Dense(1, activation='sigmoid')(conc)
 
     model = Model(inputs=[astro_in, im_in], outputs=[lr])
