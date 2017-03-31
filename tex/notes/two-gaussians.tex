@@ -1,0 +1,181 @@
+\documentclass[a4paper]{article}
+\usepackage{fullpage}
+
+\usepackage{latexsym}         % for some symbols
+\usepackage{amsmath}          % for maths
+\usepackage{amssymb}          % for Real number symbol
+\usepackage{graphicx}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{subfigure}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Notation
+
+\newcommand{\normal}{\mathcal{N}}
+\newcommand{\thetaall}{\tilde{\Theta}}
+
+\newcommand{\vect}[2]{\begin{bmatrix} #1 \\ #2 \end{bmatrix}}
+\newcommand{\mat}[4]{\begin{bmatrix} #1 & #2\\ #3& #4 \end{bmatrix}}
+
+\newcommand{\dotprod}[2]{\langle #1 , #2 \rangle}
+\newcommand{\trace}{\mathrm{tr}}
+\newcommand{\deter}{\mathrm{det}}
+
+% end notation
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{Distance between two 2D Gaussians}
+\author{Cheng Soon Ong}
+\date{24 March 2017}
+
+\begin{document}
+
+\maketitle
+
+\section{Motivation}
+
+In astronomy cross identification is the task of finding the same object in the sky in two images.
+The location of each pixel is known, but the challenge lies in the fact that the two images are
+measured in different wavelengths.
+When doing radio cross identification we need to compare two distributions, one from the optical
+image and a second from the radio image.
+We assume here that each empirical distribution is well approximated by a single two dimensional
+Gaussian.
+The first step to cross identification is then to compute the distance between the two Gaussians.
+
+\section{General abstract setup}
+
+One way to measure the difference between two distributions is by using the Kullback-Leibler (KL)
+divergence. This is asymmetric, and one often looks at the average of the KL divergence in
+both directions. This section selects the relevant results
+from~\cite{nielsen09clumnd,nielsen11staefd}.
+
+Let $\normal(\mu, S)$ denote the $d$ dimensional normal distribution with mean $\mu$ and covariance
+matrix $S$. We rewrite this Gaussian in its canonical decomposition in terms of its natural
+parameters. The sufficient statistics are stacked onto a tuple containing a $d$ dimensional vector
+and a $d\times d$ matrix
+\[
+  \tilde{x} = (x, -\frac{1}{2}xx^\top)
+\]
+associated with the natural parameters
+\begin{equation}
+  \label{eq:nat-param}
+  \thetaall = (\theta, \Theta) = \left(S^{-1}\mu, \frac{1}{2} S^{-1}\right)
+\end{equation}
+The KL divergence between two Gaussian distributions
+\[
+N_p = \normal(\mu_p, S_p)\qquad\mbox{and}\qquad N_q = \normal(\mu_q, S_q)
+\]
+is given by the Bregman divergence with generator $F$
+\begin{align}
+  KL(N_p||N_q) &= D_F(\thetaall_q || \thetaall_p)\\
+  &= F(\thetaall_q) - F(\thetaall_p) - \dotprod{(\thetaall_q - \thetaall_p)}{\nabla F(\thetaall_p)}
+  \label{eq:bregman-div}
+\end{align}
+The function $F$ turns out to be the log normaliser specifying the exponential family
+(of the Gaussian)
+\begin{equation}
+  \label{eq:log-normaliser}
+  F(\thetaall) = \frac{1}{4}\trace(\Theta^{-1} \theta\theta^\top)
+    -\frac{1}{2} \log \deter \Theta + \frac{d}{2}\log 2\pi.
+\end{equation}
+The gradient of $F$ is given by
+\begin{equation}
+  \label{eq:grad-log-normaliser}
+  \nabla F(\thetaall) = \left(
+  \frac{1}{2} \Theta^{-1}\theta
+  ,
+  -\frac{1}{2} \Theta^{-1} - \frac{1}{4} (\Theta^{-1}\theta)(\Theta^{-1}\theta)^\top
+  \right).
+\end{equation}
+The inner product in \eqref{eq:bregman-div} is the sum of the inner products of the
+vectors and matrices,
+\[
+  \dotprod{\thetaall_p}{\thetaall_q} = \dotprod{\theta_p}{\theta_q} + \dotprod{\Theta_p}{\Theta_q}
+\]
+where the matrix inner product is $\dotprod{\Theta_p}{\Theta_q} = \trace(\Theta_p\Theta_q^\top)$.
+
+\section{Two dimensional Gaussian}
+
+We explicitly show each element of the vector and matrix for a 2 dimensional Gaussian
+mean $\mu$ and variance $S$,
+\[
+  \normal\left( \vect{\mu_1}{\mu_2}, \mat{s_{11}}{s_{12}}{s_{21}}{s_{22}}\right).
+\]
+The determinant and inverse of $S$ is given by
+\begin{equation}
+  \label{eq:det-S}
+  a := \deter S = |s_{11} s_{22} - s_{21} s_{22}|
+\end{equation}
+and
+\begin{equation}
+  \label{eq:inv-S}
+  S^{-1} = \frac{1}{a}\mat{s_{22}}{-s_{12}}{-s_{21}}{s_{11}}
+\end{equation}
+respectively.
+We can then explicitly compute the parameters for the KL divergence in the previous section.
+Starting from the right most term in \eqref{eq:bregman-div},
+since $d=2$ the constant is $\log 2\pi$.
+Recall the relationship between determinants and inverses:
+\[
+  \deter S^{-1} = \frac{1}{\deter S}
+\]
+Because we are only considering a two dimensional problem, constants are squared in the determinant,
+i.e. $\deter(c S) = c^2 \deter S$.
+By the definition of $\Theta$, we have
+\begin{align*}
+  \frac{1}{2} \log \deter \Theta &= \frac{1}{2} \log \deter (\frac{1}{2} S^{-1}) \\
+  &= \frac{1}{2} \log \frac{1}{4} \frac{1}{\deter S}\\
+  &= \frac{1}{2} \log \frac{1}{4a}
+\end{align*}
+where the last line substitutes \eqref{eq:det-S}.
+By the definition of $\theta$,
+\begin{equation}
+  \label{eq:theta}
+  \theta = S^{-1}m = \frac{1}{a}\vect{s_{22}\mu_1 - s_{12}\mu_2}{s_{11}\mu_2 - s_{21}\mu_1}.
+\end{equation}
+
+We also require
+\begin{align}
+  \Theta^{-1}\theta &= 2SS^{-1}m = 2m\nonumber\\
+  &=\vect{2\mu_1}{2\mu_2}\label{eq:2mean},
+\end{align}
+which allows us to compute terms in the gradient. By multiplying
+\eqref{eq:2mean} and \eqref{eq:theta} we have
+\begin{align*}
+  \Theta^{-1}\theta\theta^\top &= \frac{1}{a}\vect{2\mu_1}{2\mu_2}
+  \vect{s_{22}\mu_1 - s_{12}\mu_2}{s_{11}\mu_2 - s_{21}\mu_1}^\top\\
+  &=\frac{2}{a}\mat{\mu_1(s_{22}\mu_1 - s_{12}\mu_2)}{\mu_1(s_{11}\mu_2 - s_{21}\mu_1)}{\mu_2(s_{22}\mu_1 - s_{12}\mu_2)}{\mu_2(s_{11}\mu_2 - s_{21}\mu_1)},
+\end{align*}
+allowing us to calculate the first term of the log normaliser
+\[
+  \frac{1}{4}\trace(\Theta^{-1} \theta\theta^\top)= \frac{1}{2a}
+  \left(\mu_1(s_{22}\mu_1 - s_{12}\mu_2) + \mu_2(s_{11}\mu_2 - s_{21}\mu_1)\right).
+\]
+Substituting into \eqref{eq:log-normaliser}, we have
+\begin{equation}
+  \label{eq:gauss-log-normaliser}
+  F(\thetaall) = \frac{1}{2a}
+  \left(\mu_1(s_{22}\mu_1 - s_{12}\mu_2) + \mu_2(s_{11}\mu_2 - s_{21}\mu_1)\right)
+  - \frac{1}{2} \log \frac{1}{4a} + \log 2\pi.
+\end{equation}
+Substituting into \eqref{eq:grad-log-normaliser}, we have
+\begin{equation}
+  \label{eq:gauss-grad-log-normaliser-vec}
+  \frac{1}{2}\Theta^{-1}\theta = \mu
+\end{equation}
+and
+\begin{equation}
+  \label{eq:gauss-grad-log-normaliser-mat}
+  -\frac{1}{2} \Theta^{-1} - \frac{1}{4} (\Theta^{-1}\theta)(\Theta^{-1}\theta)^\top
+  =
+  - S - \mu\mu^\top.
+\end{equation}
+It is likely that \eqref{eq:gauss-log-normaliser} and \eqref{eq:gauss-grad-log-normaliser-mat}
+are true in general for all Gaussians (not just 2D Gaussians).
+
+\bibliographystyle{alpha}
+\bibliography{gaussian}
+\end{document}
