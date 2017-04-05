@@ -684,7 +684,7 @@ def parse_classification(classification, subject, atlas_positions, wcs,
     wcs: World coordinate system of the ATLAS image.
     pix_offset: (x, y) pixel position of this radio subject on the ATLAS image.
     -> dict mapping radio signature to list of corresponding IR host pixel
-        locations.
+        locations, or None if there is no corresponding pixel location.
     """
     result = {}
 
@@ -746,7 +746,10 @@ def parse_classification(classification, subject, atlas_positions, wcs,
                 ir_location = (ir_x, ir_y)
                 ir_locations.append(ir_location)
 
-            result[radio_signature] = ir_locations
+        # Case where 'No Sources' was selected should be handled automatically;
+        # if no sources were selected then nothing has been added to
+        # ir_locations.
+        result[radio_signature] = ir_locations
 
     if n_invalid:
         logging.debug('%d invalid annotations for %s.', n_invalid,
