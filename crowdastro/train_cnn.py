@@ -131,8 +131,7 @@ def train(training_h5, model_json, weights_path, epochs, batch_size, s3=False,
             datagen = ImageDataGenerator(
                     data_format='channels_first',
                     horizontal_flip=True,
-                    vertical_flip=True,
-                    data_format='channels_first')
+                    vertical_flip=True)
             datagen.fit(X_im)
             # Shuffle the data before batching using known indices.
             batches = datagen.flow(X_im[idx], Y[idx], batch_size=batch_size,
