@@ -40,7 +40,7 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
     keywords='machine-learning radio astronomy classification',
-    packages=['crowdastro'],
+    packages=['crowdastro', 'crowdastro.crowd', 'crowdastro.experiment', 'crowdastro.active_learning'],
     # Should be kept in sync with requirements.txt.
     install_requires=[
         'astropy',
